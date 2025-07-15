@@ -1,0 +1,1600 @@
+{%  load static %}
+{% load humanize %}
+
+<!doctype html>
+
+<html
+  lang="en"
+  class="layout-navbar-fixed layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-skin="default"
+  data-bs-theme="light"
+  data-assets-path="{% static 'assets' %}">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+     <title>Growfox - Marketing Data Center</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/img/favicon/gavicon.jpg' %}?v=3" />
+
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/fonts/iconify-icons.css' %}" />
+
+    <!-- Core CSS -->
+    <!-- build:css assets/vendor/css/theme.css -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/pickr/pickr-themes.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <!-- endbuild -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static 'assets/vendor/js/helpers.js' %}"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js. -->
+    <script src="{% static 'assets/vendor/js/template-customizer.js' %}"></script>
+
+    <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
+
+    <script src="{% static 'assets/js/config.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.0/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0/dist/chartjs-adapter-luxon.min.js"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Menu -->
+<aside id="layout-menu" class="layout-menu menu-vertical menu">
+  <div class="app-brand demo logo-wrapper">
+    <!-- ✅ แก้ href จาก index.html เป็น {% url 'index' %} -->
+    <a href="{% url 'index' %}" class="app-brand-link">
+      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-img" />
+      <img src="{% static 'assets/img/favicon/gavicon.jpg' %}" alt="Fox Icon" class="logo-img logo-icon d-none" />
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-white text-large ms-auto">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M8.47365 11.7183C8.11707 12.0749 8.11707 12.6531 8.47365 13.0097L12.071 16.607C12.4615 16.9975 12.4615 17.6305 12.071 18.021C11.6805 18.4115 11.0475 18.4115 10.657 18.021L5.83009 13.1941C5.37164 12.7356 5.37164 11.9924 5.83009 11.5339L10.657 6.707C11.0475 6.31653 11.6805 6.31653 12.071 6.707C12.4615 7.09747 12.4615 7.73053 12.071 8.121L8.47365 11.7183Z"
+          fill-opacity="0.9" />
+        <path
+          d="M14.3584 11.8336C14.0654 12.1266 14.0654 12.6014 14.3584 12.8944L18.071 16.607C18.4615 16.9975 18.4615 17.6305 18.071 18.021C17.6805 18.4115 17.0475 18.4115 16.657 18.021L11.6819 13.0459C11.3053 12.6693 11.3053 12.0587 11.6819 11.6821L16.657 6.707C17.0475 6.31653 17.6805 6.31653 18.071 6.707C18.4615 7.09747 18.4615 7.73053 18.071 8.121L14.3584 11.8336Z"
+          fill-opacity="0.4" />
+      </svg>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1">
+
+
+            <!-- Add Group Menu Bar -->
+            <li class="menu-header small mt-5">
+              <span class="menu-header-text" data-i18n="Apps & Pages">Pages &amp; Posts</span>
+            </li>
+<li class="menu-item">
+  <a href="javascript:void(0);" class="menu-link menu-toggle">
+    <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+    <div data-i18n="Page Campaigns">Page Campaigns</div>
+    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ page_groups_count }}</div>
+  </a>
+  <ul class="menu-sub">
+    {% for group in page_groups_sidebar %}
+      <li class="menu-item">
+        <a href="{% url 'group_detail' group.id %}" class="menu-link">
+          <div data-i18n="{{ group.group_name }}">{{ group.group_name }}</div>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+<!-- 🔶 Post Campaign Menu -->
+<li class="menu-item">
+  <a href="javascript:void(0);" class="menu-link menu-toggle">
+    <i class="menu-icon icon-base ri ri-article-line"></i>
+    <div data-i18n="Post Campaigns">Post Campaigns</div>
+    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ comment_campaign_groups|length }}</div>
+  </a>
+  <ul class="menu-sub">
+    {% for group in comment_campaign_groups %}
+      <li class="menu-item">
+        <!-- ใช้ campaign_group.group_name สำหรับชื่อแคมเปญ -->
+               <a href="{% url 'posts_campaign' group_name=group.group_name %}" class="menu-link">
+          <div>{{ group.group_name }}</div> <!-- ใช้ group_name แทน campaign_name -->
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+
+
+            <!-- Apps & Pages -->
+            <li class="menu-header small mt-5">
+              <span class="menu-header-text" data-i18n="Apps & Ads">Apps &amp; Ads</span>
+            </li>
+        <li class="menu-item">
+        <a href="/chat-ai.html" class="menu-link">
+        <i class="menu-icon icon-base ri ri-chat-3-line"></i>
+        <div data-i18n="Chat with AI">Chat with AI</div>
+        </a>
+        </li>
+
+            <!-- Page Overview Menu Bar -->
+
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-bill-line"></i>
+                <div data-i18n="Page">Page</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="app-academy-dashboard.html" class="menu-link">
+                    <div data-i18n="Campaign Overview">Campaign Overview</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="app-academy-course.html" class="menu-link">
+                    <div data-i18n="Page Overview">Page Overview</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Page Overview end -->
+            <!-- Post Overview Menu Bar -->
+
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-file-list-line"></i>
+                <div data-i18n="Posts">Posts</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="app-academy-dashboard.html" class="menu-link">
+                    <div data-i18n="Campaign Overview">Campaign Overview</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="app-academy-course.html" class="menu-link">
+                    <div data-i18n="Page Overview">Post Overview</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Post Overview end -->
+
+            <!-- Ads Campaign Menu Bar -->
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-bar-chart-2-line"></i>
+                <div data-i18n="Ads Campaign">Ads Campaign</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="charts-apex.html" class="menu-link">
+                    <div data-i18n="Meta">Meta</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="charts-chartjs.html" class="menu-link">
+                    <div data-i18n="Tiktok">Tiktok</div>
+                  </a>
+                </li>   <li class="menu-item">
+                  <a href="charts-chartjs.html" class="menu-link">
+                    <div data-i18n="Google">Google</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+  <!-- ⚙️ Setting & User moved to bottom -->
+  <div class="mt-auto">
+    <ul class="menu-inner py-1">
+      <li class="menu-header small mt-5">
+        <span class="menu-header-text">Setting</span>
+      </li>
+      <li class="menu-item">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+          <i class="menu-icon ri ri-user-line"></i>
+          <div data-i18n="Users">Users</div>
+        </a>
+        <ul class="menu-sub">
+          <li class="menu-item">
+            <a href="app-ecommerce-dashboard.html" class="menu-link">
+              <div data-i18n="hello@growfox.co">hello@growfox.co</div>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+          <i class="menu-icon ri ri-settings-3-line"></i>
+          <div data-i18n="Setting">Setting</div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</aside>
+
+        <div class="menu-mobile-toggler d-xl-none rounded-1">
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1">
+            <i class="ri ri-menu-line icon-base"></i>
+            <i class="ri ri-arrow-right-s-line icon-base"></i>
+          </a>
+        </div>
+          <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+
+          <nav
+            class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
+            id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="icon-base ri ri-menu-line icon-22px"></i>
+              </a>
+            </div>
+
+            <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+              <!-- Search -->
+              <div class="navbar-nav align-items-center">
+                <div class="nav-item navbar-search-wrapper mb-0">
+                  <a class="nav-item nav-link search-toggler px-0" href="javascript:void(0);">
+                    <span class="d-inline-block text-body-secondary fw-normal" id="autocomplete"></span>
+                  </a>
+                </div>
+              </div>
+
+              <!-- /Search -->
+
+              <ul class="navbar-nav flex-row align-items-center ms-md-auto"
+                <li class="nav-item dropdown me-sm-2 me-xl-0">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
+                    id="nav-theme"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown">
+                    <i class="icon-base ri ri-sun-line icon-22px theme-icon-active"></i>
+                    <span class="d-none ms-2" id="nav-theme-text">Toggle theme</span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-theme-text">
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center active"
+                        data-bs-theme-value="light"
+                        aria-pressed="false">
+                        <span><i class="icon-base ri ri-sun-line icon-22px me-3" data-icon="sun-line"></i>Light</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center"
+                        data-bs-theme-value="dark"
+                        aria-pressed="true">
+                        <span
+                          ><i class="icon-base ri ri-moon-clear-line icon-22px me-3" data-icon="moon-clear-line"></i
+                          >Dark</span
+                        >
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        class="dropdown-item align-items-center"
+                        data-bs-theme-value="system"
+                        aria-pressed="false">
+                        <span
+                          ><i class="icon-base ri ri-computer-line icon-22px me-3" data-icon="computer-line"></i
+                          >System</span
+                        >
+                      </button>
+                    </li>
+                  </ul>
+                </li>
+                <!-- / Style Switcher-->
+
+                <!-- Notification -->
+                <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-4 me-xl-1">
+                  <a
+                    class="nav-link dropdown-toggle hide-arrow btn btn-icon btn-text-secondary rounded-pill"
+                    href="javascript:void(0);"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false">
+                    <i class="icon-base ri ri-notification-2-line icon-22px"></i>
+                    <span
+                      class="position-absolute top-0 start-50 translate-middle-y badge badge-dot bg-danger mt-2 border"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end py-0">
+                    <li class="dropdown-menu-header border-bottom py-50">
+                      <div class="dropdown-header d-flex align-items-center py-2">
+                        <h6 class="mb-0 me-auto">Notification</h6>
+                        <div class="d-flex align-items-center h6 mb-0">
+                          <span class="badge rounded-pill bg-label-primary fs-xsmall me-2">8 New</span>
+                          <a
+                            href="javascript:void(0)"
+                            class="dropdown-notifications-all p-2"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Mark all as read"
+                            ><i class="icon-base ri ri-mail-open-line text-heading"></i
+                          ></a>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="dropdown-notifications-list scrollable-container">
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <img src="../../assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Congratulation Lettie 🎉</h6>
+                              <small class="mb-1 d-block text-body">Won the monthly best seller gold badge</small>
+                              <small class="text-body-secondary">1h ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <span class="avatar-initial rounded-circle bg-label-danger">CF</span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Charles Franklin</h6>
+                              <small class="mb-1 d-block text-body">Accepted your connection</small>
+                              <small class="text-body-secondary">12hr ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <img src="../../assets/img/avatars/2.png" alt="avatar" class="rounded-circle" />
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">New Message ✉️</h6>
+                              <small class="mb-1 d-block text-body">You have new message from Natalie</small>
+                              <small class="text-body-secondary">1h ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <span class="avatar-initial rounded-circle bg-label-success"
+                                  ><i class="icon-base ri ri-shopping-cart-2-line icon-18px"></i
+                                ></span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Whoo! You have new order 🛒</h6>
+                              <small class="mb-1 d-block text-body">ACME Inc. made new order $1,154</small>
+                              <small class="text-body-secondary">1 day ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <img src="../../assets/img/avatars/9.png" alt="avatar" class="rounded-circle" />
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Application has been approved 🚀</h6>
+                              <small class="mb-1 d-block text-body"
+                                >Your ABC project application has been approved.</small
+                              >
+                              <small class="text-body-secondary">2 days ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <span class="avatar-initial rounded-circle bg-label-success"
+                                  ><i class="icon-base ri ri-pie-chart-2-line icon-18px"></i
+                                ></span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Monthly report is generated</h6>
+                              <small class="mb-1 d-block text-body">July monthly financial report is generated </small>
+                              <small class="text-body-secondary">3 days ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <img src="../../assets/img/avatars/5.png" alt="avatar" class="rounded-circle" />
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">Send connection request</h6>
+                              <small class="mb-1 d-block text-body">Peter sent you connection request</small>
+                              <small class="text-body-secondary">4 days ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <img src="../../assets/img/avatars/6.png" alt="avatar" class="rounded-circle" />
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">New message from Jane</h6>
+                              <small class="mb-1 d-block text-body">Your have new message from Jane</small>
+                              <small class="text-body-secondary">5 days ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                        <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
+                          <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                              <div class="avatar">
+                                <span class="avatar-initial rounded-circle bg-label-warning"
+                                  ><i class="icon-base ri ri-error-warning-line icon-18px"></i
+                                ></span>
+                              </div>
+                            </div>
+                            <div class="flex-grow-1">
+                              <h6 class="small mb-1">CPU is running high</h6>
+                              <small class="mb-1 d-block text-body"
+                                >CPU Utilization Percent is currently at 88.63%,</small
+                              >
+                              <small class="text-body-secondary">5 days ago</small>
+                            </div>
+                            <div class="flex-shrink-0 dropdown-notifications-actions">
+                              <a href="javascript:void(0)" class="dropdown-notifications-read"
+                                ><span class="badge badge-dot"></span
+                              ></a>
+                              <a href="javascript:void(0)" class="dropdown-notifications-archive"
+                                ><span class="icon-base ri ri-close-line"></span
+                              ></a>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    </li>
+                    <li class="border-top">
+                      <div class="d-grid p-4">
+                        <a class="btn btn-primary btn-sm d-flex" href="javascript:void(0);">
+                          <small class="align-middle">View all notifications</small>
+                        </a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ Notification -->
+
+                            <!-- User -->
+                    <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+<img src="{% static 'assets/img/avatars/Fox.webp' %}" alt="avatar" class="rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <div class="d-flex align-items-center">
+                          <div class="flex-shrink-0 me-2">
+                            <div class="avatar avatar-online">
+<img src="{% static 'assets/img/avatars/Fox.webp' %}" alt="avatar" class="rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <h6 class="mb-0 small">Hello Growfox</h6>
+                            <small class="text-body-secondary">Maythas</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="pages-profile-user.html">
+                        <i class="icon-base ri ri-user-3-line icon-22px me-3"></i
+                        ><span class="align-middle">My Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <i class="icon-base ri ri-settings-4-line icon-22px me-3"></i
+                        ><span class="align-middle">Settings</span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="d-grid px-4 pt-2 pb-1">
+                        <a class="btn btn-sm btn-danger d-flex" href="auth-login-cover.html" target="_blank">
+                          <small class="align-middle">Logout</small>
+                          <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
+                        </a>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ User -->
+              </ul>
+            </div>
+          </nav>
+
+          <!-- / Navbar -->
+<!-- Content wrapper -->
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="card p-4 mb-4">
+      <div class="row justify-content-between align-items-start mb-4">
+        <div class="col-md-9 d-flex">
+          <div class="position-relative me-3">
+            <a href="{{ page.page_url }}" target="_blank" class="position-absolute" style="top: 0px; left: 90px; z-index: 2;">
+              {% if page.platform == "facebook" %}
+                <img src="{% static 'assets/img/icons/facebook-icon.webp' %}" alt="Facebook Icon" style="width: 20px; height: 20px;" />
+              {% elif page.platform == "tiktok" %}
+                <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" alt="TikTok Icon" style="width: 20px; height: 20px;" />
+              {% elif page.platform == "instagram" %}
+                <img src="{% static 'assets/img/icons/iglogo.png' %}" alt="Instagram Icon" style="width: 35px; height: 28px;" />
+              {% elif page.platform == "lemon8" %}
+                <img src="{% static 'assets/img/icons/lemon8logo.png' %}" alt="Lemon8 Icon" style="width: 25px; height: 25 px;" />
+              {% elif page.platform == "youtube" %}
+                <img src="{% static 'assets/img/icons/youtubelogo.png' %}" alt="Youtube Icon" style="width: 25px; height: 25 px;" />
+              {% endif %}
+            </a>
+            <a href="{{ page.page_url }}" target="_blank">
+              <img class="rounded-circle border border-2 border-light" src="{{ page.profile_pic|default:'/static/assets/default-profile.png' }}" alt="Page Logo" width="100" height="100" />
+            </a>
+          </div>
+      <div class="ms-2">
+    <h5 class="mb-2">{{ page.page_name|default:page.page_username }}</h5>
+    <div class="text-muted mb-1">
+        <strong>Page Username:</strong>
+        {% if page.platform == "lemon8" %}
+            {% with page.page_url|cut:"https://www.lemon8-app.com/" as lemon8_user %}
+                {{ lemon8_user }}
+            {% endwith %}
+        {% elif page.platform == "youtube" %}
+            {% with page.page_url|cut:"http://www.youtube.com/"|cut:"https://www.youtube.com/"|cut:"@" as yt_user %}
+                {{ yt_user }}
+            {% endwith %}
+        {% else %}
+            {{ page.page_username|default:"-" }}
+        {% endif %}
+    </div>
+            {% if page.platform == "facebook" %}
+              <div class="text-muted mb-1"><strong>Page Categories:</strong> {{ page.page_category|default:"-" }}</div>
+            {% elif page.platform == "instagram" %}
+              <div class="text-muted mb-1"><strong>Platform:</strong> Instagram</div>
+            {% elif page.platform == "lemon8" %}
+              <div class="text-muted mb-1"><strong>Platform:</strong> Lemon8</div>
+                {% elif page.platform == "youtube" %}
+              <div class="text-muted mb-1"><strong>Platform:</strong> YouTube</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-3 d-flex justify-content-end">
+          <input type="date" class="form-control" style="max-width: 180px; font-size: 0.9rem;" />
+        </div>
+      </div>
+
+      {% if page.platform == "facebook" %}
+      <div class="row mb-4">
+        <div class="col-md-4 text-muted"><strong>Page Website:</strong> <a href="{{ page.page_website }}">{{ page.page_website|default:"-" }}</a></div>
+        <div class="col-md-4 text-muted"><strong>Page Email:</strong> <a href="mailto:{{ page.page_email }}">{{ page.page_email|default:"-" }}</a></div>
+        <div class="col-md-4 text-muted"><strong>Page Number:</strong> {{ page.page_phone|default:"-" }}</div>
+      </div>
+      {% elif page.platform == "tiktok" %}
+      <div class="row mb-4">
+        <div class="col-md-4 text-muted"><strong>Platform:</strong> TikTok</div>
+        <div class="col-md-4 text-muted"><strong>Contact:</strong> -</div>
+        <div class="col-md-4 text-muted"><strong>Phone:</strong> -</div>
+      </div>
+      {% elif page.platform == "instagram" %}
+      <div class="row mb-4">
+        <div class="col-md-4 text-muted"><strong>Website:</strong> <a href="{{ page.page_website }}">{{ page.page_website|default:"-" }}</a></div>
+        <div class="col-md-4 text-muted"><strong>Category:</strong> {{ page.page_category|default:"-" }}</div>
+      </div>
+      {% elif page.platform == "lemon8" %}
+      <div class="row mb-4">
+        <div class="col-md-4 text-muted"><strong>Website:</strong> <a href="{{ page.page_website }}">{{ page.page_website|default:"-" }}</a></div>
+        <div class="col-md-4 text-muted"><strong>Age:</strong> {{ page.age|default:"-" }}</div>
+        <div class="col-md-4 text-muted"><strong>Following:</strong> {{ page.following_count|intcomma|default:"-" }}</div>
+      </div>
+      {% elif page.platform == "youtube" %}
+  <div class="row mb-4">
+        <div class="col-md-4 text-muted"><strong>Website:</strong> <a href="{{ page.page_website }}">{{ page.page_website|default:"-" }}</a></div>
+    <div class="col-md-4 text-muted"><strong>Country:</strong> {{ page.page_address|default:"-" }}</div>
+    <div class="col-md-4 text-muted"><strong>Join Date:</strong> {{ page.page_join_date|default:"-" }}</div>
+  </div>
+      {% endif %}
+
+<div class="row mb-4 mt-3">
+  <div class="col-md-8">
+    <strong>
+      {% if page.platform == "facebook" %}Page Description:{% elif page.platform == "instagram" %}Bio:{% elif page.platform == "lemon8" %}Bio:{% else %}Description:{% endif %}
+    </strong>
+    <div class="text-muted">{{ page.page_description|default:"-" }}</div>
+  </div>
+
+  {# ✅ เงื่อนไขแสดง Page Address เฉพาะ Facebook ถ้ามี #}
+  {% if page.platform == "facebook" and page.page_address %}
+    <div class="col-md-4">
+      <strong>Page Address:</strong>
+      <div class="text-muted">{{ page.page_address }}</div>
+    </div>
+  {% endif %}
+</div>
+
+<hr class="my-4" />
+
+      <div class="row text-center mt-4">
+        <div class="col">
+          <div class="fw-semibold">
+            {% if page.platform == "facebook" %}
+              {{ page.page_followers_count|intcomma|default:"-" }}
+            {% elif page.platform == "tiktok" %}
+              {{ page.page_followers|intcomma|default:"-" }}
+            {% elif page.platform == "instagram" or page.platform == "lemon8" %}
+              {{ page.page_followers|intcomma|default:"-" }}
+                {% elif page.platform == "youtube" %}
+              {{ page.page_followers|intcomma|default:"-" }}
+            {% endif %}
+          </div>
+          <div class="text-muted small">
+      {% if page.platform == "youtube" %}
+        Subscribe
+      {% else %}
+        Followers
+      {% endif %}
+    </div>
+        </div>
+        <div class="col">
+          <div class="fw-semibold">
+            {% if page.platform == "facebook" %}
+              {{ page.page_likes_count|intcomma|default:"-" }}
+            {% elif page.platform == "tiktok" %}
+              {{ page.page_likes|intcomma|default:"-" }}
+            {% elif page.platform == "instagram" %}
+              {{ page.post_count|intcomma|default:"-" }}
+            {% elif page.platform == "lemon8" %}
+              {{ page.page_likes|intcomma|default:"-" }}
+                {% elif page.platform == "youtube" %}
+  {{ page.page_total_views|intcomma|default:"-" }}
+            {% else %}
+              -
+            {% endif %}
+          </div>
+          <div class="text-muted small">
+  {% if page.platform == "youtube" %}All Views{% elif page.platform == "instagram" %}All Post{% elif page.platform == "lemon8" %}Likes{% else %}Likes{% endif %}
+          </div>
+        </div>
+        <div class="col">
+  <div class="fw-semibold">
+    {% if page.platform == "facebook" %}
+      {{ page.page_talking_count|intcomma|default:"-" }}
+    {% elif page.platform == "youtube" %}
+      {{ page.page_videos_count|intcomma|default:"-" }}
+    {% endif %}
+  </div>
+  <div class="text-muted small">
+    {% if page.platform == "facebook" %}
+      Talking
+    {% elif page.platform == "youtube" %}
+      All Videos
+    {% endif %}
+    </div>
+      </div>
+
+
+
+
+  </div>
+</div>
+
+  {% if facebook_posts or facebook_posts_flop %}
+<div class="row">
+
+  <!-- 🔥 Top 10 Facebook Posts -->
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-3">
+        <h5 class="card-title mb-3">Top 10 Facebook Posts</h5>
+        <div style="max-height: 600px; overflow-y: auto;">
+          {% for post in facebook_posts_top10 %}
+          <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+            <div style="width: 90px; height: 90px; flex-shrink: 0; position: relative; overflow: hidden;">
+            {% if post.post_imgs %}
+            <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank">
+              <img src="{{ post.post_imgs.0 }}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" />
+            </a>
+            {% else %}
+             <div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>
+            {% endif %}
+            </div>
+            <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center gap-2">
+                  {% if page.profile_pic %}
+                  <img src="{{ page.profile_pic }}" class="rounded-circle" style="width: 16px; height: 16px;">
+                  {% endif %}
+                  <i class="bi bi-facebook text-primary"></i>
+                  <strong class="text-truncate">{{ page.page_name }}</strong>
+                </div>
+                <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
+              </div>
+              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                {{ post.post_content }}
+              </div>
+              <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                {% if post.reactions %}
+                  {% for reaction, count in post.reactions.items %}
+                    {% if reaction == "ถูกใจ" %}<span>👍 {{ count }}</span>{% endif %}
+                    {% if reaction == "ห่วงใย" %}<span>🥰 {{ count }}</span>{% endif %}
+                    {% if reaction == "รักเลย" %}<span>❤️ {{ count }}</span>{% endif %}
+                    {% if reaction == "เศร้า" %}<span>😢 {{ count }}</span>{% endif %}
+                    {% if reaction == "โกรธ" %}<span>😡 {{ count }}</span>{% endif %}
+                    {% if reaction == "ว้าว" %}<span>😮 {{ count }}</span>{% endif %}
+                    {% if reaction == "ฮ่าๆ" or reaction == "ฮา" %}<span>😂 {{ count }}</span>{% endif %}
+                  {% endfor %}
+                {% endif %}
+                <span>💬 {{ post.comment_count|default:0 }}</span>
+                <span>↪ {{ post.share_count|default:0 }}</span>
+                <span class="ms-auto fw-semibold text-dark">🔥 {{ post.total_engagement }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧊 Flop 10 Facebook Posts -->
+  <div class="col-lg-6 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-3">
+        <h5 class="card-title mb-3">Flop 10 Facebook Posts</h5>
+        <div style="max-height: 600px; overflow-y: auto;">
+          {% for post in facebook_posts_flop %}
+          <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+            <div style="width: 90px; height: 90px; flex-shrink: 0; position: relative; overflow: hidden;">
+            {% if post.post_imgs %}
+            <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank">
+              <img src="{{ post.post_imgs.0 }}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" />
+            </a>
+            {% else %}
+             <div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>
+            {% endif %}
+            </div>
+            <div class="flex-grow-1 d-flex flex-column justify-content-between px-3 py-2" style="min-width: 0; overflow: hidden;">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center gap-2">
+                  {% if page.profile_pic %}
+                  <img src="{{ page.profile_pic }}" class="rounded-circle" style="width: 16px; height: 16px;">
+                  {% endif %}
+                  <i class="bi bi-facebook text-primary"></i>
+                  <strong class="text-truncate">{{ page.page_name }}</strong>
+                </div>
+                <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
+              </div>
+              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                {{ post.post_content }}
+              </div>
+              <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                {% if post.reactions %}
+                  {% for reaction, count in post.reactions.items %}
+                    {% if reaction == "ถูกใจ" %}<span>👍 {{ count }}</span>{% endif %}
+                    {% if reaction == "ห่วงใย" %}<span>🥰 {{ count }}</span>{% endif %}
+                    {% if reaction == "รักเลย" %}<span>❤️ {{ count }}</span>{% endif %}
+                    {% if reaction == "เศร้า" %}<span>😢 {{ count }}</span>{% endif %}
+                    {% if reaction == "โกรธ" %}<span>😡 {{ count }}</span>{% endif %}
+                    {% if reaction == "ว้าว" %}<span>😮 {{ count }}</span>{% endif %}
+                    {% if reaction == "ขำ" or reaction == "ฮ่าๆ" %}<span>😂 {{ count }}</span>{% endif %}
+                  {% endfor %}
+                {% endif %}
+                <span>💬 {{ post.comment_count|default:0 }}</span>
+                <span>↪ {{ post.share_count|default:0 }}</span>
+                <span class="ms-auto fw-semibold text-dark">🔥 {{ post.total_engagement }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endif %}
+    <br>
+  <!-- 📊 New 100 Posts Overview -->
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body p-3">
+    <h5 class="card-title mb-3">New 100 Posts Overview</h5>
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+      <table class="table table-sm table-hover align-middle mb-0 small">
+        <thead class="table-light text-center align-middle" style="line-height: 1.0; position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
+          <tr>
+            <th style="width: 40px;">
+              <span class="visually-hidden">#</span>
+            </th>
+            <th style="min-width: 180px;">
+                <span class="visually-hidden">Page</span>
+            </th>
+            <th style="min-width: 250px;">Post</th>
+            <!-- ลบคอลัมน์ Date ออก -->
+            <th>Likes</th>
+            <th>Comments</th>
+            <th>All Reactions</th>
+            <th>Interaction Rate</th>
+            <th>Reach per Post</th>
+            <th>Impression</th>
+            <th>Sentiment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for post in facebook_posts %}
+          <tr>
+            <!-- Row number -->
+            <td class="text-center">{{ forloop.counter }}</td>
+
+            <!-- Page info (Profile pic + name + date) -->
+            <td class="text-start">
+  <div class="d-flex align-items-start gap-2">
+    {% if page.profile_pic %}
+    <img src="{{ page.profile_pic }}" style="width: 28px; height: 28px; object-fit: cover;" class="rounded-circle mt-1" />
+    {% endif %}
+    <div class="d-flex flex-column lh-sm">
+      <span class="text-truncate">{{ page.page_name }}</span>
+      <div class="text-muted small" style="font-size: 0.65rem;">
+        {{ post.post_timestamp_dt|date:"j M Y - H:i" }}
+      </div>
+    </div>
+  </div>
+</td>
+
+
+            <!-- Post content & image -->
+            <td style="min-width: 240px; max-width: 240px; padding: 6px 8px;">
+  <div class="d-flex align-items-start gap-2">
+    <div style="flex-shrink: 0;">
+      {% if post.post_imgs %}
+          <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank">
+        <img src="{{ post.post_imgs.0 }}"
+             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
+          </a>
+      {% else %}
+        <div style="width: 60px; height: 60px; background-color: #f0f0f0; border-radius: 8px;"></div>
+      {% endif %}
+    </div>
+      <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank">
+    <div class="fw-normal" style="font-size: 0.75rem; line-height: 1.3; max-height: 3.6em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; white-space: normal;">
+      {{ post.post_content }}
+    </a>
+    </div>
+  </div>
+</td>
+
+
+            <!-- Metrics -->
+            <td class="text-center">{{ post.like_count|default:0 }}</td>
+            <td class="text-center">{{ post.comment_count|default:0 }}</td>
+            <td class="text-center">{{ post.total_engagement|default:0 }}</td>
+            <td class="text-center">{{ post.interaction_rate|default:"0%" }}</td>
+            <td class="text-center">{{ post.reach|default:"-" }}</td>
+            <td class="text-center">{{ post.impression_per_view|default:"-" }}</td>
+            <td class="text-center">{{ post.negative_sentiment_share|default:"0%" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+          <br>
+<!-- 📊 Engagement Scatter Chart Section -->
+<div class="card shadow-sm border-0 mb-5" style="width: 100%; margin: 0 auto;">
+  <div class="card-body p-4" style="padding: 1.5rem;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="card-title mb-0">Engagement Scatter Chart</h5>
+      <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+      <span class="badge bg-primary rounded-circle me-2" style="width: 10px; height: 10px;"></span>
+      <span class="text-muted small">Reactions, Comments & Shares</span>
+    </div>
+    <div style="width: 100%; aspect-ratio: 3 / 1;">
+      <canvas id="engagementScatterChart" style="width: 100%; height: 100%; display: block;"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<!-- ✅ Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1"></script>
+
+<script>
+const ctx = document.getElementById('engagementScatterChart').getContext('2d');
+
+const scatterData = {
+  datasets: [{
+    label: 'Engagement',
+    data: [
+      {% for post in facebook_posts %}
+        {
+          x: new Date("{{ post.post_timestamp_dt|date:'Y-m-d H:i' }}"),
+          y: {{ post.total_engagement|default:0 }},
+          img: "{{ post.post_imgs.0|default:'' }}",
+          content: "{{ post.post_content|truncatewords:20|escapejs }}",
+          page_name: "{{ page.page_name|escapejs }}",
+          timestamp: "{{ post.post_timestamp_text|escapejs }}",
+          post_id: "{{ post.post_id }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ],
+    backgroundColor: '#FFBBDA',
+    pointRadius: 6,
+    pointHoverRadius: 8,
+  }]
+};
+
+const scatterOptions = {
+  responsive: true,
+  onClick: (e, elements) => {
+    if (elements.length > 0) {
+      const index = elements[0].index;
+      const postId = scatterData.datasets[0].data[index].post_id;
+      window.open(`https://www.facebook.com/${postId}`, '_blank');
+    }
+  },
+  plugins: {
+    tooltip: {
+      enabled: false,
+      external: function(context) {
+  const tooltipModel = context.tooltip;
+  const chart = context.chart;
+
+  let tooltipEl = document.getElementById('chartjs-tooltip');
+  if (!tooltipEl) {
+    tooltipEl = document.createElement('div');
+    tooltipEl.id = 'chartjs-tooltip';
+    tooltipEl.innerHTML = '<div class="tooltip-box"></div>';
+    document.body.appendChild(tooltipEl);
+  }
+
+  if (tooltipModel.opacity === 0) {
+    tooltipEl.style.opacity = 0;
+    return;
+  }
+
+  const dataPoint = tooltipModel.dataPoints[0].raw;
+  const postUrl = `https://www.facebook.com/${dataPoint.post_id}`;
+
+  const html = `
+    <div class="d-flex align-items-start gap-2" style="max-width: 500px;">
+      <a href="${postUrl}" target="_blank">
+        <img src="${dataPoint.img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px;" />
+      </a>
+      <div class="flex-grow-1">
+        <div style="font-weight: 600; font-size: 14px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${dataPoint.page_name}
+        </div>
+        <div style="font-size: 13px; color: #555;">${dataPoint.timestamp}</div>
+        <div style="font-size: 14px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">
+          ${dataPoint.content}
+        </div>
+        <div style="font-size: 11px; color: #999; margin-top: 2px;">Total Engagement: ${dataPoint.y}</div>
+      </div>
+    </div>
+  `;
+
+  tooltipEl.querySelector('.tooltip-box').innerHTML = html;
+
+  const position = chart.canvas.getBoundingClientRect();
+  const tooltipWidth = 500;
+  let left = position.left + window.pageXOffset + tooltipModel.caretX + 10;
+  let top = position.top + window.pageYOffset + tooltipModel.caretY + 10;
+
+  // ✅ ตรวจสอบไม่ให้ล้นขอบขวาของหน้าจอ
+  const screenWidth = window.innerWidth;
+  if (left + tooltipWidth > screenWidth) {
+    left = screenWidth - tooltipWidth - 20; // -20 เป็น padding ด้านขวา
+  }
+
+  tooltipEl.style.opacity = 1;
+  tooltipEl.style.position = 'absolute';
+  tooltipEl.style.left = `${left}px`;
+  tooltipEl.style.top = `${top}px`;
+  tooltipEl.style.background = 'white';
+  tooltipEl.style.border = '1px solid #ddd';
+  tooltipEl.style.borderRadius = '8px';
+  tooltipEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+  tooltipEl.style.padding = '10px';
+  tooltipEl.style.pointerEvents = 'none';
+  tooltipEl.style.fontFamily = 'Inter, sans-serif';
+  tooltipEl.style.maxWidth = '500px';
+  tooltipEl.style.zIndex = '9999';
+}
+    }
+  },
+  scales: {
+    x: {
+      type: 'time',
+      time: {
+        tooltipFormat: 'DD MMM YYYY',
+        unit: 'day',
+        displayFormats: {
+          day: 'DD MMM'
+        }
+      },
+      title: {
+        display: true,
+        text: 'Date'
+      },
+      ticks: {
+        color: '#888'
+      }
+    },
+     y: {
+    beginAtZero: true,
+    suggestedMax: 200,        // หรือค่าสูงสุดของคุณ
+    ticks: {
+      stepSize: 20,           // ✅ ให้เส้น Y-grid ห่างเท่ากันและตรงกับจุด
+      color: '#888'
+    },
+    title: {
+      display: true,
+      text: 'Engagement'
+    },
+    grid: {
+      color: '#e0e0e0'
+    }
+    }
+  }
+};
+
+new Chart(ctx, {
+  type: 'scatter',
+  data: scatterData,
+  options: scatterOptions
+});
+</script>
+
+<style>
+  #chartjs-tooltip {
+  transition: all 0.2s ease;
+  max-width: 500px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  z-index: 9999;
+  position: absolute;
+}
+</style>
+<br>
+<!-- 📊 Number of posts by days & Best Times To Post -->
+<div class="row">
+<!-- 📊 Number of posts by days -->
+<div class="col-md-6">
+  <div class="card shadow-sm rounded p-3 mb-4 w-100" style="aspect-ratio: 4 / 2;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="mb-0">Number of posts by days</h6>
+    </div>
+    <div class="position-relative" style="width: 100%; height: 100%;">
+      <canvas id="postsByDayChart" style="width: 100%; height: 100%;"></canvas>
+    </div>
+  </div>
+</div>
+
+
+<!-- 🧠 Popup Modal -->
+<div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Posts in Selected By Day</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const postsByDayChart = new Chart(document.getElementById("postsByDayChart").getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: {{ bar_day_labels|safe }},
+      datasets: [{
+        label: "Number of posts",
+        data: {{ bar_day_values|safe }},
+        backgroundColor: {{ bar_day_colors|safe }},
+        borderRadius: 6,
+        barThickness: 28
+      }]
+    },
+    options: {
+      onClick: function (e, elements) {
+        if (elements.length > 0) {
+          const dayIndex = elements[0].index;
+          const postsMap = JSON.parse('{{ posts_by_day_json|escapejs }}');
+          const posts = postsMap[dayIndex] || [];
+
+          document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected By Day';
+
+          const html = posts.map(p => `
+            <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+              <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
+                ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank"><img src="${p.post_imgs[0]}" class="rounded-start" style="height: 100%; width: 90px; object-fit: cover;" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
+              </div>
+              <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="d-flex align-items-center gap-2">
+                    ${p.profile_pic ? `<img src="${p.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
+                    <i class="bi bi-facebook text-primary"></i>
+                    <strong class="text-truncate">${p.page_name}</strong>
+                  </div>
+                  <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
+                </div>
+                <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                  ${p.post_content}
+                </div>
+                <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                  ${Object.entries(p.reactions || {}).map(([r, c]) => {
+                    const emoji = { 'ถูกใจ': '👍', 'รักเลย': '❤️', 'เศร้า': '😢', 'โกรธ': '😡', 'ว้าว': '😮', 'ฮ่าๆ': '😂', 'ห่วงใย': '🥰' }[r] || '';
+                    return `<span>${emoji} ${c}</span>`;
+                  }).join('')}
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+
+          document.getElementById('popupContent').innerHTML = html;
+          new bootstrap.Modal(document.getElementById('popupModal')).show();
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0, color: "#485b7d", font: { size: 12, family: "Inter" } },
+          grid: { color: "#e0e0e0" }
+        },
+        x: {
+          ticks: { color: "#485b7d", font: { size: 12, family: "Inter" } },
+          grid: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `Posts: ${context.parsed.y}`;
+            }
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+});
+</script>
+
+
+  <!-- 🕒 Best Times To Post -->
+  <div class="col-md-6">
+    <div class="card shadow-sm rounded p-3 mb-4" style="aspect-ratio: 4 / 2;">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">Best Times To Post</h6>
+      </div>
+      <div class="position-relative" style="width: 100%; height: 100%;">
+        <canvas id="bestTimesChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- 🧊 Popup Modal -->
+<div class="modal fade" id="bestTimesModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content rounded">
+      <div class="modal-header">
+        <h5 class="modal-title fw-semibold">Posts in Selected Time Slot</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="bestTimesModalBody">
+        <!-- Posts will be injected here -->
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ Bubble Chart: Best Times To Post -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  function getColorByPostCount(count) {
+    const max = 30;
+    const ratio = Math.min(count / max, 1);
+    const hue = (1 - ratio) * 240;
+    return `hsl(${hue}, 70%, 60%)`;
+  }
+
+  const bubbles = JSON.parse('{{ bubble_data|escapejs }}');
+  const postMap = JSON.parse('{{ posts_grouped_json|escapejs }}');
+
+  const ctx = document.getElementById("bestTimesChart").getContext("2d");
+  const chart = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: bubbles.map(b => ({
+        data: [{
+          x: b.x, y: b.y, r: b.r,
+          count: b.count,
+          likes: b.likes,
+          comments: b.comments,
+          shares: b.shares,
+          key: b.key,
+          label: b.tooltip_label
+        }],
+        backgroundColor: getColorByPostCount(b.count),
+        hoverBackgroundColor: getColorByPostCount(b.count)
+      }))
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => [
+              ctx.raw.label,
+              `${ctx.raw.count} Number of posts`,
+              `${ctx.raw.likes} Likes, ${ctx.raw.comments} Comments, ${ctx.raw.shares} Shares`
+            ]
+          }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          min: -0.5, max: 6.5,
+          ticks: { callback: v => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][v] }
+        },
+        y: { min: 0, max: 24, ticks: { stepSize: 2 } }
+      },
+      onClick: (e, elements) => {
+        if (elements.length) {
+          const key = chart.data.datasets[elements[0].datasetIndex].data[0].key;
+          const posts = postMap[key] || [];
+
+          document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected Time Slot';
+
+          const html = posts.map(p => `
+            <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+              <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
+                ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank">
+                  <img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` :
+                  `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
+              </div>
+              <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="d-flex align-items-center gap-2">
+                    ${p.page?.profile_pic ? `<img src="${p.page.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
+                    <i class="bi bi-facebook text-primary"></i>
+                    <strong class="text-truncate">${p.page?.page_name || 'Unnamed'}</strong>
+                  </div>
+                  <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
+                </div>
+                <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                  ${p.post_content || ''}
+                </div>
+                <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                  ${Object.entries(p.reactions || {}).map(([reaction, count]) => {
+                    const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[reaction] || '';
+                    return `<span>${emoji} ${count}</span>`;
+                  }).join('')}
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+
+          document.getElementById('popupContent').innerHTML = html;
+          new bootstrap.Modal(document.getElementById('popupModal')).show();
+        }
+      }
+    }
+  });
+});
+</script>
+
+
+<br>
+
+<!-- 👥 Follower Line Chart & 🔠 Top 50 Hashtags -->
+<div class="row">
+  <!-- 👥 Follower Line Chart -->
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0 mb-4" style="aspect-ratio: 4 / 2;">
+      <div class="card-body p-4 d-flex flex-column justify-content-between" style="height: 450px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">Follower Line Chart</h5>
+          <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+          <span class="badge bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></span>
+          <span class="text-muted small">Number of followers per day</span>
+        </div>
+        <div style="flex-grow: 1; position: relative;">
+          <div id="followerLineChart" style="width: 100%; height: 100%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- ✅ Google Chart Library -->
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+  google.charts.load('current', { packages: ['corechart'] });
+  google.charts.setOnLoadCallback(drawFollowerChart);
+
+  function drawFollowerChart() {
+    const data = new google.visualization.DataTable();
+    data.addColumn('string', 'Date');
+    data.addColumn('number', 'Follower');
+
+    data.addRows([
+      {% for row in follower_data %}
+        ['{{ row.date }}', {{ row.followers }}]{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]);
+
+    const options = {
+  chartArea: { left: 60, top: 30, width: '92%', height: '80%' },
+  fontName: 'Inter',
+  legend: { position: 'none' },
+  series: { 0: { color: '#FFA266' } },
+  hAxis: {
+    textStyle: { color: '#485B7D', fontSize: 12 },
+    baselineColor: '#485B7D'
+  },
+  vAxis: {
+    format: 'decimal',
+    textStyle: { color: '#485B7D', fontSize: 12 },
+    baselineColor: '#485B7D',
+    gridlines: { color: '#dce1eb', count: 4 }
+  }
+};
+
+
+    const chart = new google.visualization.LineChart(document.getElementById('followerLineChart'));
+    chart.draw(data, options);
+  }
+</script>
+
+<!-- 🔠 Top 50 Hashtags Wordcloud (แบบ Fanpage Karma) -->
+<div class="col-md-6">
+  <div class="card shadow-sm border-0 mb-4" style="height: 450px;">
+    <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+      <div>
+        <h6 class="mb-2">Top 50 Hashtags by Posts</h6>
+        <p class="text-muted small">The bigger the word, the more it was used. The greener, the more these posts were interacted with.</p>
+
+        <div class="d-flex flex-wrap gap-2 overflow-auto" id="hashtagCloudBox" style="max-height: 280px;">
+          {% for tag in top_hashtags %}
+            <a href="#" class="fw-medium"
+              style="
+                font-size: {{ tag.font_size }}em;
+                color: hsl({{ tag.color_hue }}, 60%, 50%);
+                text-decoration: none;
+                line-height: 1.2em;
+              ">
+              {{ tag.tag }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="analytics_chartLegend mt-3 small text-muted">
+        <div class="analytics_chartLegendItem">size = frequency</div>
+        <div class="analytics_chartLegendItemGreen">green = high engagement</div>
+        <div class="analytics_chartLegendItemRed">red = low engagement</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+          <br>
+
+            <!-- Footer -->
+<footer class="content-footer footer bg-footer-theme mt-auto py-4 border-top">
+  <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between">
+    <div class="text-muted mb-2 mb-md-0" style="color: #FF6801;">
+      © <script>document.write(new Date().getFullYear());</script> Growfox Marketing Data Center. All rights reserved.
+    </div>
+    <div class="footer-links d-flex flex-wrap gap-3">
+      <a href="/terms" class="footer-link" style="color: #FF6801 !important;">Terms</a>
+      <a href="/privacy" class="footer-link" style="color: #FF6801 !important;">Privacy</a>
+      <a href="/support" class="footer-link" style="color: #FF6801 !important;">F.A.Q.</a>
+    </div>
+  </div>
+</footer>
+            <!-- / Footer -->
+
+            <div class="content-backdrop fade"></div>
+          </div>
+          <!-- Content wrapper -->
+        </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+
+      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+      <div class="drag-target"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <!-- Core JS -->
+
+    <!-- build:js assets/vendor/js/theme.js  -->
+
+    <script src="{% static 'assets/vendor/libs/jquery/jquery.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/node-waves/node-waves.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/@algolia/autocomplete-js.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/pickr/pickr.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/hammer/hammer.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/i18n/i18n.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/js/menu.js' %}"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{% static 'assets/vendor/libs/moment/moment.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+
+    <!-- Main JS -->
+
+    <script src="{% static 'assets/js/main.js' %}"></script>
+
+    <!-- Page JS -->
+    <script src="{% static 'assets/js/app-academy-dashboard.js' %}"></script>
+  </body>
+</html>

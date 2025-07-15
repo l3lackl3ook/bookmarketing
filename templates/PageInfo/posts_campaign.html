@@ -1,0 +1,428 @@
+{%  load static %}
+
+<!doctype html>
+
+<html
+  lang="en"
+  class="layout-navbar-fixed layout-menu-fixed layout-compact"
+  dir="ltr"
+  data-skin="default"
+  data-bs-theme="light"
+  data-assets-path="{% static 'assets' %}">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Growfox - Marketing Data Center</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/img/favicon/gavicon.jpg' %}?v=3" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/fonts/iconify-icons.css' %}" />
+
+    <!-- Core CSS -->
+    <!-- build:css assets/vendor/css/theme.css -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/pickr/pickr-themes.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <!-- endbuild -->
+
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static 'assets/vendor/js/helpers.js' %}"></script>
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+
+    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js. -->
+    <script src="{% static 'assets/vendor/js/template-customizer.js' %}"></script>
+
+    <!--? Config: Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file. -->
+
+    <script src="{% static 'assets/js/config.js' %}"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Menu -->
+<aside id="layout-menu" class="layout-menu menu-vertical menu">
+  <div class="app-brand demo logo-wrapper">
+    <!-- ✅ แก้ href จาก index.html เป็น {% url 'index' %} -->
+    <a href="{% url 'index' %}" class="app-brand-link">
+      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-img" />
+      <img src="{% static 'assets/img/favicon/gavicon.jpg' %}" alt="Fox Icon" class="logo-img logo-icon d-none" />
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-white text-large ms-auto">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M8.47365 11.7183C8.11707 12.0749 8.11707 12.6531 8.47365 13.0097L12.071 16.607C12.4615 16.9975 12.4615 17.6305 12.071 18.021C11.6805 18.4115 11.0475 18.4115 10.657 18.021L5.83009 13.1941C5.37164 12.7356 5.37164 11.9924 5.83009 11.5339L10.657 6.707C11.0475 6.31653 11.6805 6.31653 12.071 6.707C12.4615 7.09747 12.4615 7.73053 12.071 8.121L8.47365 11.7183Z"
+          fill-opacity="0.9" />
+        <path
+          d="M14.3584 11.8336C14.0654 12.1266 14.0654 12.6014 14.3584 12.8944L18.071 16.607C18.4615 16.9975 18.4615 17.6305 18.071 18.021C17.6805 18.4115 17.0475 18.4115 16.657 18.021L11.6819 13.0459C11.3053 12.6693 11.3053 12.0587 11.6819 11.6821L16.657 6.707C17.0475 6.31653 17.6805 6.31653 18.071 6.707C18.4615 7.09747 18.4615 7.73053 18.071 8.121L14.3584 11.8336Z"
+          fill-opacity="0.4" />
+      </svg>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1">
+
+
+            <!-- Add Group Menu Bar -->
+            <li class="menu-header small mt-5">
+              <span class="menu-header-text" data-i18n="Apps & Pages">Pages &amp; Posts</span>
+            </li>
+<li class="menu-item">
+  <a href="javascript:void(0);" class="menu-link menu-toggle">
+    <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+    <div data-i18n="Page Campaigns">Page Campaigns</div>
+    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ page_groups_count }}</div>
+  </a>
+  <ul class="menu-sub">
+    {% for group in page_groups_sidebar %}
+      <li class="menu-item">
+        <a href="{% url 'group_detail' group.id %}" class="menu-link">
+          <div data-i18n="{{ group.group_name }}">{{ group.group_name }}</div>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+<!-- 🔶 Post Campaign Menu -->
+<li class="menu-item">
+  <a href="javascript:void(0);" class="menu-link menu-toggle">
+    <i class="menu-icon icon-base ri ri-article-line"></i>
+    <div data-i18n="Post Campaigns">Post Campaigns</div>
+    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ comment_campaign_groups|length }}</div>
+  </a>
+  <ul class="menu-sub">
+    {% for group in comment_campaign_groups %}
+      <li class="menu-item">
+        <!-- ใช้ campaign_group.group_name สำหรับชื่อแคมเปญ -->
+               <a href="{% url 'posts_campaign' group_name=group.group_name %}" class="menu-link">
+          <div>{{ group.group_name }}</div> <!-- ใช้ group_name แทน campaign_name -->
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+
+
+            <!-- Apps & Pages -->
+            <li class="menu-header small mt-5">
+              <span class="menu-header-text" data-i18n="Apps & Ads">Apps &amp; Ads</span>
+            </li>
+        <li class="menu-item">
+        <a href="/chat-ai.html" class="menu-link">
+        <i class="menu-icon icon-base ri ri-chat-3-line"></i>
+        <div data-i18n="Chat with AI">Chat with AI</div>
+        </a>
+        </li>
+
+            <!-- Page Overview Menu Bar -->
+
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-bill-line"></i>
+                <div data-i18n="Page">Page</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="app-academy-dashboard.html" class="menu-link">
+                    <div data-i18n="Campaign Overview">Campaign Overview</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="app-academy-course.html" class="menu-link">
+                    <div data-i18n="Page Overview">Page Overview</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Page Overview end -->
+            <!-- Post Overview Menu Bar -->
+
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-file-list-line"></i>
+                <div data-i18n="Posts">Posts</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="app-academy-dashboard.html" class="menu-link">
+                    <div data-i18n="Campaign Overview">Campaign Overview</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="app-academy-course.html" class="menu-link">
+                    <div data-i18n="Page Overview">Post Overview</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Post Overview end -->
+
+            <!-- Ads Campaign Menu Bar -->
+            <li class="menu-item">
+              <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon icon-base ri ri-bar-chart-2-line"></i>
+                <div data-i18n="Ads Campaign">Ads Campaign</div>
+              </a>
+              <ul class="menu-sub">
+                <li class="menu-item">
+                  <a href="charts-apex.html" class="menu-link">
+                    <div data-i18n="Meta">Meta</div>
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="charts-chartjs.html" class="menu-link">
+                    <div data-i18n="Tiktok">Tiktok</div>
+                  </a>
+                </li>   <li class="menu-item">
+                  <a href="charts-chartjs.html" class="menu-link">
+                    <div data-i18n="Google">Google</div>
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+  <!-- ⚙️ Setting & User moved to bottom -->
+  <div class="mt-auto">
+    <ul class="menu-inner py-1">
+      <li class="menu-header small mt-5">
+        <span class="menu-header-text">Setting</span>
+      </li>
+      <li class="menu-item">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+          <i class="menu-icon ri ri-user-line"></i>
+          <div data-i18n="Users">Users</div>
+        </a>
+        <ul class="menu-sub">
+          <li class="menu-item">
+            <a href="app-ecommerce-dashboard.html" class="menu-link">
+              <div data-i18n="hello@growfox.co">hello@growfox.co</div>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <a href="javascript:void(0);" class="menu-link menu-toggle">
+          <i class="menu-icon ri ri-settings-3-line"></i>
+          <div data-i18n="Setting">Setting</div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</aside>
+
+        <div class="menu-mobile-toggler d-xl-none rounded-1">
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large text-bg-secondary p-2 rounded-1">
+            <i class="ri ri-menu-line icon-base"></i>
+            <i class="ri ri-arrow-right-s-line icon-base"></i>
+          </a>
+        </div>
+        <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+    <!-- Mobile Toggle -->
+    <div class="menu-mobile-toggler d-xl-none rounded-1">
+      <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large p-2">
+        <i class="ri ri-menu-line"></i>
+        <i class="ri ri-arrow-right-s-line"></i>
+      </a>
+    </div>
+
+
+           <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <!-- Content -->
+<!-- Content wrapper -->
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+
+<!-- 🔶 Section: Create Comment Dashboard -->
+<div class="card p-4 mt-4">
+  <!-- หัวข้อ -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 style="font-weight: 500; font-size: 24px;">Create Comment Dashboard</h3>
+  </div>
+
+  <!-- ฟอร์มกรอก URL + Dashboard Name + Dashboard Type -->
+  <form method="post" action="{% url 'add_comment_url' %}">
+    {% csrf_token %}
+    <div class="row g-3 align-items-center mb-3">
+
+      <!-- ช่องกรอกลิงก์โพสต์ -->
+      <div class="col-md-5">
+        <input type="text" name="post_url" class="form-control form-control-lg"
+          placeholder="ลิงก์โพสต์ Facebook เช่น https://www.facebook.com/...">
+      </div>
+
+      <!-- ช่องกรอกชื่อ Dashboard -->
+      <div class="col-md-3">
+        <input type="text" name="dashboard_name" class="form-control form-control-lg"
+          placeholder="ชื่อ Dashboard เช่น Lotus รีวิว">
+      </div>
+
+      <!-- เลือกประเภท Dashboard -->
+      <div class="col-md-3">
+        <select name="dashboard_type" class="form-select form-select-lg">
+          <option value="seeding" selected>Seeding Dashboard</option>
+          <option value="activity">Activity Dashboard</option>
+        </select>
+      </div>
+      <!-- เพิ่ม hidden input สำหรับ post_campaign_id -->
+      <input type="hidden" name="post_campaign_id" value="{{ campaign_group.id }}">
+      <!-- ปุ่ม Submit -->
+      <div class="col-md-1 text-end">
+        <button type="submit" class="btn w-100"
+          style="background-color: #FF6801; color: white; border-radius: 8px; padding: 10px 16px;">
+          + Create
+        </button>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+
+<!-- 🔷 Section: Table of Comment Dashboards -->
+<div class="card p-4 mt-3">
+  <h5 style="font-weight: 500; font-size: 18px; margin-bottom: 20px;">Comment Dashboard List</h5>
+
+  <div class="table-responsive">
+    <table class="table table-hover" style="border: 1px solid #E0E0E0; border-radius: 8px; overflow: hidden;">
+      <thead style="background-color: #F5F5F5; color: #424242; font-weight: 500; font-size: 15px;">
+        <tr>
+          <th style="padding: 16px;">Dashboard Name</th>
+          <th style="padding: 16px;">Post URL</th>
+          <th style="padding: 16px;">Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dashboard in comment_dashboards %}
+        <tr style="border-bottom: 1px solid #E0E0E0;">
+          <td style="padding: 16px;">
+            <a href="{% url 'comment_dashboard_detail' dashboard_id=dashboard.id %}" style="text-decoration: none; color: #000; font-weight: 500;">
+            {{ dashboard.dashboard_name|default:"(ไม่มีชื่อ)" }}
+            </a>
+          </td>
+          <td style="padding: 16px;">
+            <a href="{{ dashboard.post_id }}" target="_blank" style="text-decoration: none; color: #1877f2;">
+              {{ dashboard.post_id|truncatechars:70 }}
+            </a>
+          </td>
+          <td style="padding: 16px;">{{ dashboard.created_at|date:"d M Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3" class="text-center text-muted py-4">ยังไม่มี Comment Dashboard ถูกเพิ่มเข้ามา</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+            <!-- / Content -->
+
+            <!-- Footer -->           <!-- Footer -->
+<footer class="content-footer footer bg-footer-theme mt-auto py-4 border-top" style="color: #FF6801;">
+  <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between">
+    <div class="text-muted mb-2 mb-md-0">
+      © <script>document.write(new Date().getFullYear());</script> Growfox Marketing Data Center. All rights reserved.
+    </div>
+    <div class="footer-links d-flex flex-wrap gap-3">
+      <a href="/terms" class="footer-link" style="color: #FF6801 !important;">Terms</a>
+      <a href="/privacy" class="footer-link" style="color: #FF6801 !important;">Privacy</a>
+      <a href="/support" class="footer-link" style="color: #FF6801 !important;">F.A.Q.</a>
+    </div>
+  </div>
+</footer>
+            <!-- / Footer -->
+
+            <div class="content-backdrop fade"></div>
+          </div>
+          <!-- Content wrapper -->
+        </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+
+      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+      <div class="drag-target"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+    <!-- Core JS -->
+
+    <!-- build:js assets/vendor/js/theme.js  -->
+
+    <script src="{% static 'assets/vendor/libs/jquery/jquery.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/node-waves/node-waves.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/@algolia/autocomplete-js.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/pickr/pickr.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/hammer/hammer.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/libs/i18n/i18n.js' %}"></script>
+
+    <script src="{% static 'assets/vendor/js/menu.js' %}"></script>
+
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{% static 'assets/vendor/libs/moment/moment.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
+    <script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+
+    <!-- Main JS -->
+
+    <script src="{% static 'assets/js/main.js' %}"></script>
+
+    <!-- Page JS -->
+    <script src="{% static 'assets/js/app-academy-dashboard.js' %}"></script>
+  </body>
+</html>
