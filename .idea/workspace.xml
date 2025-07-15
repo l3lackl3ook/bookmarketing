@@ -6,6 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0002_alter_facebookcomment_post_id_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0003_alter_facebookcomment_options.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0004_alter_facebookcomment_options_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0005_remove_facebookcomment_post_id.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0006_alter_facebookcomment_profile_img_url.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0007_facebookcomment_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0008_fbcommentdashboard_dashboard_type.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0009_facebookcomment_like_status_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0010_facebookcomment_comment_type_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0011_remove_facebookcomment_comment_type.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0012_alter_facebookpost_post_type.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0013_alter_facebookpost_post_timestamp_dt.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0014_fbcommentdashboard_post_campaign.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0015_commentcampaigngroup_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0016_alter_fbcommentdashboard_campaign_group.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0017_commentcampaigngroup_post.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0018_remove_fbcommentdashboard_link_url.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
