@@ -24,6 +24,8 @@
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0016_alter_fbcommentdashboard_campaign_group.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0017_commentcampaigngroup_post.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0018_remove_fbcommentdashboard_link_url.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
