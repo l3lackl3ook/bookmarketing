@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0002_alter_facebookcomment_post_id_and_more.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0003_alter_facebookcomment_options.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0004_alter_facebookcomment_options_and_more.py" beforeDir="false" />
@@ -74,7 +73,7 @@
 }</component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "https://github.com/l3lackl3ook/Seeding2.git",
+    "url": "https://github.com/l3lackl3ook/bookmarketing.git",
     "accountId": "b429c0b9-f422-4e3b-aa90-ba6028a78239"
   }
 }]]></component>
