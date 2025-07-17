@@ -1,4 +1,5 @@
 {%  load static %}
+
 {% load humanize %}
 
 <!doctype html>
@@ -79,8 +80,7 @@
   <div class="app-brand demo logo-wrapper">
     <!-- ✅ แก้ href จาก index.html เป็น {% url 'index' %} -->
     <a href="{% url 'index' %}" class="app-brand-link">
-      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-img" />
-      <img src="{% static 'assets/img/favicon/gavicon.jpg' %}" alt="Fox Icon" class="logo-img logo-icon d-none" />
+      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-full" />
     </a>
 
     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-white text-large ms-auto">
@@ -106,7 +106,7 @@
             </li>
 <li class="menu-item">
   <a href="javascript:void(0);" class="menu-link menu-toggle">
-    <i class="menu-icon icon-base ri ri-home-smile-line"></i>
+    <i class="menu-icon icon-base ri ri-numbers-line"></i>
     <div data-i18n="Page Campaigns">Page Campaigns</div>
     <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ page_groups_count }}</div>
   </a>

@@ -28,7 +28,7 @@
 }
 
 .layout-navbar {
-  display: none !important;
+  display: block !important;
 }
 
 /* Navbar page z-index issue solution */
@@ -107,19 +107,22 @@
 }
 /* ส่วนนี้ควบคุมเฉพาะกล่องโลโก้ */
 .logo-wrapper {
-  background-color: #2f2f2f; /* พื้นหลังสีดำ */
-  padding: 12px 16px;
+  background-color: #2f2f2f;
+  height: 64px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.logo-img {
-  width: 222px !important;
-  height: 60px !important;
-  object-fit: contain;
-  display: block;
+.layout-menu-collapsed .logo-wrapper {
+  justify-content: flex-start !important;  /* ชิดซ้าย container */
+  padding-left: 5px !important;           /* เผื่อเว้นขอบนิดนึง */
+  padding-right: 0 !important;
 }
+
+
 /* ให้สไตล์ใกล้เคียง toggle menu เดิม */
 .custom-add-group {
   background-color: #ff5c00 !important;
@@ -174,5 +177,30 @@
 /* เปลี่ยนสี icon ในเมนูที่ active เป็นสีขาว */
 .menu-item.active .menu-icon {
   color: #ffffff !important;
+}
+
+
+/* ปิดการบีบ/หาย sidebar ใน mobile */
+@media (max-width: 1199px) {
+  .layout-container {
+    flex-direction: row !important;
+  }
+  .layout-menu {
+    width: 260px !important; /* หรือขนาด sidebar ที่คุณต้องการ */
+  }
+}
+
+.logo-full {
+  width: 222px !important;
+  height: 60px !important;
+  object-fit: contain;
+  display: block !important;
+}
+
+
+/* เมื่อ sidebar ถูกย่อ (โดยมี class .layout-menu-collapsed) */
+.layout-menu-collapsed .logo-full {
+  display: block !important;
+  justify-content: flex-start;
 }
 

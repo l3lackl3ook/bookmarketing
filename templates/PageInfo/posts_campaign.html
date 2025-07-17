@@ -79,8 +79,7 @@
   <div class="app-brand demo logo-wrapper">
     <!-- ✅ แก้ href จาก index.html เป็น {% url 'index' %} -->
     <a href="{% url 'index' %}" class="app-brand-link">
-      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-img" />
-      <img src="{% static 'assets/img/favicon/gavicon.jpg' %}" alt="Fox Icon" class="logo-img logo-icon d-none" />
+      <img src="{% static 'assets/img/branding/growfox.webp' %}" alt="Growfox Logo" class="logo-full" />
     </a>
 
     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-white text-large ms-auto">
@@ -562,6 +561,9 @@
 <!-- Content wrapper -->
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">{{ campaign_group.group_name }}</h3>
+</div>
 
 <!-- 🔶 Section: Create Comment Dashboard -->
 <div class="card p-4 mt-4">

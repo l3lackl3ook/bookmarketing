@@ -165,7 +165,7 @@
 }
 /* เปลี่ยนปุ่มเมนู active (เช่น Overview) เป็นสีส้ม */
 .menu-item.active > .menu-link {
-  background-color: #FF6B00 !important;  /* สีส้มจาก Figma */
+  background-color: #ffffff !important;  /* สีส้มจาก Figma */
   color: #ffffff !important;            /* สีข้อความ */
   font-weight: 600;
   border-radius: 8px;
