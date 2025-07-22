@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.humanize',
     'PageInfo.apps.PageinfoConfig',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -66,8 +67,7 @@ ROOT_URLCONF = "FB_WebApp_Project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / 'templates'],  # ลบเครื่องหมายจุลภาคที่ไม่จำเป็น
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -80,6 +80,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = "FB_WebApp_Project.wsgi.application"
 
@@ -148,3 +149,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
+AUTHENTICATION_FORM = 'accounts.forms.GrowfoxLoginForm'

@@ -6,26 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/cookie.json" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/cookie.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0002_alter_facebookcomment_post_id_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0003_alter_facebookcomment_options.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0004_alter_facebookcomment_options_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0005_remove_facebookcomment_post_id.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0006_alter_facebookcomment_profile_img_url.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0007_facebookcomment_dashboard.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0008_fbcommentdashboard_dashboard_type.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0009_facebookcomment_like_status_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0010_facebookcomment_comment_type_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0011_remove_facebookcomment_comment_type.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0012_alter_facebookpost_post_type.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0013_alter_facebookpost_post_timestamp_dt.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0014_fbcommentdashboard_post_campaign.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0015_commentcampaigngroup_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0016_alter_fbcommentdashboard_campaign_group.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0017_commentcampaigngroup_post.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0018_remove_fbcommentdashboard_link_url.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/FB_WebApp_Project/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/FB_WebApp_Project/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FB_WebApp_Project/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/FB_WebApp_Project/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/fb_live.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/fb_live.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/static/assets/css/demo.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/assets/css/demo.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/staticfiles/assets/css/demo.css" beforeDir="false" afterPath="$PROJECT_DIR$/staticfiles/assets/css/demo.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/add_page.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/add_page.html" afterDir="false" />
@@ -47,6 +33,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -80,12 +67,15 @@
     &quot;assignee&quot;: &quot;blackbook75&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/l3lackl3ook/bookmarketing.git",
-    "accountId": "b429c0b9-f422-4e3b-aa90-ba6028a78239"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/l3lackl3ook/bookmarketing.git&quot;,
+    &quot;accountId&quot;: &quot;b429c0b9-f422-4e3b-aa90-ba6028a78239&quot;
   }
-}]]></component>
+}</component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -99,13 +89,14 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "django.template.preview.state": "SHOW_EDITOR_AND_PREVIEW",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/FB_WebApp_Project-main/static/assets/img/favicon",
+    "last_opened_file_path": "C:/FB_WebApp_Project-main/accounts/templates/registration",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -117,9 +108,12 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\FB_WebApp_Project-main\accounts\templates\registration" />
+      <recent name="C:\FB_WebApp_Project-main\accounts\templates\accounts" />
       <recent name="C:\FB_WebApp_Project-main\static\assets\img\favicon" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\FB_WebApp_Project-main\accounts\templates\accounts" />
       <recent name="C:\FB_WebApp_Project-main\PageInfo" />
       <recent name="C:\FB_WebApp_Project-main\static\assets\img\favicon" />
       <recent name="C:\FB_WebApp_Project-main\FB_WebApp_Project" />

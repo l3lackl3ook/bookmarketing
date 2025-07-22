@@ -28,8 +28,14 @@
 }
 
 .layout-navbar {
-  display: block !important;
+  background-color: #2f2f2f !important; /* กำหนดพื้นหลังสีดำ */
+  width: 100% !important; /* ให้มันเต็มความกว้าง */
+  display: block !important; /* ให้แสดงปกติ */
+  height: 64px !important; /* กำหนดความสูงเป็น 64px */
+  box-sizing: border-box; /* ให้แน่ใจว่ามีการคำนวณขนาดอย่างถูกต้อง */
+  padding: 0; /* ไม่มี padding ภายใน */
 }
+
 
 /* Navbar page z-index issue solution */
 .content-wrapper .navbar {
@@ -118,7 +124,7 @@
 
 .layout-menu-collapsed .logo-wrapper {
   justify-content: flex-start !important;  /* ชิดซ้าย container */
-  padding-left: 5px !important;           /* เผื่อเว้นขอบนิดนึง */
+  padding-left: 10px !important;           /* เผื่อเว้นขอบนิดนึง */
   padding-right: 0 !important;
 }
 
@@ -204,3 +210,58 @@
   justify-content: flex-start;
 }
 
+/* ให้พื้นหลังของปุ่ม toggle เป็นสีดำ */
+.layout-menu-toggle .nav-link {
+  background-color: #2f2f2f !important;  /* สีพื้นหลังดำ */
+  color: #FF6B00 !important;  /* สีของไอคอนเป็นสีส้ม */
+  border: none !important;  /* ไม่มีขอบ */
+  padding: 12px !important; /* เพิ่มพื้นที่ให้ปุ่ม */
+  border-radius: 8px !important; /* ให้มุมปุ่มโค้งมน */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 64px; /* ความสูงให้พอดีกับโลโก้ */
+  width: 64px;  /* ความกว้างของปุ่ม */
+}
+
+/* ทำให้ปุ่ม toggle เมื่อ hover มีการเปลี่ยนแปลง */
+.layout-menu-toggle .nav-link:hover {
+  background-color: #FF6B00 !important;  /* ปรับพื้นหลังเป็นสีส้มเมื่อ hover */
+  color: #ffffff !important;  /* เปลี่ยนสีไอคอนเป็นสีขาว */
+  cursor: pointer;
+}
+
+/* ให้พื้นที่ของปุ่ม toggle ครอบคลุมได้ดีขึ้น */
+.layout-menu-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 64px; /* กำหนดความสูงของปุ่ม */
+  width: 64px;  /* กำหนดความกว้าง */
+  background-color: transparent !important;  /* ไม่มีพื้นหลัง */
+  border-radius: 8px !important;  /* มุมโค้งมน */
+}
+
+/* ซ่อน layout-navbar เมื่อหน้าจอใหญ่กว่า 1199px */
+@media (min-width: 1200px) {
+  .layout-navbar {
+    display: none !important; /* ซ่อนเมนู navbar */
+  }
+}
+
+/* แสดง layout-navbar เมื่อหน้าจอเล็กกว่า 1199px */
+@media (max-width: 1199px) {
+  .layout-navbar {
+    display: block !important; /* ให้แสดง navbar ในขนาดหน้าจอที่เล็กกว่า */
+  }
+}
+
+/* ฟอนต์สำหรับภาษาอังกฤษ (ใช้ Montserrat) */
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* ฟอนต์สำหรับภาษาไทย (ใช้ Prompt) */
+body:lang(th) {
+    font-family: 'Prompt', sans-serif;
+}

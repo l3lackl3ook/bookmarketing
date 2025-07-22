@@ -28,8 +28,14 @@
 }
 
 .layout-navbar {
-  display: none !important;
+  background-color: #2f2f2f !important; /* กำหนดพื้นหลังสีดำ */
+  width: 100% !important; /* ให้มันเต็มความกว้าง */
+  display: block !important; /* ให้แสดงปกติ */
+  height: 64px !important; /* กำหนดความสูงเป็น 64px */
+  box-sizing: border-box; /* ให้แน่ใจว่ามีการคำนวณขนาดอย่างถูกต้อง */
+  padding: 0; /* ไม่มี padding ภายใน */
 }
+
 
 /* Navbar page z-index issue solution */
 .content-wrapper .navbar {
@@ -107,19 +113,22 @@
 }
 /* ส่วนนี้ควบคุมเฉพาะกล่องโลโก้ */
 .logo-wrapper {
-  background-color: #2f2f2f; /* พื้นหลังสีดำ */
-  padding: 12px 16px;
+  background-color: #2f2f2f;
+  height: 64px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
-.logo-img {
-  width: 222px !important;
-  height: 60px !important;
-  object-fit: contain;
-  display: block;
+.layout-menu-collapsed .logo-wrapper {
+  justify-content: flex-start !important;  /* ชิดซ้าย container */
+  padding-left: 10px !important;           /* เผื่อเว้นขอบนิดนึง */
+  padding-right: 0 !important;
 }
+
+
 /* ให้สไตล์ใกล้เคียง toggle menu เดิม */
 .custom-add-group {
   background-color: #ff5c00 !important;
@@ -165,7 +174,7 @@
 }
 /* เปลี่ยนปุ่มเมนู active (เช่น Overview) เป็นสีส้ม */
 .menu-item.active > .menu-link {
-  background-color: #ffffff !important;  /* สีส้มจาก Figma */
+  background-color: #FF6B00 !important;  /* สีส้มจาก Figma */
   color: #ffffff !important;            /* สีข้อความ */
   font-weight: 600;
   border-radius: 8px;
@@ -176,3 +185,83 @@
   color: #ffffff !important;
 }
 
+
+/* ปิดการบีบ/หาย sidebar ใน mobile */
+@media (max-width: 1199px) {
+  .layout-container {
+    flex-direction: row !important;
+  }
+  .layout-menu {
+    width: 260px !important; /* หรือขนาด sidebar ที่คุณต้องการ */
+  }
+}
+
+.logo-full {
+  width: 222px !important;
+  height: 60px !important;
+  object-fit: contain;
+  display: block !important;
+}
+
+
+/* เมื่อ sidebar ถูกย่อ (โดยมี class .layout-menu-collapsed) */
+.layout-menu-collapsed .logo-full {
+  display: block !important;
+  justify-content: flex-start;
+}
+
+/* ให้พื้นหลังของปุ่ม toggle เป็นสีดำ */
+.layout-menu-toggle .nav-link {
+  background-color: #2f2f2f !important;  /* สีพื้นหลังดำ */
+  color: #FF6B00 !important;  /* สีของไอคอนเป็นสีส้ม */
+  border: none !important;  /* ไม่มีขอบ */
+  padding: 12px !important; /* เพิ่มพื้นที่ให้ปุ่ม */
+  border-radius: 8px !important; /* ให้มุมปุ่มโค้งมน */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 64px; /* ความสูงให้พอดีกับโลโก้ */
+  width: 64px;  /* ความกว้างของปุ่ม */
+}
+
+/* ทำให้ปุ่ม toggle เมื่อ hover มีการเปลี่ยนแปลง */
+.layout-menu-toggle .nav-link:hover {
+  background-color: #FF6B00 !important;  /* ปรับพื้นหลังเป็นสีส้มเมื่อ hover */
+  color: #ffffff !important;  /* เปลี่ยนสีไอคอนเป็นสีขาว */
+  cursor: pointer;
+}
+
+/* ให้พื้นที่ของปุ่ม toggle ครอบคลุมได้ดีขึ้น */
+.layout-menu-toggle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 64px; /* กำหนดความสูงของปุ่ม */
+  width: 64px;  /* กำหนดความกว้าง */
+  background-color: transparent !important;  /* ไม่มีพื้นหลัง */
+  border-radius: 8px !important;  /* มุมโค้งมน */
+}
+
+/* ซ่อน layout-navbar เมื่อหน้าจอใหญ่กว่า 1199px */
+@media (min-width: 1200px) {
+  .layout-navbar {
+    display: none !important; /* ซ่อนเมนู navbar */
+  }
+}
+
+/* แสดง layout-navbar เมื่อหน้าจอเล็กกว่า 1199px */
+@media (max-width: 1199px) {
+  .layout-navbar {
+    display: block !important; /* ให้แสดง navbar ในขนาดหน้าจอที่เล็กกว่า */
+  }
+}
+
+/* ฟอนต์สำหรับภาษาอังกฤษ (ใช้ Montserrat) */
+body {
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* ฟอนต์สำหรับภาษาไทย (ใช้ Prompt) */
+body:lang(th) {
+    font-family: 'Prompt', sans-serif;
+}

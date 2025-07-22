@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 from PageInfo import views
 
 urlpatterns = [
@@ -36,6 +38,7 @@ urlpatterns = [
     path('comment-campaign/<int:pk>/', views.comment_campaign_detail, name='comment_campaign_detail'),
     path('dashboard/<int:dashboard_id>/', views.comment_dashboard_detail, name='comment_dashboard_detail'),
     path('posts-campaign/<str:group_name>/', views.posts_campaign, name='posts_campaign'),
+    path('accounts/', include('accounts.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # ✅ เพิ่มตรงนี้เพื่อให้ static files โหลดได้ตอน DEBUG = True

@@ -2,6 +2,7 @@ from django.db import models
 
 class PageGroup(models.Model):
     group_name = models.CharField(max_length=255, default='Test Campaign')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.group_name
@@ -112,7 +113,7 @@ class FacebookComment(models.Model):
 class CommentCampaignGroup(models.Model):
     group_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-    post = models.OneToOneField('FacebookPost', on_delete=models.CASCADE, related_name='campaign', null=True, blank=True)
+    post = models.ForeignKey('FacebookPost', on_delete=models.CASCADE, related_name='campaigns', null=True, blank=True)
 
     def __str__(self):
         return self.group_name

@@ -9,11 +9,15 @@ from django.core.files import File
 from .seeding_utils import is_seeding
 from urllib.parse import unquote
 from urllib.parse import urlparse
+from django.urls import reverse
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.forms import modelformset_factory
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 from .forms import FacebookCommentForm  # ✅ import form ที่คุณสร้างแล้ว
 from .forms import CommentDashboardForm  # ✅ อย่าลืม import
 from .models import FacebookComment, FBCommentDashboard, CommentCampaignGroup
@@ -41,6 +45,7 @@ import calendar
 import re
 import os
 import json  # 👈 ต้อง import นี้
+
 
 def page_campaign_dashboard(request):
     if request.method == 'POST':
@@ -606,6 +611,7 @@ def add_page(request, group_id):
                 except Exception as e:
                     print("❌ Error fetching posts:", e)
 
+
             elif platform == 'tiktok':
                 tiktok_data = get_tiktok_info(url)
                 if tiktok_data:
@@ -1002,35 +1008,39 @@ def group_detail(request, group_id):
         'posts_by_pillar': posts_by_pillar,
         'sidebar': sidebar,
     })
+
+@login_required
 def index(request):
+    # 🔐 ตรวจสอบว่า user ต้องเปลี่ยนรหัสผ่านก่อน
+    if request.user.is_first_login:
+        return redirect(reverse('accounts:password_change'))
+
+    full_name = request.user.get_full_name()
+
+    # ✅ ดำเนินการตามปกติ
     page_groups = PageGroup.objects.prefetch_related('pages')
     total_groups = page_groups.count()
 
     comment_dashboards = FBCommentDashboard.objects.all()
     comment_dashboards_by_group = defaultdict(list)
-
     for dashboard in comment_dashboards:
         if dashboard.campaign_group:
             comment_dashboards_by_group[dashboard.campaign_group].append(dashboard)
 
-    # ฟอร์มสำหรับ Page Group
     form_group = PageGroupForm(request.POST or None)
-
-    # หากมีการส่งฟอร์ม Page Group
     if form_group.is_valid():
         form_group.save()
         return redirect('index')
 
-    # ดึงข้อมูลกลุ่มแคมเปญ
     comment_campaign_groups = CommentCampaignGroup.objects.order_by('-created_at')
 
-    # ส่งข้อมูลทั้งหมดไปยังเทมเพลต
     return render(request, 'PageInfo/index.html', {
         'page_groups': page_groups,
         'total_groups': total_groups,
         'comment_dashboards_by_group': comment_dashboards_by_group,
         'comment_campaign_groups': comment_campaign_groups,
-        'form_group': form_group,  # ฟอร์มสำหรับ Page Group
+        'form_group': form_group,
+        'full_name': full_name,
     })
 
 def sidebar_context(request):

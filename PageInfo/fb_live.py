@@ -7,7 +7,7 @@ from pprint import pprint
 from typing import Any, Optional, List, Tuple
 
 from playwright.async_api import Playwright, async_playwright, Browser, Page, BrowserContext
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class FBLiveScraperAsync:
@@ -170,7 +170,24 @@ class FBLiveScraperAsync:
             "พฤษภาคม": 5, "มิถุนายน": 6, "กรกฎาคม": 7, "สิงหาคม": 8,
             "กันยายน": 9, "ตุลาคม": 10, "พฤศจิกายน": 11, "ธันวาคม": 12
         }
+        # Handle relative time formats like '6 วัน', '5 ชั่วโมง', etc.
+        now = datetime.now()
+        rel_match = re.match(r'^\s*(\d+)\s*(วินาที|นาที|ชั่วโมง|วัน|ปีที่แล้ว|ปี)\s*$', text)
+        if rel_match:
+            value = int(rel_match.group(1))
+            unit = rel_match.group(2)
+            if unit == 'วินาที':
+                return now - timedelta(seconds=value)
+            elif unit == 'นาที':
+                return now - timedelta(minutes=value)
+            elif unit == 'ชั่วโมง':
+                return now - timedelta(hours=value)
+            elif unit == 'วัน':
+                return now - timedelta(days=value)
+            elif unit in ('ปีที่แล้ว', 'ปี'):
+                return now - timedelta(days=value * 365)
         parts = text.split()
+
         # Handle dates with only day and month (e.g., '23 กุมภาพันธ์')
         if len(parts) == 2 and parts[0].isdigit():
             day = int(parts[0])
@@ -371,6 +388,7 @@ class FBLiveScraperAsync:
                     tooltip_text = (await tooltip_span.text_content()).strip()
                     if tooltip_text:
                         post_timestamp_text = tooltip_text
+                        # print(f"[get_post_detail] Tooltip text: {tooltip_text}")
                         post_timestamp_dt = self._parse_thai_timestamp(tooltip_text)
 
             # Hide any visible timestamp tooltip so it doesn't block the "ดูเพิ่มเติม" button
@@ -450,6 +468,62 @@ class FBLiveScraperAsync:
             # Determine post type
             post_type = 'video' if '/videos/' in post_url else 'post'
 
+            reactions = {}
+            # Reactions extraction (improved)
+            try:
+                # Locate the inner div that actually acts as the reaction button
+                button_loc = postRoot.locator('span[aria-label*="แสดงความรู้สึก"] >> div[role="button"]')
+                toolbar_clicked = False
+                if await button_loc.count():
+                    btn = button_loc.first
+                    await btn.scroll_into_view_if_needed()
+                    try:
+                        await btn.click(force=True)
+                    except Exception:
+                        print(f"[get_post_reactions] Could not click reactions button on {post_url}")
+                        # Fallback: direct JS click
+                        await detail_page.evaluate("(el) => el.click()", btn)
+                    await detail_page.wait_for_timeout(500)
+                    toolbar_clicked = True
+
+                # New: Guarded dialog parsing with flag
+                dialog_parsed = False
+                # Attempt to wait for and parse the reactions dialog(s)
+                try:
+                    await detail_page.wait_for_selector('div[role="dialog"][aria-labelledby]', timeout=5000)
+                    dialogs = detail_page.locator('div[role="dialog"][aria-labelledby]')
+                    dialog_count = await dialogs.count()
+                    for idx in range(dialog_count):
+                        dialog = dialogs.nth(idx)
+                        await dialog.wait_for(state='visible', timeout=5000)
+                        tabs = dialog.locator('div[role="tab"]')
+                        tab_count = await tabs.count()
+                        if tab_count > 0:
+                            for i in range(tab_count):
+                                tab = tabs.nth(i)
+                                aria = await tab.get_attribute('aria-label')
+                                match = re.search(
+                                    r'แสดง\s*([\d\.,]+\s*(?:พัน|หมื่น|แสน|ล้าน)?)\s*คนที่แสดงความรู้สึก\s*"([^"]+)"',
+                                    aria or '')
+                                if match:
+                                    count_text, react_type = match.group(1), match.group(2)
+                                    reactions[react_type] = self._parse_thai_number(count_text)
+                        else:
+                            # If there are no tabs, try to extract summary counts from dialog content
+                            summary_spans = await dialog.locator('span').all()
+                            for span in summary_spans:
+                                text = (await span.text_content() or "").strip()
+                                match = re.search(r'([\d\.,]+\s*(?:พัน|หมื่น|แสน|ล้าน)?)\s*([^\d\s]+)?', text)
+                                if match:
+                                    count_text = match.group(1)
+                                    if count_text and count_text not in reactions.values():
+                                        reactions[text] = self._parse_thai_number(count_text)
+                    dialog_parsed = True
+                except Exception:
+                    print(f"[get_post_reactions] No reactions dialog on {post_url}")
+            except Exception as exc:
+                print(f"[get_post_reactions] failed to click reactions button: {exc}")
+
             # print(f"[get_post_detail] Successfully fetched details for {post_id}")
             await detail_page.close()
 
@@ -462,7 +536,7 @@ class FBLiveScraperAsync:
                 "post_content": post_content,
                 "video_thumbnail": video_thumbnail,
                 "video_url": video_url,
-                # "reactions": reactions,
+                "reactions": reactions,
                 "comment_count": comment_count,
                 "watch_count": watch_count,
                 # "comments": comments,
