@@ -6,20 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FB_WebApp_Project/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/FB_WebApp_Project/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FB_WebApp_Project/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/FB_WebApp_Project/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/fb_live.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/fb_live.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/assets/css/demo.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/assets/css/demo.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/staticfiles/assets/css/demo.css" beforeDir="false" afterPath="$PROJECT_DIR$/staticfiles/assets/css/demo.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/PageInfo/add_page.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/add_page.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/PageInfo/comment_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/comment_dashboard.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/pageview.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/pageview.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/PageInfo/posts_campaign.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/posts_campaign.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base1.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base1.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

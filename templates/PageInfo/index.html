@@ -127,7 +127,7 @@
       <thead style="background-color: #F5F5F5; color: #424242; font-weight: 500; font-size: 15px;">
         <tr>
           <th style="padding: 16px;">Campaign Name</th>
-          <th style="padding: 16px;">Post</th>
+          <th style="padding: 16px;">Posts</th>
           <th style="padding: 16px;">Created At</th>
         </tr>
       </thead>
@@ -140,7 +140,7 @@
               {{ campaign.group_name }}
             </a>
           </td>
-          <td style="padding: 16px; font-size: 15px;">{{ campaign.dashboards.count }} Posts on this Dashboard</td>
+          <td style="padding: 16px; font-size: 15px;">{{ campaign.dashboards.count }} Post on this Dashboard</td>
           <td style="padding: 16px; font-size: 15px;">{{ campaign.created_at|date:"d M Y H:i" }}</td>
         </tr>
         {% empty %}

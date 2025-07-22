@@ -114,11 +114,14 @@
             <li class="menu-header small mt-5">
               <span class="menu-header-text" data-i18n="Apps & Pages">Pages &amp; Posts</span>
             </li>
+<!-- Page Campaigns -->
 <li class="menu-item">
   <a href="javascript:void(0);" class="menu-link menu-toggle">
     <i class="menu-icon icon-base ri ri-numbers-line"></i>
     <div data-i18n="Page Campaigns">Page Campaigns</div>
-    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ page_groups_count }}</div>
+    <div class="badge badge-center ms-3" style="background-color: #FF6801; color: white; width: 20px; height: 20px; text-align: center; line-height: 20px; border-radius: 50%; display: inline-block;">
+      {{ page_groups_count }}
+    </div>
   </a>
   <ul class="menu-sub">
     {% for group in page_groups_sidebar %}
@@ -130,24 +133,27 @@
     {% endfor %}
   </ul>
 </li>
-<!-- 🔶 Post Campaign Menu -->
+
+<!-- Post Campaigns -->
 <li class="menu-item">
   <a href="javascript:void(0);" class="menu-link menu-toggle">
     <i class="menu-icon icon-base ri ri-article-line"></i>
     <div data-i18n="Post Campaigns">Post Campaigns</div>
-    <div class="badge badge-center text-bg-danger rounded-pill ms-auto">{{ comment_campaign_groups|length }}</div>
+    <div class="badge badge-center ms-3" style="background-color: #FF6801; color: white; width: 20px; height: 20px; text-align: center; line-height: 20px; border-radius: 50%; display: inline-block;">
+      {{ comment_campaign_groups|length }}
+    </div>
   </a>
   <ul class="menu-sub">
     {% for group in comment_campaign_groups %}
       <li class="menu-item">
-        <!-- ใช้ campaign_group.group_name สำหรับชื่อแคมเปญ -->
         <a href="{% url 'posts_campaign' group_name=group.group_name %}" class="menu-link">
-          <div>{{ group.group_name }}</div> <!-- ใช้ group_name แทน campaign_name -->
+          <div>{{ group.group_name }}</div>
         </a>
       </li>
     {% endfor %}
   </ul>
 </li>
+
 
   <!-- ⚙️ Setting & User moved to bottom -->
   <div class="mt-auto">
