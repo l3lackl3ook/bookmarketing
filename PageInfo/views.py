@@ -21,7 +21,8 @@ from django.contrib.auth import update_session_auth_hash
 from .forms import FacebookCommentForm  # ✅ import form ที่คุณสร้างแล้ว
 from .forms import CommentDashboardForm  # ✅ อย่าลืม import
 from .models import FacebookComment, FBCommentDashboard, CommentCampaignGroup
-from .models import PageGroup, PageInfo, FacebookPost, FollowerHistory
+from .models import PageGroup, PageInfo, FollowerHistory
+from .models import FacebookPost, TikTokPost
 from .forms import PageGroupForm, PageURLForm, CommentDashboardForm
 from .fb_comment_info import run_fb_comment_scraper
 from .fb_page_info import PageInfo as FBPageInfo
@@ -46,6 +47,14 @@ import re
 import os
 import json  # 👈 ต้อง import นี้
 
+def parse_timestamp(post):
+    if isinstance(post.get('post_timestamp_dt'), datetime):
+        return post['post_timestamp_dt']
+    try:
+        # กรณี TikTok ที่ใช้ string เช่น '23/07/2025'
+        return datetime.strptime(post.get('post_timestamp_text') or post.get('post_timestamp', ''), '%d/%m/%Y')
+    except:
+        return None
 
 def page_campaign_dashboard(request):
     if request.method == 'POST':
@@ -244,6 +253,25 @@ def extract_post_id(url):
 
 def normalize_url(url):
     return urlparse(url)._replace(query="", fragment="").geturl().rstrip('/')
+
+def normalize_post(post):
+    is_facebook = getattr(post, 'post_type', None) is not None
+
+    return {
+        'post_id': getattr(post, 'post_id', None) or '',
+        'post_content': post.post_content,
+        'post_imgs': post.post_imgs if is_facebook else [post.post_imgs] if post.post_imgs else [],
+        'post_timestamp_dt': post.post_timestamp_dt if is_facebook else None,
+        'post_timestamp_text': post.post_timestamp_text if is_facebook else post.post_timestamp,
+        'reactions': post.reactions if is_facebook else {'reaction': post.reaction},
+        'comment_count': post.comment_count or 0,
+        'share_count': post.share_count or 0,
+        'content_pillar': getattr(post, 'content_pillar', None),
+        'platform': post.platform if hasattr(post, 'platform') else 'facebook',
+        'page_name': post.page.page_name if post.page else '',
+        'page_profile_pic': post.page.profile_pic if post.page else '',
+        'page': post.page
+    }
 
 from django.db.models import Count
 import json
@@ -627,6 +655,26 @@ def add_page(request, group_id):
                     }
                     filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
                     PageInfo.objects.create(page_group=group, **filtered_data)
+
+                    page = PageInfo.objects.create(page_group=group, **filtered_data)
+
+                    from .tiktok_post import get_tiktok_posts
+                    posts = get_tiktok_posts(url)
+
+                    for post in posts:
+                        TikTokPost.objects.create(
+                            page=page,
+                            post_url=post.get('post_url'),
+                            post_content=post.get('post_content', ''),
+                            post_imgs=post.get('post_thumbnail', ''),
+                            post_timestamp=post.get('timestamp', ''),
+                            like_count=post.get('reaction', 0),
+                            comment_count=post.get('comment', 0),
+                            share_count=post.get('shared', 0),
+                            save_count=post.get('saved', 0),
+                            view_count=post.get('views', 0),
+                            platform='tiktok'
+                        )
                 else:
                     form.add_error(None, "❌ ไม่สามารถดึงข้อมูล TikTok ได้ กรุณาตรวจสอบ URL หรือรอสักครู่")
                     return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
@@ -813,13 +861,29 @@ def create_group(request):
 def group_detail(request, group_id):
     group = get_object_or_404(PageGroup, id=group_id)
     pages = group.pages.all().order_by('-page_followers_count')
-    posts = FacebookPost.objects.filter(page__in=pages)
+    facebook_posts = FacebookPost.objects.filter(page__in=pages)
+    tiktok_posts = TikTokPost.objects.filter(page__in=pages)
+
+    all_posts = list(facebook_posts) + list(tiktok_posts)
+
+    for post in facebook_posts:
+        post.platform = 'facebook'
+    for post in tiktok_posts:
+        post.platform = 'tiktok'
+
+    posts = facebook_posts.union(tiktok_posts, all=True) if hasattr(facebook_posts,'union') else facebook_posts + tiktok_posts
+
+    posts = list(facebook_posts) + list(tiktok_posts)
+
+
 
     sidebar = sidebar_context(request)
 
     # 🔟 Top 10 Posts by Engagement
+    normalized_posts = [normalize_post(p) for p in posts]
+
     top10_posts = sorted(
-        [p for p in posts if p.post_timestamp_dt],
+        normalized_posts,
         key=lambda p: (
                 (sum(p.reactions.values()) if isinstance(p.reactions, dict) else 0)
                 + (p.comment_count or 0)
@@ -906,13 +970,18 @@ def group_detail(request, group_id):
 
     # 📅 Number of posts by weekday (Bar Chart)
     day_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    day_counts = Counter(post.post_timestamp_dt.weekday() for post in posts if post.post_timestamp_dt)
+    day_counts = Counter(
+        parse_timestamp(post).weekday()
+        for post in posts
+        if parse_timestamp(post)
+    )
     bar_day_labels = day_labels
     bar_day_values = [day_counts.get(i, 0) for i in range(7)]
     bar_day_colors = [colors[i % len(colors)] for i in range(7)]
     posts_grouped_by_day = defaultdict(list)
     for post in posts:
-        if post.post_timestamp_dt:
+        dt = parse_timestamp(post)
+        if dt:
             weekday = post.post_timestamp_dt.weekday()
             posts_grouped_by_day[str(weekday)].append({
                 'post_id': post.post_id,
@@ -933,8 +1002,11 @@ def group_detail(request, group_id):
     posts_grouped_by_time = defaultdict(list)
 
     for post in posts:
-        if not post.post_timestamp_dt:
+        dt = parse_timestamp(post)
+        if not dt:
             continue
+        weekday = dt.weekday()
+        hour = dt.hour
 
         weekday = post.post_timestamp_dt.weekday()
         hour = post.post_timestamp_dt.hour
@@ -1003,7 +1075,7 @@ def group_detail(request, group_id):
         'posts_grouped_json': json.dumps(posts_grouped_by_time),
         'posts_by_day_json': json.dumps(posts_grouped_by_day),
         'followers_posts_map': json.dumps(followers_posts_map),
-        'facebook_posts_top10': top10_posts_data,
+        'facebook_posts_top10': top10_posts,
         "pillar_summary": pillar_summary,
         'posts_by_pillar': posts_by_pillar,
         'sidebar': sidebar,

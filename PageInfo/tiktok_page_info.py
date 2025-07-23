@@ -2,6 +2,7 @@ import requests
 import re
 import json
 
+
 def get_tiktok_info(url):
     # แยก username จาก URL เช่น https://www.tiktok.com/@atlascat_official
     match = re.search(r"tiktok\.com/@([\w\.\-]+)", url)
