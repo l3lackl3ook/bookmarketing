@@ -566,7 +566,6 @@ async def run_fb_post_video_reel_live_scraper(url, cookie_path, cutoff_dt):
     return (posts or []) + (videos or []) + (reels or []) + (lives or [])
 
 
-
 def add_page(request, group_id):
     group = PageGroup.objects.get(id=group_id)
 
@@ -601,9 +600,8 @@ def add_page(request, group_id):
 
                     for post in posts or []:
                         post_type = post.get("post_type", "post")
-
-                        post_url = post.get("video_url") if post_type in ["video", "reel", "live"] else post.get("post_url")
-
+                        post_url = post.get("video_url") if post_type in ["video", "reel", "live"] else post.get(
+                            "post_url")
                         post_imgs = (post.get("post_imgs") or []) + (
                             [post.get("video_thumbnail")] if post.get("video_thumbnail") else [])
 
@@ -639,203 +637,160 @@ def add_page(request, group_id):
                 except Exception as e:
                     print("❌ Error fetching posts:", e)
 
-
             elif platform == 'tiktok':
+                # ✅ ดึงข้อมูลโปรไฟล์ก่อน
                 tiktok_data = get_tiktok_info(url)
-                if tiktok_data:
-                    filtered_data = {
-                        'page_username': tiktok_data.get('username'),
-                        'page_name': tiktok_data.get('nickname'),
-                        'page_followers': tiktok_data.get('followers'),
-                        'page_likes': tiktok_data.get('likes'),
-                        'page_description': tiktok_data.get('bio'),
-                        'profile_pic': tiktok_data.get('profile_pic'),
-                        'page_url': tiktok_data.get('url'),
-                        'platform': 'tiktok'
-                    }
-                    filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
-                    PageInfo.objects.create(page_group=group, **filtered_data)
-
-                    page = PageInfo.objects.create(page_group=group, **filtered_data)
-
-                    from .tiktok_post import get_tiktok_posts
-                    posts = get_tiktok_posts(url)
-
-                    for post in posts:
-                        TikTokPost.objects.create(
-                            page=page,
-                            post_url=post.get('post_url'),
-                            post_content=post.get('post_content', ''),
-                            post_imgs=post.get('post_thumbnail', ''),
-                            post_timestamp=post.get('timestamp', ''),
-                            like_count=post.get('reaction', 0),
-                            comment_count=post.get('comment', 0),
-                            share_count=post.get('shared', 0),
-                            save_count=post.get('saved', 0),
-                            view_count=post.get('views', 0),
-                            platform='tiktok'
-                        )
-                else:
+                if not tiktok_data:
                     form.add_error(None, "❌ ไม่สามารถดึงข้อมูล TikTok ได้ กรุณาตรวจสอบ URL หรือรอสักครู่")
                     return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
 
+                # ✅ สร้าง PageInfo สำหรับ TikTok
+                filtered_data = {
+                    'page_username': tiktok_data.get('username'),
+                    'page_name': tiktok_data.get('nickname'),
+                    'page_followers': tiktok_data.get('followers', 0),
+                    'page_likes': tiktok_data.get('likes', 0),
+                    'following_count': tiktok_data.get('following', 0),
+                    'page_videos_count': tiktok_data.get('video_count', 0),
+                    'page_description': tiktok_data.get('bio'),
+                    'profile_pic': tiktok_data.get('profile_pic'),
+                    'page_url': tiktok_data.get('url'),
+                    'verified': tiktok_data.get('verified', False),
+                    'platform': 'tiktok'
+                }
+
+                # ✅ กรองเฉพาะ field ที่มีใน model
+                filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
+
+                # ✅ สร้าง PageInfo ก่อน
+                page_obj = PageInfo.objects.create(page_group=group, **filtered_data)
+                print(f"✅ สร้าง PageInfo สำหรับ TikTok สำเร็จ: {page_obj.page_username}")
+
+                # ✅ ดึงข้อมูลโพสต์ TikTok
+                try:
+                    from .tiktok_post import scrape_tiktok_posts_for_django
+                    posts = scrape_tiktok_posts_for_django(url, max_posts=30)  # จำกัดจำนวนโพสต์
+                    print(f"📋 ดึงข้อมูล {len(posts)} โพสต์จาก TikTok")
+
+                    for post in posts:
+                        # ✅ แปลงวันที่จาก string เป็น datetime object
+                        post_timestamp_dt = None
+                        post_timestamp_text = post.get('timestamp', '')
+
+                        if post_timestamp_text and post_timestamp_text != 'ไม่พบวันที่':
+                            try:
+                                # แปลงจาก "23/07/2025" เป็น datetime
+                                post_timestamp_dt = datetime.strptime(post_timestamp_text, '%d/%m/%Y')
+                                if timezone.is_naive(post_timestamp_dt):
+                                    post_timestamp_dt = timezone.make_aware(post_timestamp_dt)
+                            except ValueError as e:
+                                print(f"⚠️ ไม่สามารถแปลงวันที่ '{post_timestamp_text}': {e}")
+                                post_timestamp_dt = None
+
+                        # ✅ สร้าง TikTokPost
+                        TikTokPost.objects.update_or_create(
+                            post_url=post.get('post_url'),
+                            defaults={
+                                'page': page_obj,
+                                'post_content': post.get('post_content', ''),
+                                'post_imgs': post.get('post_thumbnail', ''),
+                                'post_timestamp': post_timestamp_text,
+                                'post_timestamp_dt': post_timestamp_dt,  # ✅ เพิ่ม datetime field
+                                'like_count': post.get('reaction', 0),
+                                'comment_count': post.get('comment', 0),
+                                'share_count': post.get('shared', 0),
+                                'save_count': post.get('saved', 0),
+                                'view_count': post.get('views', 0),
+                                'platform': 'tiktok'
+                            }
+                        )
+
+                    print(f"✅ บันทึกข้อมูล {len(posts)} โพสต์ TikTok สำเร็จ")
+
+                except Exception as e:
+                    print(f"❌ Error fetching TikTok posts: {e}")
+                    # ✅ ถึงแม้จะ error ก็ยังคง PageInfo ไว้
+                    pass
 
             elif platform == 'instagram':
-
                 match = re.search(r"instagram\.com/([\w\.\-]+)/?", url)
-
                 if match:
-
                     username = match.group(1)
-
                     ig_data = get_instagram_info(username)
-
                     if ig_data:
-
                         filtered_data = {
-
                             'page_username': ig_data.get('username'),
-
                             'page_name': ig_data.get('username'),
-
                             'page_followers': ig_data.get('followers_count'),
-
                             'page_website': ig_data.get('website'),
-
                             'page_category': ig_data.get('category'),
-
                             'post_count': ig_data.get('post_count'),
-
                             'page_description': ig_data.get('bio'),
-
                             'profile_pic': ig_data.get('profile_pic'),
-
                             'page_url': ig_data.get('url'),
-
                             'platform': 'instagram'
-
                         }
-
                         filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
-
                         PageInfo.objects.create(page_group=group, **filtered_data)
-
                     else:
-
                         form.add_error(None, "❌ ไม่สามารถดึงข้อมูล Instagram ได้ กรุณาตรวจสอบ URL หรือรอสักครู่")
-
                         return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
-
                 else:
-
                     form.add_error(None, "❌ URL Instagram ไม่ถูกต้อง")
-
                     return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
-
 
             elif platform == 'lemon8':
-
-                lm8_data = get_lemon8_info(url)  # ใช้ url เต็ม ไม่ต้องตัด username
-
+                lm8_data = get_lemon8_info(url)
                 if lm8_data:
-
                     allowed_fields = {f.name for f in PageInfo._meta.get_fields()}
-
                     filtered_data = {
-
                         'page_username': lm8_data.get('username'),
-
                         'page_name': lm8_data.get('username'),
-
                         'page_followers': lm8_data.get('followers_count'),
-
                         'page_likes': lm8_data.get('likes_count'),
-
                         'following_count': lm8_data.get('following_count'),
-
                         'age': lm8_data.get('age'),
-
                         'page_description': lm8_data.get('bio'),
-
                         'page_website': lm8_data.get('website'),
-
                         'profile_pic': lm8_data.get('profile_pic'),
-
                         'page_url': lm8_data.get('url'),
-
                         'platform': 'lemon8'
-
                     }
-
                     filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
-
                     PageInfo.objects.create(page_group=group, **filtered_data)
-
                 else:
-
                     form.add_error(None, "❌ ไม่สามารถดึงข้อมูล Lemon8 ได้ กรุณาตรวจสอบ URL หรือรอสักครู่")
-
                     return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
 
-
-
-
             elif platform == 'youtube':
-
                 from .yt_page_info import get_youtube_info
-
                 yt_data = get_youtube_info(url)
-
                 if yt_data:
-
                     allowed_fields = {f.name for f in PageInfo._meta.get_fields()}
-
                     yt_data['subscribers_count'] = clean_number(yt_data.get('subscribers_count'))
-
                     yt_data['videos_count'] = clean_number(yt_data.get('videos_count'))
-
                     yt_data['total_views'] = clean_number(yt_data.get('total_views'))
-
                     filtered_data = {
-
                         'page_username': yt_data.get('username'),
-
                         'page_name': yt_data.get('page_name'),
-
                         'page_followers': yt_data.get('subscribers_count'),
-
                         'profile_pic': yt_data.get('profile_pic'),
-
                         'page_url': yt_data.get('page_url'),
-
                         'page_description': yt_data.get('bio'),
-
                         'page_address': yt_data.get('country'),
-
                         'page_join_date': yt_data.get('join_date'),
-
                         'page_videos_count': yt_data.get('videos_count'),
-
                         'page_total_views': yt_data.get('total_views'),
-
                         'page_website': yt_data.get('page_website'),
-
                         'platform': 'youtube'
-
                     }
-
                     filtered_data = {k: v for k, v in filtered_data.items() if k in allowed_fields}
-
                     PageInfo.objects.create(page_group=group, **filtered_data)
-
                 else:
-
                     form.add_error(None, "❌ ไม่สามารถดึงข้อมูล YouTube ได้ กรุณาตรวจสอบ URL หรือรอสักครู่")
-
                     return render(request, 'PageInfo/add_page.html', {'form': form, 'group': group})
 
             return redirect('group_detail', group_id=group.id)
-
 
     else:
         form = PageURLForm()

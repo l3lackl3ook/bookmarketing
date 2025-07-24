@@ -138,16 +138,20 @@ class FBCommentDashboard(models.Model):
 class TikTokPost(models.Model):
     page = models.ForeignKey('PageInfo', on_delete=models.CASCADE, related_name='tiktok_posts')
 
-    post_url = models.URLField(max_length=500)
+    post_url = models.URLField(max_length=500, unique=True)
     post_content = models.TextField(null=True, blank=True)
     post_imgs = models.URLField(null=True, blank=True)
-    post_timestamp = models.CharField(max_length=100, null=True, blank=True)
+
+    post_timestamp = models.CharField(max_length=100, null=True, blank=True)  # เก็บแบบ string
+    post_timestamp_dt = models.DateTimeField(null=True, blank=True)  # เก็บแบบ datetime
 
     view_count = models.IntegerField(null=True, blank=True)
-    reaction = models.IntegerField(null=True, blank=True)
+    like_count = models.IntegerField(null=True, blank=True)  # ✅ เปลี่ยนจาก reaction → like_count
     comment_count = models.IntegerField(null=True, blank=True)
     share_count = models.IntegerField(null=True, blank=True)
     save_count = models.IntegerField(null=True, blank=True)
+
+    platform = models.CharField(max_length=20, default='tiktok')  # ✅ เพิ่ม platform
 
     created_at = models.DateTimeField(auto_now_add=True)
 
