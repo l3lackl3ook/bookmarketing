@@ -398,10 +398,17 @@
             <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
               <div class="d-flex justify-content-between align-items-start">
                 <div class="d-flex align-items-center gap-2">
-                  {% if page.profile_pic %}
-                  <img src="{{ page.profile_pic }}" class="rounded-circle" style="width: 16px; height: 16px;">
-                  {% endif %}
-                  <i class="bi bi-facebook text-primary"></i>
+                  <!-- Container ปรับขนาดใหม่ให้พอดีกับขนาดภาพ -->
+<div class="position-relative d-inline-block" style="width: 24px; height: 24px;">
+  <!-- รูปเพจ -->
+  <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
+       width="24" height="24" style="object-fit: cover;">
+
+  <!-- ไอคอน Facebook -->
+  <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
+       width="10" height="10"
+       class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+</div>
                   <strong class="text-truncate">{{ page.page_name }}</strong>
                 </div>
                 <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
@@ -440,7 +447,7 @@
         <h5 class="card-title mb-3">Flop 10 Facebook Posts</h5>
         <div style="max-height: 600px; overflow-y: auto;">
           {% for post in facebook_posts_flop %}
-          <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+          <div class="d-flex border rounded mb-2 small overflow-hidden">
             <div style="width: 90px; height: 90px; flex-shrink: 0; position: relative; overflow: hidden;">
             {% if post.post_imgs %}
             <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank">
@@ -453,10 +460,17 @@
             <div class="flex-grow-1 d-flex flex-column justify-content-between px-3 py-2" style="min-width: 0; overflow: hidden;">
               <div class="d-flex justify-content-between align-items-start">
                 <div class="d-flex align-items-center gap-2">
-                  {% if page.profile_pic %}
-                  <img src="{{ page.profile_pic }}" class="rounded-circle" style="width: 16px; height: 16px;">
-                  {% endif %}
-                  <i class="bi bi-facebook text-primary"></i>
+                                    <!-- Container ปรับขนาดใหม่ให้พอดีกับขนาดภาพ -->
+<div class="position-relative d-inline-block" style="width: 24px; height: 24px;">
+  <!-- รูปเพจ -->
+  <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
+       width="24" height="24" style="object-fit: cover;">
+
+  <!-- ไอคอน Facebook -->
+  <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
+       width="10" height="10"
+       class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+</div>
                   <strong class="text-truncate">{{ page.page_name }}</strong>
                 </div>
                 <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
@@ -523,12 +537,21 @@
             <!-- Row number -->
             <td class="text-center">{{ forloop.counter }}</td>
 
-            <!-- Page info (Profile pic + name + date) -->
-            <td class="text-start">
+ <!-- Page info (Profile pic + name + date) -->
+<td class="text-start">
   <div class="d-flex align-items-start gap-2">
-    {% if page.profile_pic %}
-    <img src="{{ page.profile_pic }}" style="width: 28px; height: 28px; object-fit: cover;" class="rounded-circle mt-1" />
-    {% endif %}
+    <!-- 🟦 รูปเพจพร้อมไอคอน Facebook ซ้อน -->
+    <div class="position-relative d-inline-block" style="width: 28px; height: 28px;">
+      {% if page.profile_pic %}
+      <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
+           width="28" height="28" style="object-fit: cover;">
+      {% endif %}
+      <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
+           width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    </div>
+
+    <!-- 📝 ชื่อเพจ + เวลา -->
     <div class="d-flex flex-column lh-sm">
       <span class="text-truncate">{{ page.page_name }}</span>
       <div class="text-muted small" style="font-size: 0.65rem;">

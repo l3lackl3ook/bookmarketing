@@ -259,9 +259,22 @@
 /* ฟอนต์สำหรับภาษาอังกฤษ (ใช้ Montserrat) */
 body {
     font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
 }
 
 /* ฟอนต์สำหรับภาษาไทย (ใช้ Prompt) */
 body:lang(th) {
     font-family: 'Prompt', sans-serif;
+    font-size: 14px;
+}
+
+/* ลิงก์ชื่อเพจ (สีปกติ = ดำ, hover = ส้ม Growfox) */
+.page-name-link {
+  color: #5f5f6f !important;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.page-name-link:hover {
+  color: #FF6B00 !important;
 }

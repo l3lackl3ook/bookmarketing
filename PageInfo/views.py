@@ -812,33 +812,16 @@ def create_group(request):
 
     # ส่งฟอร์มไปยัง template
     return render(request, 'PageInfo/index.html', {'form': form})
-
 def group_detail(request, group_id):
     group = get_object_or_404(PageGroup, id=group_id)
     pages = group.pages.all().order_by('-page_followers_count')
-    facebook_posts = FacebookPost.objects.filter(page__in=pages)
-    tiktok_posts = TikTokPost.objects.filter(page__in=pages)
-
-    all_posts = list(facebook_posts) + list(tiktok_posts)
-
-    for post in facebook_posts:
-        post.platform = 'facebook'
-    for post in tiktok_posts:
-        post.platform = 'tiktok'
-
-    posts = facebook_posts.union(tiktok_posts, all=True) if hasattr(facebook_posts,'union') else facebook_posts + tiktok_posts
-
-    posts = list(facebook_posts) + list(tiktok_posts)
-
-
+    posts = FacebookPost.objects.filter(page__in=pages)
 
     sidebar = sidebar_context(request)
 
     # 🔟 Top 10 Posts by Engagement
-    normalized_posts = [normalize_post(p) for p in posts]
-
     top10_posts = sorted(
-        normalized_posts,
+        [p for p in posts if p.post_timestamp_dt],
         key=lambda p: (
                 (sum(p.reactions.values()) if isinstance(p.reactions, dict) else 0)
                 + (p.comment_count or 0)
@@ -925,18 +908,13 @@ def group_detail(request, group_id):
 
     # 📅 Number of posts by weekday (Bar Chart)
     day_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    day_counts = Counter(
-        parse_timestamp(post).weekday()
-        for post in posts
-        if parse_timestamp(post)
-    )
+    day_counts = Counter(post.post_timestamp_dt.weekday() for post in posts if post.post_timestamp_dt)
     bar_day_labels = day_labels
     bar_day_values = [day_counts.get(i, 0) for i in range(7)]
     bar_day_colors = [colors[i % len(colors)] for i in range(7)]
     posts_grouped_by_day = defaultdict(list)
     for post in posts:
-        dt = parse_timestamp(post)
-        if dt:
+        if post.post_timestamp_dt:
             weekday = post.post_timestamp_dt.weekday()
             posts_grouped_by_day[str(weekday)].append({
                 'post_id': post.post_id,
@@ -957,11 +935,8 @@ def group_detail(request, group_id):
     posts_grouped_by_time = defaultdict(list)
 
     for post in posts:
-        dt = parse_timestamp(post)
-        if not dt:
+        if not post.post_timestamp_dt:
             continue
-        weekday = dt.weekday()
-        hour = dt.hour
 
         weekday = post.post_timestamp_dt.weekday()
         hour = post.post_timestamp_dt.hour
@@ -1030,7 +1005,7 @@ def group_detail(request, group_id):
         'posts_grouped_json': json.dumps(posts_grouped_by_time),
         'posts_by_day_json': json.dumps(posts_grouped_by_day),
         'followers_posts_map': json.dumps(followers_posts_map),
-        'facebook_posts_top10': top10_posts,
+        'facebook_posts_top10': top10_posts_data,
         "pillar_summary": pillar_summary,
         'posts_by_pillar': posts_by_pillar,
         'sidebar': sidebar,

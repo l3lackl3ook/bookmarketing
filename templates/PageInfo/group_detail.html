@@ -257,16 +257,44 @@
 <tbody>
 {% for page in pages %}
 <tr>
-  <td class="d-flex align-items-center">
-    <img src="{{ page.profile_pic }}" alt="{{ page.page_name|default:page.page_username }}" width="40" height="40" class="rounded-circle me-2">
-    <div class="text-start">
-      <a href="{% url 'pageview' page.id %}" class="fw-semibold">
-        {{ page.page_name|default:page.page_username }}
-      </a>
-      <br>
-      <a href="{{ page.page_url }}" target="_blank" class="small text-muted">View Page</a>
-    </div>
-  </td>
+<td class="d-flex align-items-center">
+  <!-- 🔵 Profile Picture + Platform Icon -->
+  <div class="position-relative me-2" style="width: 40px; height: 40px;">
+    {% if page.profile_pic %}
+      <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
+           width="40" height="40" style="object-fit: cover;">
+    {% else %}
+      <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white"
+           width="40" height="40" style="object-fit: cover;">
+    {% endif %}
+
+    <!-- ✅ Platform Icon -->
+    {% if page.platform == "facebook" %}
+      <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    {% elif page.platform == "tiktok" %}
+      <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    {% elif page.platform == "instagram" %}
+      <img src="{% static 'assets/img/icons/iglogo.png' %}" width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    {% elif page.platform == "lemon8" %}
+      <img src="{% static 'assets/img/icons/lemon8logo.png' %}" width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    {% elif page.platform == "youtube" %}
+      <img src="{% static 'assets/img/icons/youtubelogo.png' %}" width="12" height="12"
+           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+    {% endif %}
+  </div>
+
+  <!-- 🔗 Page Name -->
+  <div class="text-start">
+    <a href="{% url 'pageview' page.id %}" class="page-name-link">
+      {{ page.page_name|default:page.page_username }}
+    </a>
+  </div>
+</td>
+
 
   <!-- Followers -->
   <td class="hover-count">
