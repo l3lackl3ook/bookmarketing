@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta  # ใส่ไว้บนสุดของ views.py ด้วย
+from datetime import datetime, timedelta, timezone  # ใส่ไว้บนสุดของ views.py ด้วย
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Prefetch
 from django.conf import settings
@@ -670,10 +670,13 @@ def add_page(request, group_id):
                 try:
                     from .tiktok_post import scrape_tiktok_posts_for_django, filter_recent_posts
 
+                    # กำหนดพาธไฟล์ cookies ที่บันทึกไว้
+                    cookie_path = os.path.join(settings.BASE_DIR, 'PageInfo', 'tiktok_cookies.json')
+
                     # เรียก scraper และรับผลลัพธ์เป็น dict
                     scrape_result = scrape_tiktok_posts_for_django(
                         profile_url=url,
-                        cookies_file=None,
+                        cookies_file=cookie_path,
                         max_posts=None,
                         headless=True,
                         scroll_rounds=50,
@@ -692,29 +695,40 @@ def add_page(request, group_id):
                         print(f"📋 ดึงข้อมูล {len(posts_data)} โพสต์จาก TikTok")
 
                         for post in posts_data:
-                            # ✅ แปลงวันที่จาก string เป็น datetime object
+                            # ✅ แปลงวันที่จาก timestamp_unix หรือ string เป็น datetime object
                             post_timestamp_dt = None
                             post_timestamp_text = post.get('timestamp', '')
-
-                            if post_timestamp_text and post_timestamp_text != 'ไม่พบวันที่':
+                            # ใช้ timestamp_unix ถ้ามี
+                            ts_unix = post.get('timestamp_unix')
+                            if ts_unix:
                                 try:
-                                    # แปลงจาก "23/07/2025" เป็น datetime
-                                    post_timestamp_dt = datetime.strptime(post_timestamp_text, '%d/%m/%Y')
-                                    if timezone.is_naive(post_timestamp_dt):
-                                        post_timestamp_dt = timezone.make_aware(post_timestamp_dt)
+                                    # แปลง unix timestamp เป็น datetime (UTC) แล้วแปลงเป็นเขตเวลาปัจจุบัน
+                                    dt_utc = datetime.fromtimestamp(int(ts_unix), tz=timezone.utc)
+                                    post_timestamp_dt = dt_utc.astimezone(timezone.get_default_timezone())
+                                except Exception as e:
+                                    print(f"⚠️ ไม่สามารถแปลง timestamp_unix '{ts_unix}': {e}")
+                                    post_timestamp_dt = None
+                            # หากไม่มี timestamp_unix ลอง parse จาก string 'dd/mm/YYYY'
+                            if post_timestamp_dt is None and post_timestamp_text and post_timestamp_text != 'ไม่พบวันที่':
+                                try:
+                                    dt = datetime.strptime(post_timestamp_text, '%d/%m/%Y')
+                                    if timezone.is_naive(dt):
+                                        post_timestamp_dt = timezone.make_aware(dt)
+                                    else:
+                                        post_timestamp_dt = dt
                                 except ValueError as e:
                                     print(f"⚠️ ไม่สามารถแปลงวันที่ '{post_timestamp_text}': {e}")
                                     post_timestamp_dt = None
 
-                            # ✅ สร้างหรืออัปเดต TikTokPost
+                            # ✅ สร้างหรืออัปเดต TikTokPost (ตัดทอนค่า URL ไม่เกิน max_length)
                             TikTokPost.objects.update_or_create(
-                                post_url=post.get('post_url'),
+                                post_url=(post.get('post_url') or '')[:500],
                                 defaults={
                                     'page': page_obj,
                                     'post_content': post.get('post_content', ''),
-                                    'post_imgs': post.get('post_thumbnail', ''),
+                                    'post_imgs': (post.get('post_thumbnail') or '')[:500],
                                     'post_timestamp': post_timestamp_text,
-                                    'post_timestamp_dt': post_timestamp_dt,  # ✅ เพิ่ม datetime field
+                                    'post_timestamp_dt': post_timestamp_dt,
                                     'like_count': post.get('reaction', 0),
                                     'comment_count': post.get('comment', 0),
                                     'share_count': post.get('shared', 0),
@@ -1131,49 +1145,186 @@ def pageview(request, page_id):
         # แปลง queryset เป็น list ของ dict เพื่อใช้ใน template
         tiktok_posts_data = []
         for p in tiktok_posts_qs:
+            # เตรียมข้อมูล timestamp และ interaction สำหรับตารางและกราฟ
             timestamp_text = p.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if p.post_timestamp_dt else (p.post_timestamp or '')
-            total_engagement = (p.like_count or 0) + (p.comment_count or 0) + (p.share_count or 0)
+            total_engagement = (p.like_count or 0) + (p.comment_count or 0) + (p.share_count or 0) + (p.save_count or 0)
+            # อัตราปฏิสัมพันธ์: ใช้ engagement ต่อจำนวน view หากมี view
+            if p.view_count and p.view_count > 0:
+                interaction_rate = f"{(total_engagement / p.view_count):.2%}"
+            else:
+                interaction_rate = '-'
             tiktok_posts_data.append({
                 'post_url': p.post_url,
-                'post_content': p.post_content,
+                'post_content': p.post_content or '',
                 'post_imgs': [p.post_imgs] if p.post_imgs else [],
                 'post_timestamp': timestamp_text,
+                'post_timestamp_dt': p.post_timestamp_dt,
                 'view_count': p.view_count or 0,
                 'like_count': p.like_count or 0,
                 'comment_count': p.comment_count or 0,
                 'share_count': p.share_count or 0,
                 'save_count': p.save_count or 0,
+                'page_name': p.page.page_name if p.page else '',
+                'profile_pic': p.page.profile_pic if p.page else '',
                 'total_engagement': total_engagement,
+                'interaction_rate': interaction_rate,
             })
 
         # จัดลำดับโพสต์สำหรับ Top 10 และ Flop 10 ตาม view_count
         tiktok_posts_top10 = sorted(tiktok_posts_data, key=lambda x: x['view_count'], reverse=True)[:10]
         tiktok_posts_flop10 = sorted(tiktok_posts_data, key=lambda x: x['view_count'])[:10]
 
-        # สร้าง scatter chart (วันที่ vs. view_count)
+        # สร้าง scatter chart (วันที่ vs. engagement)
         tiktok_scatter = []
+        # เก็บวันที่ทั้งหมดเพื่อหาช่วงวันที่
+        scatter_dates = []
         for item in tiktok_posts_data:
-            date_part = item['post_timestamp'][:10] if item['post_timestamp'] else ''
-            tiktok_scatter.append({
-                'x': date_part,
-                'y': item['view_count'],
-                'content': (item['post_content'][:30] + '...') if item['post_content'] else '',
-                'page_name': page.page_name,
-                'timestamp_text': item['post_timestamp'],
-                'img': item['post_imgs'][0] if item['post_imgs'] else None,
-            })
+            if item.get('post_timestamp_dt'):
+                # ใช้ datetime จริงสำหรับแกน X
+                scatter_dates.append(item['post_timestamp_dt'].date())
+                tiktok_scatter.append({
+                    'x': item['post_timestamp_dt'].strftime('%Y-%m-%d %H:%M'),
+                    'y': item['total_engagement'],
+                    'content': (item['post_content'][:30] + '...') if item.get('post_content') else '',
+                    'page_name': item.get('page_name', page.page_name),
+                    'timestamp_text': item['post_timestamp'],
+                    'img': item['post_imgs'][0] if item['post_imgs'] else None,
+                    'link': item['post_url'],
+                })
+            else:
+                # ถ้าไม่มี datetime ให้ข้ามใน scatter chart
+                continue
+
+        # หาวันแรกและวันสุดท้ายสำหรับหัวกราฟ
+        start_date = ''
+        end_date = ''
+        if scatter_dates:
+            scatter_dates_sorted = sorted(scatter_dates)
+            start_date = scatter_dates_sorted[0].strftime('%d %b')
+            end_date = scatter_dates_sorted[-1].strftime('%d %b')
 
         # นับจำนวนโพสต์ตามวันในสัปดาห์
         weekday_counter = Counter()
+        posts_by_day_json = defaultdict(list)
+        posts_grouped_by_time = defaultdict(list)
+        # เตรียม heatmap สำหรับ best time chart
+        heatmap_counter = {}
+        hour_bins = list(range(0, 24, 2))  # กลุ่มชั่วโมงทุก 2 ชั่วโมง
         for p in tiktok_posts_qs:
             dt = p.post_timestamp_dt
-            if dt:
-                weekday_name = dt.strftime('%A')
-                weekday_counter[weekday_name] += 1
+            if not dt:
+                continue
+            weekday_index = dt.weekday()
+            weekday_name = dt.strftime('%A')
+            weekday_counter[weekday_name] += 1
+            hour = dt.hour
+            hour_slot = (hour // 2) * 2
+            key = f"{weekday_index}_{hour_slot}"
+
+            # ตัวแปรปฏิสัมพันธ์
+            likes = p.like_count or 0
+            comments = p.comment_count or 0
+            shares = p.share_count or 0
+            saves = p.save_count or 0
+            views = p.view_count or 0
+            total_engagement = likes + comments + shares
+
+            # posts_by_day_json สำหรับ popup วัน
+            posts_by_day_json[str(weekday_index)].append({
+                "platform": "tiktok",
+                "post_url": p.post_url,
+                "post_imgs": [p.post_imgs] if p.post_imgs else [],
+                "post_content": p.post_content or '',
+                "post_timestamp": dt.strftime('%Y-%m-%d %H:%M'),
+                "profile_pic": p.page.profile_pic if p.page else None,
+                "page_name": p.page.page_name if p.page else '',
+                "like_count": likes,
+                "comment_count": comments,
+                "share_count": shares,
+                "save_count": saves,
+                "view_count": views,
+                "total_engagement": likes + comments + shares + saves,
+            })
+
+            # posts_grouped_by_time สำหรับ popup Best Times chart
+            posts_grouped_by_time[key].append({
+                "platform": "tiktok",
+                "post_url": p.post_url,
+                "post_imgs": [p.post_imgs] if p.post_imgs else [],
+                "post_content": p.post_content or '',
+                "post_timestamp": dt.strftime('%Y-%m-%d %H:%M'),
+                "profile_pic": p.page.profile_pic if p.page else None,
+                "page_name": p.page.page_name if p.page else '',
+                "like_count": likes,
+                "comment_count": comments,
+                "share_count": shares,
+                "save_count": saves,
+                "view_count": views,
+                "total_engagement": likes + comments + shares + saves,
+            })
+
+            # รวมข้อมูล heatmap สำหรับ bubble chart
+            heat_key = (weekday_name, hour_slot)
+            if heat_key not in heatmap_counter:
+                heatmap_counter[heat_key] = {
+                    "count": 0,
+                    "likes": 0,
+                    "comments": 0,
+                    "shares": 0,
+                    "saves": 0,
+                    "engagement": 0,
+                }
+            heatmap_counter[heat_key]["count"] += 1
+            heatmap_counter[heat_key]["likes"] += likes
+            heatmap_counter[heat_key]["comments"] += comments
+            heatmap_counter[heat_key]["shares"] += shares
+            heatmap_counter[heat_key]["saves"] += saves
+            heatmap_counter[heat_key]["engagement"] += likes + comments + shares + saves
+
+        # สร้าง bar chart ข้อมูลวัน
         posts_by_day_data = [{"day": day, "count": weekday_counter.get(day, 0)} for day in calendar.day_name]
         bar_day_labels = list(calendar.day_name)
         bar_day_values = [weekday_counter.get(day, 0) for day in bar_day_labels]
-        bar_day_colors = ['#a2d2ff', '#cdb4db', '#ffd6a5', '#ffdac1', '#e8aeef', '#c3f0ca', '#bcd4e6']
+        # ฟังก์ชันเลือกสีตามจำนวนโพสต์
+        def get_bar_color_by_count(count):
+            color_map = {
+                1: "#cdb4db",
+                2: "#c5f6f7",
+                3: "#f9c6c9",
+                4: "#ffd6a5",
+                5: "#FF6962",
+            }
+            return color_map.get(count, "#9E9E9E")
+
+        bar_day_colors = [get_bar_color_by_count(weekday_counter.get(day, 0)) for day in bar_day_labels]
+
+        # สร้างข้อมูล bubble chart (Best Times To Post)
+        day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        best_times_bubble = []
+
+        for (day_name, hour_slot), val in heatmap_counter.items():
+            key_str = f"{day_order.index(day_name)}_{hour_slot}"
+            tooltip_label = f"{day_name} {hour_slot:02d}:00 - {hour_slot + 2:02d}:00"
+            bubble = {
+                "x": day_order.index(day_name),
+                "y": hour_slot,
+                "r": max(4, min(20, val["count"] * 3)),
+                "count": val["count"],
+                "likes": val["likes"],
+                "comments": val["comments"],
+                "shares": val["shares"],
+                "saves": val["saves"],
+                "label": tooltip_label,
+                "tooltip_label": tooltip_label,
+                "key": key_str,
+                "color": get_bar_color_by_count(val["count"]),
+                "customTooltip": {
+                    "line1": tooltip_label,
+                    "line2": f"{val['count']} Number of posts",
+                    "line3": f"{val['likes']} Likes, {val['comments']} Comments, {val['shares']} Shares, {val['saves']} Saves"
+                }
+            }
+            best_times_bubble.append(bubble)
 
         # ดึงข้อมูลผู้ติดตามจาก FollowerHistory หากมี
         follower_qs = FollowerHistory.objects.filter(page=page).order_by('date')
@@ -1182,17 +1333,37 @@ def pageview(request, page_id):
             for f in follower_qs if f.page_followers_count
         ]
 
+        # คำนวณ Top 50 Hashtags สำหรับ TikTok
+        top_hashtags_raw = extract_top_hashtags(tiktok_posts_qs)  # ดึง (tag, count)
+        top_count_max = top_hashtags_raw[0][1] if top_hashtags_raw else 1
+        top_hashtags = []
+        for tag, count in top_hashtags_raw:
+            font_size = round(0.8 + (count / top_count_max) * 1.5, 2)
+            color_hue = round(120 - (count / top_count_max) * 60, 2)
+            top_hashtags.append({
+                "tag": tag,
+                "count": count,
+                "font_size": font_size,
+                "color_hue": color_hue,
+            })
+
         return render(request, 'PageInfo/pageview.html', {
             'page': page,
             'tiktok_posts': tiktok_posts_data,
             'tiktok_posts_top10': tiktok_posts_top10,
             'tiktok_posts_flop': tiktok_posts_flop10,
             'scatter_data': json.dumps(tiktok_scatter, ensure_ascii=False),
+            'start_date': start_date,
+            'end_date': end_date,
             'follower_data': follower_data,
             'posts_by_day_data': posts_by_day_data,
             'bar_day_labels': json.dumps(bar_day_labels, ensure_ascii=False),
             'bar_day_values': json.dumps(bar_day_values),
             'bar_day_colors': json.dumps(bar_day_colors),
+            'bubble_data': json.dumps(best_times_bubble),
+            'posts_by_day_json': json.dumps(posts_by_day_json),
+            'posts_grouped_json': json.dumps(posts_grouped_by_time),
+            'top_hashtags': top_hashtags,
         })
 
     if page.platform == "facebook":
