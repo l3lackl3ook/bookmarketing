@@ -668,44 +668,63 @@ def add_page(request, group_id):
 
                 # ✅ ดึงข้อมูลโพสต์ TikTok
                 try:
-                    from .tiktok_post import scrape_tiktok_posts_for_django
-                    posts = scrape_tiktok_posts_for_django(url)  # จำกัดจำนวนโพสต์ได้ตรงนี้
-                    print(f"📋 ดึงข้อมูล {len(posts)} โพสต์จาก TikTok")
+                    from .tiktok_post import scrape_tiktok_posts_for_django, filter_recent_posts
 
-                    for post in posts:
-                        # ✅ แปลงวันที่จาก string เป็น datetime object
-                        post_timestamp_dt = None
-                        post_timestamp_text = post.get('timestamp', '')
+                    # เรียก scraper และรับผลลัพธ์เป็น dict
+                    scrape_result = scrape_tiktok_posts_for_django(
+                        profile_url=url,
+                        cookies_file=None,
+                        max_posts=None,
+                        headless=True,
+                        scroll_rounds=50,
+                        timeout=30000
+                    )
 
-                        if post_timestamp_text and post_timestamp_text != 'ไม่พบวันที่':
-                            try:
-                                # แปลงจาก "23/07/2025" เป็น datetime
-                                post_timestamp_dt = datetime.strptime(post_timestamp_text, '%d/%m/%Y')
-                                if timezone.is_naive(post_timestamp_dt):
-                                    post_timestamp_dt = timezone.make_aware(post_timestamp_dt)
-                            except ValueError as e:
-                                print(f"⚠️ ไม่สามารถแปลงวันที่ '{post_timestamp_text}': {e}")
-                                post_timestamp_dt = None
+                    # ตรวจสอบว่าการดึงข้อมูลสำเร็จหรือไม่
+                    if not scrape_result.get('success'):
+                        print(f"❌ Error fetching TikTok posts: {scrape_result.get('message')}")
+                        # ถึงแม้จะ error ก็ยังคง PageInfo ไว้
+                        pass
+                    else:
+                        posts_data = scrape_result.get('data', [])
+                        # หากต้องการกรองเฉพาะโพสต์ช่วง 30 วันที่ผ่านมา สามารถใช้ filter_recent_posts
+                        posts_data = filter_recent_posts(posts_data, days=30)
+                        print(f"📋 ดึงข้อมูล {len(posts_data)} โพสต์จาก TikTok")
 
-                        # ✅ สร้าง TikTokPost
-                        TikTokPost.objects.update_or_create(
-                            post_url=post.get('post_url'),
-                            defaults={
-                                'page': page_obj,
-                                'post_content': post.get('post_content', ''),
-                                'post_imgs': post.get('post_thumbnail', ''),
-                                'post_timestamp': post_timestamp_text,
-                                'post_timestamp_dt': post_timestamp_dt,  # ✅ เพิ่ม datetime field
-                                'like_count': post.get('reaction', 0),
-                                'comment_count': post.get('comment', 0),
-                                'share_count': post.get('shared', 0),
-                                'save_count': post.get('saved', 0),
-                                'view_count': post.get('views', 0),
-                                'platform': 'tiktok'
-                            }
-                        )
+                        for post in posts_data:
+                            # ✅ แปลงวันที่จาก string เป็น datetime object
+                            post_timestamp_dt = None
+                            post_timestamp_text = post.get('timestamp', '')
 
-                    print(f"✅ บันทึกข้อมูล {len(posts)} โพสต์ TikTok สำเร็จ")
+                            if post_timestamp_text and post_timestamp_text != 'ไม่พบวันที่':
+                                try:
+                                    # แปลงจาก "23/07/2025" เป็น datetime
+                                    post_timestamp_dt = datetime.strptime(post_timestamp_text, '%d/%m/%Y')
+                                    if timezone.is_naive(post_timestamp_dt):
+                                        post_timestamp_dt = timezone.make_aware(post_timestamp_dt)
+                                except ValueError as e:
+                                    print(f"⚠️ ไม่สามารถแปลงวันที่ '{post_timestamp_text}': {e}")
+                                    post_timestamp_dt = None
+
+                            # ✅ สร้างหรืออัปเดต TikTokPost
+                            TikTokPost.objects.update_or_create(
+                                post_url=post.get('post_url'),
+                                defaults={
+                                    'page': page_obj,
+                                    'post_content': post.get('post_content', ''),
+                                    'post_imgs': post.get('post_thumbnail', ''),
+                                    'post_timestamp': post_timestamp_text,
+                                    'post_timestamp_dt': post_timestamp_dt,  # ✅ เพิ่ม datetime field
+                                    'like_count': post.get('reaction', 0),
+                                    'comment_count': post.get('comment', 0),
+                                    'share_count': post.get('shared', 0),
+                                    'save_count': post.get('saved', 0),
+                                    'view_count': post.get('views', 0),
+                                    'platform': 'tiktok'
+                                }
+                            )
+
+                        print(f"✅ บันทึกข้อมูล {len(posts_data)} โพสต์ TikTok สำเร็จ")
 
                 except Exception as e:
                     print(f"❌ Error fetching TikTok posts: {e}")
@@ -815,7 +834,11 @@ def create_group(request):
 def group_detail(request, group_id):
     group = get_object_or_404(PageGroup, id=group_id)
     pages = group.pages.all().order_by('-page_followers_count')
+    # ดึงโพสต์ Facebook ทั้งหมดของเพจในกลุ่ม
     posts = FacebookPost.objects.filter(page__in=pages)
+
+    # ดึงโพสต์ TikTok ของเพจในกลุ่ม (ถ้ามี) เพื่อแสดงในหน้า group_detail
+    tiktok_posts = TikTokPost.objects.filter(page__in=pages).order_by('-post_timestamp_dt')
 
     sidebar = sidebar_context(request)
 
@@ -856,6 +879,33 @@ def group_detail(request, group_id):
             'page_name': post.page.page_name if post.page else '',
             'page_profile_pic': post.page.profile_pic if post.page else ''
         })
+
+    # 🕺 Top TikTok posts by view count (for groups that include TikTok pages)
+    # จัดลำดับโพสต์ TikTok ตามจำนวนผู้ชม (view_count)
+    top10_tiktok_posts_data = []
+    if tiktok_posts:
+        # หาผลรวม top 10 ตาม view_count หรือ like_count หากไม่มี view_count ให้ใช้ 0
+        top10_tiktok_posts = sorted(
+            tiktok_posts,
+            key=lambda p: (p.view_count or 0),
+            reverse=True
+        )[:10]
+
+        for t_post in top10_tiktok_posts:
+            top10_tiktok_posts_data.append({
+                'post_url': t_post.post_url,
+                'post_content': t_post.post_content,
+                # TikTokPost มี post_imgs เป็น string เดียว ดังนั้นแปลงเป็น list เพื่อใช้ร่วมกับ template ที่คาดว่าเป็น list
+                'post_imgs': [t_post.post_imgs] if t_post.post_imgs else [],
+                'post_timestamp': t_post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if t_post.post_timestamp_dt else (t_post.post_timestamp or ''),
+                'view_count': t_post.view_count or 0,
+                'like_count': t_post.like_count or 0,
+                'comment_count': t_post.comment_count or 0,
+                'share_count': t_post.share_count or 0,
+                'save_count': t_post.save_count or 0,
+                'page_name': t_post.page.page_name if t_post.page else '',
+                'page_profile_pic': t_post.page.profile_pic if t_post.page else '',
+            })
 
     colors = ['#e20414', '#2e3d93', '#fbd305', '#355e73', '#0c733c', '#c94087']
 
@@ -1006,6 +1056,8 @@ def group_detail(request, group_id):
         'posts_by_day_json': json.dumps(posts_grouped_by_day),
         'followers_posts_map': json.dumps(followers_posts_map),
         'facebook_posts_top10': top10_posts_data,
+        # เพิ่มรายการโพสต์ TikTok อันดับต้น ๆ หากมีเพจ TikTok อยู่ในกลุ่ม
+        'tiktok_posts_top10': top10_tiktok_posts_data,
         "pillar_summary": pillar_summary,
         'posts_by_pillar': posts_by_pillar,
         'sidebar': sidebar,
@@ -1071,6 +1123,77 @@ def pageview(request, page_id):
     facebook_posts_flop10 = None
     scatter_data = []  # ✅ เตรียม scatter_data นอก loop ใหญ่
     posts_by_day_data = []  # ✅ เตรียม posts_by_day_data
+
+    # หากเป็นเพจ TikTok ให้เตรียมข้อมูลและ return ทันที
+    if page.platform == "tiktok":
+        # 📲 ดึงโพสต์ TikTok ทั้งหมดของเพจนี้
+        tiktok_posts_qs = TikTokPost.objects.filter(page=page).order_by('-post_timestamp_dt')
+        # แปลง queryset เป็น list ของ dict เพื่อใช้ใน template
+        tiktok_posts_data = []
+        for p in tiktok_posts_qs:
+            timestamp_text = p.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if p.post_timestamp_dt else (p.post_timestamp or '')
+            total_engagement = (p.like_count or 0) + (p.comment_count or 0) + (p.share_count or 0)
+            tiktok_posts_data.append({
+                'post_url': p.post_url,
+                'post_content': p.post_content,
+                'post_imgs': [p.post_imgs] if p.post_imgs else [],
+                'post_timestamp': timestamp_text,
+                'view_count': p.view_count or 0,
+                'like_count': p.like_count or 0,
+                'comment_count': p.comment_count or 0,
+                'share_count': p.share_count or 0,
+                'save_count': p.save_count or 0,
+                'total_engagement': total_engagement,
+            })
+
+        # จัดลำดับโพสต์สำหรับ Top 10 และ Flop 10 ตาม view_count
+        tiktok_posts_top10 = sorted(tiktok_posts_data, key=lambda x: x['view_count'], reverse=True)[:10]
+        tiktok_posts_flop10 = sorted(tiktok_posts_data, key=lambda x: x['view_count'])[:10]
+
+        # สร้าง scatter chart (วันที่ vs. view_count)
+        tiktok_scatter = []
+        for item in tiktok_posts_data:
+            date_part = item['post_timestamp'][:10] if item['post_timestamp'] else ''
+            tiktok_scatter.append({
+                'x': date_part,
+                'y': item['view_count'],
+                'content': (item['post_content'][:30] + '...') if item['post_content'] else '',
+                'page_name': page.page_name,
+                'timestamp_text': item['post_timestamp'],
+                'img': item['post_imgs'][0] if item['post_imgs'] else None,
+            })
+
+        # นับจำนวนโพสต์ตามวันในสัปดาห์
+        weekday_counter = Counter()
+        for p in tiktok_posts_qs:
+            dt = p.post_timestamp_dt
+            if dt:
+                weekday_name = dt.strftime('%A')
+                weekday_counter[weekday_name] += 1
+        posts_by_day_data = [{"day": day, "count": weekday_counter.get(day, 0)} for day in calendar.day_name]
+        bar_day_labels = list(calendar.day_name)
+        bar_day_values = [weekday_counter.get(day, 0) for day in bar_day_labels]
+        bar_day_colors = ['#a2d2ff', '#cdb4db', '#ffd6a5', '#ffdac1', '#e8aeef', '#c3f0ca', '#bcd4e6']
+
+        # ดึงข้อมูลผู้ติดตามจาก FollowerHistory หากมี
+        follower_qs = FollowerHistory.objects.filter(page=page).order_by('date')
+        follower_data = [
+            {"date": f.date.strftime("%b %d"), "followers": f.page_followers_count}
+            for f in follower_qs if f.page_followers_count
+        ]
+
+        return render(request, 'PageInfo/pageview.html', {
+            'page': page,
+            'tiktok_posts': tiktok_posts_data,
+            'tiktok_posts_top10': tiktok_posts_top10,
+            'tiktok_posts_flop': tiktok_posts_flop10,
+            'scatter_data': json.dumps(tiktok_scatter, ensure_ascii=False),
+            'follower_data': follower_data,
+            'posts_by_day_data': posts_by_day_data,
+            'bar_day_labels': json.dumps(bar_day_labels, ensure_ascii=False),
+            'bar_day_values': json.dumps(bar_day_values),
+            'bar_day_colors': json.dumps(bar_day_colors),
+        })
 
     if page.platform == "facebook":
         facebook_posts = FacebookPost.objects.filter(page=page).order_by('-post_timestamp_dt')

@@ -140,7 +140,7 @@ class TikTokPost(models.Model):
 
     post_url = models.URLField(max_length=500, unique=True)
     post_content = models.TextField(null=True, blank=True)
-    post_imgs = models.URLField(null=True, blank=True)
+    post_imgs = models.URLField(max_length=500, null=True, blank=True)
 
     post_timestamp = models.CharField(max_length=100, null=True, blank=True)  # เก็บแบบ string
     post_timestamp_dt = models.DateTimeField(null=True, blank=True)  # เก็บแบบ datetime

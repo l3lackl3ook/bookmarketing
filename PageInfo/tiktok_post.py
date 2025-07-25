@@ -150,22 +150,34 @@ class TikTokPostScraper:
             return False
 
     def solve_captcha(self, max_wait_time: int = 30) -> bool:
-        """Handle CAPTCHA with timeout - skip and continue if CAPTCHA detected"""
+        """Handle CAPTCHA with a short timeout; return quickly if CAPTCHA persists.
+
+        If a CAPTCHA is detected, we wait for a short period to see if it disappears,
+        but we don't block scraping for too long. This prevents the scraper from
+        getting stuck when TikTok presents persistent CAPTCHAs. If the CAPTCHA
+        does not go away within the specified `max_wait_time`, we log and
+        return False to allow the calling code to continue (and use default
+        values for the current item).
+        """
+        # If no CAPTCHA, nothing to solve
         if not self.check_captcha_exists():
             return True
 
         try:
-            logger.warning(f"⚠️ พบ CAPTCHA - พยายามข้าม...")
+            logger.warning("⚠️ พบ CAPTCHA - waiting briefly to see if it clears")
             start_time = time.time()
-
+            # Limit waiting time to the provided max_wait_time
             while time.time() - start_time < max_wait_time:
+                # If CAPTCHA disappears, proceed
                 if not self.check_captcha_exists():
                     logger.info("✅ CAPTCHA หายไปแล้ว - ดำเนินการต่อ")
-                    time.sleep(2)
+                    # Small delay to allow the page to load fully
+                    time.sleep(1)
                     return True
                 time.sleep(1)
 
-            logger.warning(f"⚠️ CAPTCHA ยังคงอยู่ - ดำเนินการต่อ")
+            # CAPTCHA still present after waiting
+            logger.warning("⚠️ CAPTCHA persists - skipping solve attempt and continuing")
             return False
 
         except Exception as e:
@@ -184,7 +196,8 @@ class TikTokPostScraper:
 
                 if self.check_captcha_exists():
                     logger.info("🤖 CAPTCHA detected during navigation")
-                    if not self.solve_captcha(max_wait_time=15):
+                    # Use a shorter wait time to avoid long hangs on CAPTCHA
+                    if not self.solve_captcha(max_wait_time=5):
                         logger.warning("⚠️ CAPTCHA persists - will use default values")
                         return False
 
@@ -200,16 +213,27 @@ class TikTokPostScraper:
         return False
 
     def get_post_content(self) -> str:
-        """Extract post content with enhanced timeout handling"""
+        """Extract post content with enhanced timeout handling.
+
+        This method attempts to extract the full text of a TikTok post. It
+        includes logic to expand truncated descriptions by clicking the
+        "more"/"เพิ่มเติม" button when present. It also avoids bailing
+        out early if a CAPTCHA overlay is detected – we warn about the
+        presence of a CAPTCHA but proceed to scrape via available DOM or
+        JavaScript data since much of the data is still embedded in the
+        page's scripts.
+        """
+        # Do not return early on CAPTCHA; log warning instead. Even with a
+        # CAPTCHA overlay, the underlying page HTML and scripts often still
+        # contain the full post content, so we attempt extraction regardless.
         if self.check_captcha_exists():
-            logger.warning("⚠️ CAPTCHA detected - skipping timestamp extraction")
-            return "ไม่สามารถดึงข้อมูลได้ (CAPTCHA)"
+            logger.warning("⚠️ CAPTCHA detected - attempting to extract content anyway")
 
         try:
             # Wait for content to load with timeout
             logger.info("🔍 Attempting to get content (attempt 1)")
             content_loaded = False
-            max_wait = 15  # seconds
+            max_wait = 10  # seconds (reduce wait to improve responsiveness)
             start_time = time.time()
 
             while time.time() - start_time < max_wait:
@@ -230,23 +254,59 @@ class TikTokPostScraper:
 
             # Scroll to expand description
             try:
+                # Slightly scroll down to ensure the description area is in view
                 self.page.evaluate("window.scrollTo(0, 150)")
                 time.sleep(1)
 
-                # Try to click "See more" buttons
+                # Attempt to click "See more" buttons within the description area first
                 description_area = self.page.query_selector('[data-e2e="browse-video-desc"], [data-e2e="video-desc"]')
                 if description_area:
-                    expand_buttons = description_area.query_selector_all('button, span')
-                    for button in expand_buttons[:3]:
+                    expand_buttons = description_area.query_selector_all('button, span') or []
+                    # Check a few potential elements to find the expand button
+                    for button in expand_buttons[:5]:
                         try:
-                            text = button.inner_text().lower()
-                            if 'more' in text or 'เพิ่มเติม' in text or '...' in text:
+                            text = button.inner_text().lower() if hasattr(button, 'inner_text') else ''
+                            class_name = button.get_attribute('class') or ''
+                            if any(keyword in (text or '').lower() for keyword in ['more', 'เพิ่มเติม', '...', 'show more']) or \
+                               any(keyword in (class_name or '').lower() for keyword in ['buttonexpand', 'css-1kmeri5', 'e1mzilcj2']):
                                 button.click()
-                                time.sleep(1)
+                                time.sleep(0.5)
                                 break
-                        except:
-                            pass
-            except:
+                        except Exception:
+                            continue
+
+                # Direct attempt: query known expand button classes and click
+                try:
+                    expand = self.page.query_selector('button.css-1kmeri5-ButtonExpand, button[class*="ButtonExpand"], span[class*="ButtonExpand"]')
+                    if expand:
+                        expand.click()
+                        time.sleep(0.5)
+                except Exception:
+                    pass
+
+                # Fallback: use JavaScript to find and click any element on the page
+                # whose text or class indicates it expands the description. This
+                # helps in cases where the expand button isn't inside the
+                # description container.
+                try:
+                    self.page.evaluate("""
+                        () => {
+                            const candidates = Array.from(document.querySelectorAll('button, span'));
+                            for (const el of candidates) {
+                                const text = (el.innerText || '').toLowerCase();
+                                const cls  = (el.className || '').toLowerCase();
+                                if (text.includes('more') || text.includes('เพิ่มเติม') || text.includes('...') ||
+                                    cls.includes('buttonexpand') || cls.includes('css-1kmeri5') || cls.includes('e1mzilcj2')) {
+                                    try { el.click(); return; } catch (e) {}
+                                }
+                            }
+                        }
+                    """)
+                except Exception:
+                    pass
+
+            except Exception:
+                # If any error occurs during the scrolling or button clicking, we simply continue
                 pass
 
             content = ""
@@ -368,9 +428,14 @@ class TikTokPostScraper:
             return "ไม่สามารถดึงข้อมูลได้ (Error)"
 
     def get_saved_count(self) -> int:
-        """Extract saved/bookmark count with multiple methods"""
+        """Extract saved/bookmark count with multiple methods.
+
+        Even if a CAPTCHA overlay exists, the count may still be available via
+        embedded scripts, so we continue scraping rather than returning 0.
+        """
         if self.check_captcha_exists():
-            return 0
+            # Warn but do not immediately return, since values may still be in page scripts
+            logger.warning("⚠️ CAPTCHA detected - attempting to extract saved count anyway")
 
         time.sleep(1)
 
@@ -466,9 +531,12 @@ class TikTokPostScraper:
         Extract post timestamp with multiple methods
         Returns: (formatted_date, unix_timestamp, iso_string)
         """
+        # Do not return early if a CAPTCHA is detected. A CAPTCHA overlay
+        # typically does not remove the embedded script data, so we can
+        # still attempt to pull the timestamp from JavaScript or DOM. We
+        # warn the user but proceed with extraction.
         if self.check_captcha_exists():
-            logger.warning("⚠️ CAPTCHA detected - skipping timestamp extraction")
-            return "ไม่สามารถดึงวันที่ได้ (CAPTCHA)", None, None
+            logger.warning("⚠️ CAPTCHA detected - attempting to extract timestamp anyway")
 
         # Method 1: Extract from __UNIVERSAL_DATA_FOR_REHYDRATION__
         try:
@@ -625,8 +693,8 @@ class TikTokPostScraper:
     def safe_get_metrics(self) -> Tuple[int, int, int]:
         """Extract likes, comments, and shares safely"""
         if self.check_captcha_exists():
-            logger.warning("⚠️ CAPTCHA present - using default metrics")
-            return 0, 0, 0
+            # Warn but do not bail out; metrics may still be retrievable from scripts
+            logger.warning("⚠️ CAPTCHA present - attempting to extract metrics anyway")
 
         try:
             # Try JavaScript extraction first
@@ -744,8 +812,10 @@ class TikTokPostScraper:
                     # Check for CAPTCHA during scrolling
                     if self.check_captcha_exists():
                         logger.warning(f"⚠️ CAPTCHA detected during scroll round {scroll_round + 1}")
-                        if not self.solve_captcha(max_wait_time=15):
+                        # Use a shorter wait time for solving CAPTCHA to avoid long hangs
+                        if not self.solve_captcha(max_wait_time=5):
                             logger.warning("⚠️ CAPTCHA persists - continuing scroll")
+                        # Continue scrolling regardless of CAPTCHA outcome
                         continue
 
                 except Exception as e:
@@ -964,12 +1034,12 @@ def scrape_tiktok_posts_for_django(profile_url: str,
                             "timestamp_unix": post.get("timestamp_unix"),  # Keep as None if not available
                             "timestamp_iso": post.get("timestamp_iso"),  # Keep as None if not available
                             "username": str(post.get("username", username)),
-                            "views": self._safe_int_convert(post.get("views", 0)),
-                            "reaction": self._safe_int_convert(post.get("reaction", 0)),
-                            "comment": self._safe_int_convert(post.get("comment", 0)),
-                            "shared": self._safe_int_convert(post.get("shared", 0)),
-                            "saved": self._safe_int_convert(post.get("saved", 0)),
-                            "post_index": self._safe_int_convert(post.get("post_index", len(cleaned_posts) + 1))
+                            "views": _safe_int_convert(post.get("views", 0)),
+                            "reaction": _safe_int_convert(post.get("reaction", 0)),
+                            "comment": _safe_int_convert(post.get("comment", 0)),
+                            "shared": _safe_int_convert(post.get("shared", 0)),
+                            "saved": _safe_int_convert(post.get("saved", 0)),
+                            "post_index": _safe_int_convert(post.get("post_index", len(cleaned_posts) + 1))
                         }
 
                         cleaned_posts.append(cleaned_post)
@@ -996,13 +1066,13 @@ def scrape_tiktok_posts_for_django(profile_url: str,
 
                 # Safe numeric calculations
                 try:
-                    stats['total_views'] = sum(self._safe_int_convert(post.get('views', 0)) for post in cleaned_posts)
+                    stats['total_views'] = sum(_safe_int_convert(post.get('views', 0)) for post in cleaned_posts)
                     stats['total_likes'] = sum(
-                        self._safe_int_convert(post.get('reaction', 0)) for post in cleaned_posts)
+                        _safe_int_convert(post.get('reaction', 0)) for post in cleaned_posts)
                     stats['total_comments'] = sum(
-                        self._safe_int_convert(post.get('comment', 0)) for post in cleaned_posts)
-                    stats['total_shares'] = sum(self._safe_int_convert(post.get('shared', 0)) for post in cleaned_posts)
-                    stats['total_saves'] = sum(self._safe_int_convert(post.get('saved', 0)) for post in cleaned_posts)
+                        _safe_int_convert(post.get('comment', 0)) for post in cleaned_posts)
+                    stats['total_shares'] = sum(_safe_int_convert(post.get('shared', 0)) for post in cleaned_posts)
+                    stats['total_saves'] = sum(_safe_int_convert(post.get('saved', 0)) for post in cleaned_posts)
                 except Exception as e:
                     logger.error(f"❌ Error calculating stats: {e}")
 
@@ -1194,7 +1264,7 @@ def get_posts_summary(posts_data: List[Dict]) -> Dict:
 def run_standalone_scraper(profile_url: str = None,
                            cookies_file: str = None,
                            max_posts: int = None,
-                           save_json: bool = True):
+                           save_json: bool = False):
     """
     Standalone function for testing the scraper
     """
@@ -1272,6 +1342,7 @@ if __name__ == "__main__":
     run_standalone_scraper(
         profile_url=profile_url,
         cookies_file=cookies_file if os.path.exists(cookies_file) else None,
-        max_posts=None,  # Change this number
-        save_json=True
+        max_posts=None,  # Change this number as needed
+        # Do not save to JSON by default when running directly
+        save_json=False
     )
