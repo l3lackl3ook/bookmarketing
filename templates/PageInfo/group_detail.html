@@ -240,9 +240,10 @@
         <th scope="col">Page</th>
         <th scope="col">Followers</th>
 
+        {# Show specific columns depending on platform #}
         {% if pages|length > 0 and pages.0.platform == "youtube" %}
-          <th scope="col">Viewers</th>
-          <th scope="col">All Video</th>
+          <th scope="col">Likes</th>
+          <th scope="col">Videos</th>
         {% else %}
           <th scope="col">Likes</th>
           <th scope="col">Talking</th>
@@ -336,18 +337,18 @@
   }
   </style>
 
-  <!-- Talking, Website, Email, Phone -->
+  <!-- Talking/Videos, Website, Email, Phone -->
   {% if page.platform == "facebook" %}
     <td>{{ page.page_talking_count|default:"0" }}</td>
     <td>
-  {% if page.page_website %}
-    <a href="https://{{ page.page_website|lower }}" target="_blank" class="page-name-link" style="font-weight: bold;">
-      {{ page.page_website }}
-    </a>
-  {% else %}
-    -
-  {% endif %}
-</td>
+      {% if page.page_website %}
+        <a href="https://{{ page.page_website|lower }}" target="_blank" class="page-name-link" style="font-weight: bold;">
+          {{ page.page_website }}
+        </a>
+      {% else %}
+        -
+      {% endif %}
+    </td>
     <td><a href="mailto:{{ page.page_email }}" class="page-name-link">{{ page.page_email|default:"-" }}</a></td>
     <td>{{ page.page_phone|default:"-" }}</td>
   {% elif page.platform == "instagram" %}
@@ -360,17 +361,18 @@
     <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
     <td>-</td>
     <td>-</td>
-{% elif page.platform == "youtube" %}
-  <td>{{ page.page_videos_count|default:"-" }}</td>
-  <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
-  <td>-</td>
-  <td>-</td>
-{% else %}
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
-  <td>-</td>
-{% endif %}</tr>
+  {% elif page.platform == "youtube" or page.platform == "tiktok" %}
+    <td>{{ page.page_videos_count|default:"-" }}</td>
+    <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
+    <td>-</td>
+    <td>-</td>
+  {% else %}
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  {% endif %}
+</tr>
 {% endfor %}
 </tbody>
         </table>
@@ -755,6 +757,11 @@ const followersChart = new Chart(ctx, {
 
     <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // กำหนด STATIC_URL เพื่ออ้างอิงไอคอนของแต่ละแพลตฟอร์ม
+    window.STATIC_URL = "{% static '' %}";
+    // default profile pic for posts without profile pic
+    const defaultProfilePic = `${window.STATIC_URL}assets/img/icons/default_profile.png`;
+
     const postsByDayChart = new Chart(document.getElementById("postsByDayChart").getContext("2d"), {
       type: "bar",
       data: {
@@ -776,35 +783,80 @@ const followersChart = new Chart(ctx, {
 
             document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected By Day';
 
-            const html = posts.map(p => `
-              <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-                <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-                  ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank"><img src="${p.post_imgs[0]}" class="rounded-start" style="height: 100%; width: 90px; object-fit: cover;" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
-                </div>
-                <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="d-flex align-items-center gap-2">
-                      ${p.profile_pic ? `<img src="${p.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                      <i class="bi bi-facebook text-primary"></i>
-                      <strong class="text-truncate">${p.page_name}</strong>
+            // สร้าง HTML สำหรับแต่ละโพสต์ตามแพลตฟอร์ม
+            const html = posts.map(p => {
+              // ระบุไอคอนแพลตฟอร์ม
+              let platformIcon;
+              const plat = p.platform || '{{ group.pages.first.platform|default:"facebook" }}';
+              if (plat === 'tiktok') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'instagram') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'lemon8') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'youtube') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
+              } else {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
+              }
+
+              // เนื้อหา Engagement ตามแพลตฟอร์ม
+              let engagementHtml = '';
+              if (plat === 'tiktok') {
+                engagementHtml = `
+                  <span>❤️ ${p.like_count || 0}</span>
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span>🔖 ${p.save_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">👁 ${p.view_count || 0}</span>
+                `;
+              } else {
+                const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
+                  const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[r] || '';
+                  return `<span>${emoji} ${c}</span>`;
+                }).join('');
+                engagementHtml = `
+                  ${reactions}
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
+                `;
+              }
+
+              // URL สำหรับลิงก์ไปที่โพสต์
+              let postLink;
+              if (plat === 'tiktok') {
+                postLink = p.post_url || '#';
+              } else {
+                postLink = `https://www.facebook.com/${p.post_id}`;
+              }
+
+              const imgThumb = (p.post_imgs?.length && p.post_imgs[0]) ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" class="rounded-start" style="height: 100%; width: 90px; object-fit: cover;" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`;
+
+              return `
+                <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+                  <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
+                    ${imgThumb}
+                  </div>
+                  <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="d-flex align-items-center gap-2">
+                        <img src="${p.profile_pic || defaultProfilePic}" class="rounded-circle" style="width: 16px; height: 16px;">
+                        ${platformIcon}
+                        <strong class="text-truncate">${p.page_name || ''}</strong>
+                      </div>
+                      <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
                     </div>
-                    <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-                  </div>
-                  <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                    ${p.post_content}
-                  </div>
-                  <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                    ${Object.entries(p.reactions || {}).map(([r, c]) => {
-                      const emoji = { 'ถูกใจ': '👍', 'รักเลย': '❤️', 'เศร้า': '😢', 'โกรธ': '😡', 'ว้าว': '😮', 'ฮ่าๆ': '😂', 'ห่วงใย': '🥰' }[r] || '';
-                      return `<span>${emoji} ${c}</span>`;
-                    }).join('')}
-                    <span>💬 ${p.comment_count || 0}</span>
-                    <span>↪ ${p.share_count || 0}</span>
-                    <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement}</span>
+                    <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                      ${p.post_content || ''}
+                    </div>
+                    <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                      ${engagementHtml}
+                    </div>
                   </div>
                 </div>
-              </div>
-            `).join('');
+              `;
+            }).join('');
 
             document.getElementById('popupContent').innerHTML = html;
             new bootstrap.Modal(document.getElementById('popupModal')).show();
@@ -906,38 +958,78 @@ const followersChart = new Chart(ctx, {
 
             document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected Time Slot';
 
+            const html = posts.map(p => {
+              // Determine platform and set icon
+              const plat = p.platform || '{{ group.pages.first.platform|default:"facebook" }}';
+              let platformIcon;
+              if (plat === 'tiktok') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'instagram') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'lemon8') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
+              } else if (plat === 'youtube') {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
+              } else {
+                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
+              }
 
-            const html = posts.map(p => `
-              <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-                <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-                  ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank">
-                    <img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` :
-                    `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
-                </div>
-                <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="d-flex align-items-center gap-2">
-                      ${p.page?.profile_pic ? `<img src="${p.page.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                      <i class="bi bi-facebook text-primary"></i>
-                      <strong class="text-truncate">${p.page?.page_name || 'Unnamed'}</strong>
+              // Engagement HTML
+              let engagementHtml;
+              if (plat === 'tiktok') {
+                engagementHtml = `
+                  <span>❤️ ${p.like_count || 0}</span>
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span>🔖 ${p.save_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">👁 ${p.view_count || 0}</span>
+                `;
+              } else {
+                const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
+                  const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[r] || '';
+                  return `<span>${emoji} ${c}</span>`;
+                }).join('');
+                engagementHtml = `
+                  ${reactions}
+                  <span>💬 ${p.comment_count || 0}</span>
+                  <span>↪ ${p.share_count || 0}</span>
+                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
+                `;
+              }
+
+              // Thumbnail and link
+              let postLink;
+              if (plat === 'tiktok') {
+                postLink = p.post_url || '#';
+              } else {
+                postLink = `https://www.facebook.com/${p.post_id}`;
+              }
+              const thumb = (p.post_imgs?.length && p.post_imgs[0]) ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`;
+
+              return `
+                <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+                  <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
+                    ${thumb}
+                  </div>
+                  <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="d-flex align-items-center gap-2">
+                        <img src="${p.profile_pic || defaultProfilePic}" class="rounded-circle" style="width: 16px; height: 16px;">
+                        ${platformIcon}
+                        <strong class="text-truncate">${p.page_name || ''}</strong>
+                      </div>
+                      <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
                     </div>
-                    <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-                  </div>
-                  <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                    ${p.post_content || ''}
-                  </div>
-                  <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                    ${Object.entries(p.reactions || {}).map(([reaction, count]) => {
-                      const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[reaction] || '';
-                      return `<span>${emoji} ${count}</span>`;
-                    }).join('')}
-                    <span>💬 ${p.comment_count || 0}</span>
-                    <span>↪ ${p.share_count || 0}</span>
-                    <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
+                    <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                      ${p.post_content || ''}
+                    </div>
+                    <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
+                      ${engagementHtml}
+                    </div>
                   </div>
                 </div>
-              </div>
-            `).join('');
+              `;
+            }).join('');
 
             document.getElementById('popupContent').innerHTML = html;
             new bootstrap.Modal(document.getElementById('popupModal')).show();
@@ -961,26 +1053,30 @@ const followersChart = new Chart(ctx, {
   <!-- ✅ Grid Layout -->
   <div class="px-3 py-2">
     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3">
-      {% for post in facebook_posts_top10 %}
+      {% for post in unified_top_posts %}
       <div class="col">
+        {% if post.platform == 'tiktok' %}
+        <a href="{{ post.post_url }}" target="_blank" class="text-decoration-none">
+        {% else %}
         <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank" class="text-decoration-none">
+        {% endif %}
           <div class="position-relative rounded overflow-hidden shadow-sm" style="height: 250px;">
             <!-- 🔺 Background Image -->
             <img src="{{ post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover;">
 
-            <!-- 🔵 Profile Picture + Facebook Icon -->
+            <!-- 🔵 Profile Picture + Platform Icon -->
             <div class="position-absolute top-0 start-0 m-1">
               <div class="position-relative" style="width: 24px; height: 24px;">
                 {% if post.page_profile_pic %}
-                <img src="{{ post.page_profile_pic }}" class="rounded-circle border border-white"
-                     width="24" height="24" style="object-fit: cover;">
+                <img src="{{ post.page_profile_pic }}" class="rounded-circle border border-white" width="24" height="24" style="object-fit: cover;">
                 {% else %}
-                <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white"
-                     width="24" height="24" style="object-fit: cover;">
+                <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white" width="24" height="24" style="object-fit: cover;">
                 {% endif %}
-                <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
-                     width="10" height="10"
-                     class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                {% if post.platform == 'tiktok' %}
+                <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                {% else %}
+                <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                {% endif %}
               </div>
             </div>
 
@@ -992,24 +1088,25 @@ const followersChart = new Chart(ctx, {
             </div>
 
             <!-- 🕒 Timestamp & Content -->
-            <div class="position-absolute bottom-0 start-0 text-white text-shadow px-2 py-1"
-                 style="font-size: 10px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.6));">
+            <div class="position-absolute bottom-0 start-0 text-white text-shadow px-2 py-1" style="font-size: 10px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.6));">
+              {% if post.platform != 'tiktok' and post.content_pillar %}
               <div class="small mt-1">
                 <span class="badge bg-light text-dark" style="font-size: 9px; opacity: 0.85;">
                   📌 {{ post.content_pillar }}
-                   </span>
+                </span>
               </div>
-
+              {% endif %}
               <div>{{ post.post_timestamp }}</div>
               <div class="fw-semibold text-truncate">{{ post.post_content }}</div>
             </div>
 
             <!-- 📷 Post Type Icon -->
             <div class="position-absolute bottom-0 end-0 m-1">
-              {% if post.post_type == "video" %}
+              {% if post.platform == 'tiktok' %}
               <i class="fas fa-play-circle text-white" style="font-size: 12px;"></i>
               {% else %}
-              <i class="fas fa-image text-white" style="font-size: 12px;"></i>
+                {% comment %} fallback to video if unknown post_type {% endcomment %}
+                <i class="fas fa-play-circle text-white" style="font-size: 12px;"></i>
               {% endif %}
             </div>
           </div>

@@ -853,46 +853,120 @@ def group_detail(request, group_id):
 
     # ดึงโพสต์ TikTok ของเพจในกลุ่ม (ถ้ามี) เพื่อแสดงในหน้า group_detail
     tiktok_posts = TikTokPost.objects.filter(page__in=pages).order_by('-post_timestamp_dt')
+    # 👇 Ensure TikTok posts have a datetime for timestamp
+    # Some TikTok posts may only have a date string (e.g. "dd/mm/YYYY"), so parse it into a datetime
+    from datetime import datetime
+    from django.utils import timezone as dj_tz
+    parsed_tiktok_posts = []
+    for p in tiktok_posts:
+        if not p.post_timestamp_dt:
+            ts_str = p.post_timestamp
+            if ts_str and ts_str != 'ไม่พบวันที่':
+                try:
+                    naive_dt = datetime.strptime(ts_str, '%d/%m/%Y')
+                    aware_dt = dj_tz.make_aware(naive_dt)
+                    p.post_timestamp_dt = aware_dt
+                except Exception:
+                    # leave as None
+                    pass
+        parsed_tiktok_posts.append(p)
+    # Use parsed_tiktok_posts instead of original queryset for charts
+    tiktok_posts = parsed_tiktok_posts
 
     sidebar = sidebar_context(request)
 
-    # 🔟 Top 10 Posts by Engagement
-    top10_posts = sorted(
-        [p for p in posts if p.post_timestamp_dt],
-        key=lambda p: (
-                (sum(p.reactions.values()) if isinstance(p.reactions, dict) else 0)
-                + (p.comment_count or 0)
-                + (p.share_count or 0)
-        ),
+    # 🔟 Top 10 Posts across all platforms by engagement
+    # Build a unified list of posts combining Facebook and TikTok with a consistent schema
+    unified_posts = []
+    # Handle Facebook posts
+    for f_post in posts:
+        # Compute total engagement for facebook as likes + comments + shares
+        likes_count = 0
+        if isinstance(f_post.reactions, dict):
+            likes_count = f_post.reactions.get('ถูกใจ', 0)
+        total_eng_f = likes_count + (f_post.comment_count or 0) + (f_post.share_count or 0)
+        unified_posts.append({
+            'platform': 'facebook',
+            'post_id': f_post.post_id,
+            'post_url': None,
+            'post_content': f_post.post_content,
+            'post_imgs': f_post.post_imgs or [],
+            'post_timestamp_dt': f_post.post_timestamp_dt,
+            'post_timestamp_str': f_post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if f_post.post_timestamp_dt else '',
+            'like_count': likes_count,
+            'comment_count': f_post.comment_count or 0,
+            'share_count': f_post.share_count or 0,
+            'save_count': 0,
+            'view_count': 0,
+            'reactions': f_post.reactions or {},
+            'total_engagement': total_eng_f,
+            'page_name': f_post.page.page_name if f_post.page else '',
+            'profile_pic': f_post.page.profile_pic if f_post.page else '',
+            'content_pillar': f_post.content_pillar or '',
+        })
+    # Handle TikTok posts
+    for t_post in tiktok_posts:
+        total_eng_t = (t_post.like_count or 0) + (t_post.comment_count or 0) + (t_post.share_count or 0) + (t_post.save_count or 0)
+        unified_posts.append({
+            'platform': 'tiktok',
+            'post_id': None,
+            'post_url': t_post.post_url,
+            'post_content': t_post.post_content,
+            'post_imgs': [t_post.post_imgs] if t_post.post_imgs else [],
+            'post_timestamp_dt': t_post.post_timestamp_dt,
+            'post_timestamp_str': t_post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if t_post.post_timestamp_dt else (t_post.post_timestamp or ''),
+            'like_count': t_post.like_count or 0,
+            'comment_count': t_post.comment_count or 0,
+            'share_count': t_post.share_count or 0,
+            'save_count': t_post.save_count or 0,
+            'view_count': t_post.view_count or 0,
+            'reactions': None,
+            'total_engagement': total_eng_t,
+            'page_name': t_post.page.page_name if t_post.page else '',
+            'profile_pic': t_post.page.profile_pic if t_post.page else '',
+            'content_pillar': '',
+        })
+    # Sort unified posts by total engagement descending and then by view_count for tiktok as secondary
+    unified_sorted = sorted(
+        unified_posts,
+        key=lambda p: (p['total_engagement'], p.get('view_count', 0)),
         reverse=True
     )[:10]
 
-    top10_posts_data = []
-    for post in top10_posts:
-        total_engagement = (
-                (sum(post.reactions.values()) if isinstance(post.reactions, dict) else 0)
-                + (post.comment_count or 0)
-                + (post.share_count or 0)
-        )
-
-        # แบบสมเหตุสมผล: 100 interaction = 1% engagement rate
-        engagement_rate = round((total_engagement / 100), 1)
-        engagement_rate = min(engagement_rate, 10.0)  # ตัดเพดานที่ 10%
-
-        top10_posts_data.append({
-            'post_id': post.post_id,
-            'post_content': post.post_content,
-            'post_imgs': post.post_imgs,
-            'post_timestamp': post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M'),
-            'reactions': post.reactions or {},
-            'comment_count': post.comment_count,
-            'share_count': post.share_count,
-            'total_engagement': total_engagement,
+    unified_top_posts = []
+    for p in unified_sorted:
+        # Compute engagement rate: use total_engagement divided by view_count (if available) or followers? Use simple ratio: total_engagement / 100 as placeholder
+        engagement_rate = 0.0
+        if p['platform'] == 'tiktok':
+            # avoid division by zero
+            if p['view_count']:
+                engagement_rate = round((p['total_engagement'] / p['view_count']) * 100, 2)
+            else:
+                engagement_rate = 0.0
+        else:
+            engagement_rate = round((p['total_engagement'] / 100), 1)
+        unified_top_posts.append({
+            'platform': p['platform'],
+            'post_id': p['post_id'],
+            'post_url': p['post_url'],
+            'post_content': p['post_content'],
+            'post_imgs': p['post_imgs'],
+            'post_timestamp': p['post_timestamp_str'],
+            'like_count': p['like_count'],
+            'comment_count': p['comment_count'],
+            'share_count': p['share_count'],
+            'save_count': p.get('save_count', 0),
+            'view_count': p.get('view_count', 0),
+            'reactions': p['reactions'],
+            'total_engagement': p['total_engagement'],
             'engagement_rate': engagement_rate,
-            'content_pillar': post.content_pillar,
-            'page_name': post.page.page_name if post.page else '',
-            'page_profile_pic': post.page.profile_pic if post.page else ''
+            'content_pillar': p['content_pillar'],
+            'page_name': p['page_name'],
+            'page_profile_pic': p['profile_pic'],
         })
+
+    # Assign unified_top_posts to top10_posts_data for backward compatibility
+    top10_posts_data = unified_top_posts
 
     # 🕺 Top TikTok posts by view count (for groups that include TikTok pages)
     # จัดลำดับโพสต์ TikTok ตามจำนวนผู้ชม (view_count)
@@ -919,6 +993,7 @@ def group_detail(request, group_id):
                 'save_count': t_post.save_count or 0,
                 'page_name': t_post.page.page_name if t_post.page else '',
                 'page_profile_pic': t_post.page.profile_pic if t_post.page else '',
+                'platform': 'tiktok',
             })
 
     colors = ['#e20414', '#2e3d93', '#fbd305', '#355e73', '#0c733c', '#c94087']
@@ -970,53 +1045,57 @@ def group_detail(request, group_id):
             }
         })
 
-    # 📅 Number of posts by weekday (Bar Chart)
+    # 📅 Number of posts by weekday (Bar Chart) for combined posts (Facebook + TikTok)
     day_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    day_counts = Counter(post.post_timestamp_dt.weekday() for post in posts if post.post_timestamp_dt)
+    day_counts = Counter()
+    posts_grouped_by_day = defaultdict(list)
+    # Iterate through unified_posts to count posts per weekday and build grouping
+    for p in unified_posts:
+        if p['post_timestamp_dt']:
+            weekday = p['post_timestamp_dt'].weekday()
+            day_counts[weekday] += 1
+            entry = {
+                'platform': p['platform'],
+                'post_id': p['post_id'],
+                'post_url': p['post_url'],
+                'post_content': p['post_content'],
+                'post_imgs': p['post_imgs'],
+                'post_timestamp': p['post_timestamp_str'],
+                'reactions': p['reactions'],
+                'like_count': p['like_count'],
+                'comment_count': p['comment_count'],
+                'share_count': p['share_count'],
+                'save_count': p.get('save_count', 0),
+                'view_count': p.get('view_count', 0),
+                'total_engagement': p['total_engagement'],
+                'page_name': p['page_name'],
+                'profile_pic': p['profile_pic'],
+            }
+            posts_grouped_by_day[str(weekday)].append(entry)
     bar_day_labels = day_labels
     bar_day_values = [day_counts.get(i, 0) for i in range(7)]
     bar_day_colors = [colors[i % len(colors)] for i in range(7)]
-    posts_grouped_by_day = defaultdict(list)
-    for post in posts:
-        if post.post_timestamp_dt:
-            weekday = post.post_timestamp_dt.weekday()
-            posts_grouped_by_day[str(weekday)].append({
-                'post_id': post.post_id,
-                'post_content': post.post_content,
-                'post_imgs': post.post_imgs,
-                'post_timestamp': post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M'),
-                'reactions': post.reactions or {},
-                'comment_count': post.comment_count,
-                'share_count': post.share_count,
-                'total_engagement': (sum(post.reactions.values()) if isinstance(post.reactions,
-                                                                                dict) else 0) + post.comment_count + post.share_count,
-                'page_name': post.page.page_name if post.page else '',
-                'profile_pic': post.page.profile_pic if post.page else '',
-            })
 
-    # 🕒 Best Times To Post (Bubble Chart)
+    # 🕒 Best Times To Post (Bubble Chart) for combined posts
     bubble_grouped = defaultdict(list)
     posts_grouped_by_time = defaultdict(list)
-
-    for post in posts:
-        if not post.post_timestamp_dt:
+    for p in unified_posts:
+        if not p['post_timestamp_dt']:
             continue
-
-        weekday = post.post_timestamp_dt.weekday()
-        hour = post.post_timestamp_dt.hour
+        weekday = p['post_timestamp_dt'].weekday()
+        hour = p['post_timestamp_dt'].hour
         hour_slot = (hour // 2) * 2
         key = f"{weekday}_{hour_slot}"
-
-        bubble_grouped[key].append(post)
+        bubble_grouped[key].append(p)
 
     bubble_data = []
     for key, grouped_posts in bubble_grouped.items():
         weekday, hour_slot = map(int, key.split('_'))
         count = len(grouped_posts)
-        total_likes = sum(p.reactions.get('ถูกใจ', 0) if isinstance(p.reactions, dict) else 0 for p in grouped_posts)
-        total_comments = sum(p.comment_count or 0 for p in grouped_posts)
-        total_shares = sum(p.share_count or 0 for p in grouped_posts)
-
+        # Sum likes/comments/shares across platforms
+        total_likes = sum(g['like_count'] if g['platform'] == 'tiktok' else (g['reactions'].get('ถูกใจ', 0) if g['reactions'] else 0) for g in grouped_posts)
+        total_comments = sum(g['comment_count'] for g in grouped_posts)
+        total_shares = sum(g['share_count'] for g in grouped_posts)
         bubble_data.append({
             'x': weekday,
             'y': hour_slot,
@@ -1026,31 +1105,29 @@ def group_detail(request, group_id):
             'comments': total_comments,
             'shares': total_shares,
             'tooltip_label': f"{day_labels[weekday]} {hour_slot:02d}:00 - {hour_slot + 2:02d}:00",
-            # Ensure tooltip label
-            'key': key  # Ensure the key is present for JS
+            'key': key
         })
-
-        for p in grouped_posts:
-            total_engagement = (
-                (sum(p.reactions.values()) if isinstance(p.reactions, dict) else 0) +
-                (p.comment_count or 0) +
-                (p.share_count or 0)
-            )
-            posts_grouped_by_time[f"{weekday}_{hour_slot}"].append({
-                'post_id': p.post_id,
-                'post_content': p.post_content,
-                'post_imgs': p.post_imgs,
-                'post_timestamp': p.post_timestamp_dt.strftime('%Y-%m-%d %H:%M'),
-                'reactions': p.reactions or {},
-                'comment_count': p.comment_count,
-                'share_count': p.share_count,
-                'total_engagement': (sum(p.reactions.values()) if isinstance(p.reactions, dict) else 0) + (
-                            p.comment_count or 0) + (p.share_count or 0),
+        for g in grouped_posts:
+            entry = {
+                'platform': g['platform'],
+                'post_id': g['post_id'],
+                'post_url': g['post_url'],
+                'post_content': g['post_content'],
+                'post_imgs': g['post_imgs'],
+                'post_timestamp': g['post_timestamp_str'],
+                'reactions': g['reactions'],
+                'like_count': g['like_count'],
+                'comment_count': g['comment_count'],
+                'share_count': g['share_count'],
+                'save_count': g.get('save_count', 0),
+                'view_count': g.get('view_count', 0),
+                'total_engagement': g['total_engagement'],
                 'page': {
-                    'page_name': p.page.page_name if p.page else '',
-                    'profile_pic': p.page.profile_pic if p.page else ''
+                    'page_name': g['page_name'],
+                    'profile_pic': g['profile_pic']
                 }
-            })
+            }
+            posts_grouped_by_time[key].append(entry)
 
     # 📌 ย้ายออกมาไว้หลัง bubble_data ทำงานเสร็จแล้ว
     pillar_summary = posts.values('content_pillar').annotate(post_count=Count('id')).order_by(
@@ -1069,8 +1146,10 @@ def group_detail(request, group_id):
         'posts_grouped_json': json.dumps(posts_grouped_by_time),
         'posts_by_day_json': json.dumps(posts_grouped_by_day),
         'followers_posts_map': json.dumps(followers_posts_map),
+        # unified top posts across platforms for display
+        'unified_top_posts': unified_top_posts,
+        # separate lists for backward compatibility
         'facebook_posts_top10': top10_posts_data,
-        # เพิ่มรายการโพสต์ TikTok อันดับต้น ๆ หากมีเพจ TikTok อยู่ในกลุ่ม
         'tiktok_posts_top10': top10_tiktok_posts_data,
         "pillar_summary": pillar_summary,
         'posts_by_pillar': posts_by_pillar,

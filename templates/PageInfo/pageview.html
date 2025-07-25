@@ -1231,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div class="d-flex align-items-center gap-2">
                       ${p.profile_pic || window.DEFAULT_PROFILE_PIC ? `<img src="${p.profile_pic || window.DEFAULT_PROFILE_PIC}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
                       ${platformIcon}
-                      <strong class="text-truncate">${p.page_name || ''}</strong>
+                      <strong class="text-truncate">${p.page_name}</strong>
                     </div>
                     <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp || ''}</div>
                   </div>
