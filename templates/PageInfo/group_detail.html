@@ -339,8 +339,16 @@
   <!-- Talking, Website, Email, Phone -->
   {% if page.platform == "facebook" %}
     <td>{{ page.page_talking_count|default:"0" }}</td>
-    <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
-    <td><a href="mailto:{{ page.page_email }}">{{ page.page_email|default:"-" }}</a></td>
+    <td>
+  {% if page.page_website %}
+    <a href="https://{{ page.page_website|lower }}" target="_blank" class="page-name-link" style="font-weight: bold;">
+      {{ page.page_website }}
+    </a>
+  {% else %}
+    -
+  {% endif %}
+</td>
+    <td><a href="mailto:{{ page.page_email }}" class="page-name-link">{{ page.page_email|default:"-" }}</a></td>
     <td>{{ page.page_phone|default:"-" }}</td>
   {% elif page.platform == "instagram" %}
     <td>-</td>

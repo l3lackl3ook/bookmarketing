@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PageInfo/cookie.json" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/cookie.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/tiktok_post.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/tiktok_post.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/static/assets/css/demo.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/assets/css/demo.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" afterDir="false" />

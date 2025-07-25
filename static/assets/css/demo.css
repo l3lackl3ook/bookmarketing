@@ -278,3 +278,14 @@ body:lang(th) {
 .page-name-link:hover {
   color: #FF6B00 !important;
 }
+
+.a-post-link {
+  color: #262B43; /* ดำปกติ */
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.a-post-link:hover {
+  color: #FF6801; /* ส้ม Growfox */
+  text-decoration: underline;
+}

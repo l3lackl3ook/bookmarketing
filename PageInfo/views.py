@@ -669,7 +669,7 @@ def add_page(request, group_id):
                 # ✅ ดึงข้อมูลโพสต์ TikTok
                 try:
                     from .tiktok_post import scrape_tiktok_posts_for_django
-                    posts = scrape_tiktok_posts_for_django(url, max_posts=30)  # จำกัดจำนวนโพสต์
+                    posts = scrape_tiktok_posts_for_django(url)  # จำกัดจำนวนโพสต์ได้ตรงนี้
                     print(f"📋 ดึงข้อมูล {len(posts)} โพสต์จาก TikTok")
 
                     for post in posts:

@@ -1,3 +1,5 @@
+# แก้ไขปัญหาใน tiktok_post.py
+
 from playwright.sync_api import sync_playwright
 import json
 import time
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 class TikTokPostScraper:
     """
     Enhanced TikTok post scraper class designed for Django integration
-    Can scrape posts from any TikTok profile URL dynamically
+    Can scrape posts from any TikTok profile URL dynamically with improved error handling
     """
 
     def __init__(self, cookies_file: str = None, headless: bool = False, timeout: int = 30000):
@@ -148,29 +150,29 @@ class TikTokPostScraper:
             return False
 
     def solve_captcha(self, max_wait_time: int = 30) -> bool:
-        """Handle CAPTCHA with timeout"""
+        """Handle CAPTCHA with timeout - skip and continue if CAPTCHA detected"""
         if not self.check_captcha_exists():
             return True
 
         try:
-            logger.warning(f"🤖 CAPTCHA detected - waiting up to {max_wait_time} seconds")
+            logger.warning(f"⚠️ พบ CAPTCHA - พยายามข้าม...")
             start_time = time.time()
 
             while time.time() - start_time < max_wait_time:
                 if not self.check_captcha_exists():
-                    logger.info("✅ CAPTCHA solved successfully")
+                    logger.info("✅ CAPTCHA หายไปแล้ว - ดำเนินการต่อ")
                     time.sleep(2)
                     return True
                 time.sleep(1)
 
-            logger.warning(f"⚠️ CAPTCHA timeout after {max_wait_time} seconds")
+            logger.warning(f"⚠️ CAPTCHA ยังคงอยู่ - ดำเนินการต่อ")
             return False
 
         except Exception as e:
             logger.error(f"❌ Error handling CAPTCHA: {e}")
             return False
 
-    def safe_navigate(self, url: str, retries: int = 3) -> bool:
+    def safe_navigate(self, url: str, retries: int = 2) -> bool:
         """Navigate with CAPTCHA handling and retries"""
         for attempt in range(retries):
             try:
@@ -182,14 +184,9 @@ class TikTokPostScraper:
 
                 if self.check_captcha_exists():
                     logger.info("🤖 CAPTCHA detected during navigation")
-                    if not self.solve_captcha(max_wait_time=20):
-                        if attempt < retries - 1:
-                            logger.info("🔄 Retrying navigation...")
-                            time.sleep(5)
-                            continue
-                        else:
-                            logger.error("❌ Failed to solve CAPTCHA")
-                            return False
+                    if not self.solve_captcha(max_wait_time=15):
+                        logger.warning("⚠️ CAPTCHA persists - will use default values")
+                        return False
 
                 return True
 
@@ -203,98 +200,85 @@ class TikTokPostScraper:
         return False
 
     def get_post_content(self) -> str:
-        """Extract post content with multiple fallback methods"""
+        """Extract post content with enhanced timeout handling"""
         if self.check_captcha_exists():
-            logger.warning("⚠️ CAPTCHA present - skipping content extraction")
+            logger.warning("⚠️ CAPTCHA detected - skipping timestamp extraction")
             return "ไม่สามารถดึงข้อมูลได้ (CAPTCHA)"
 
-        time.sleep(2)
-
-        # Scroll to expand description
         try:
-            self.page.evaluate("window.scrollTo(0, 150)")
-            time.sleep(1)
+            # Wait for content to load with timeout
+            logger.info("🔍 Attempting to get content (attempt 1)")
+            content_loaded = False
+            max_wait = 15  # seconds
+            start_time = time.time()
 
-            # Try to click "See more" buttons in description area only
-            description_area = self.page.query_selector('[data-e2e="browse-video-desc"], [data-e2e="video-desc"]')
-            if description_area:
-                expand_buttons = description_area.query_selector_all('button, span')
-                for button in expand_buttons:
-                    try:
-                        text = button.inner_text().lower()
-                        if 'more' in text or 'เพิ่มเติม' in text or '...' in text:
-                            button.click()
-                            time.sleep(1)
-                            break
-                    except:
-                        pass
-        except:
-            pass
+            while time.time() - start_time < max_wait:
+                # Check if any content is available
+                content_elements = self.page.query_selector_all(
+                    '[data-e2e="browse-video-desc"], [data-e2e="video-desc"], h1[data-e2e="browse-video-title"]'
+                )
 
-        content = ""
+                if content_elements:
+                    content_loaded = True
+                    break
 
-        # Method 1: Extract from __UNIVERSAL_DATA_FOR_REHYDRATION__
-        try:
-            universal_data = self.page.evaluate("""
-                () => {
-                    const scripts = document.querySelectorAll('script');
-                    for (let script of scripts) {
-                        const text = script.textContent;
-                        if (text && text.includes('__UNIVERSAL_DATA_FOR_REHYDRATION__')) {
-                            try {
-                                const match = text.match(/window\\['__UNIVERSAL_DATA_FOR_REHYDRATION__'\\]\\s*=\\s*({.+})/);
-                                if (match) {
-                                    const data = JSON.parse(match[1]);
-                                    const traverse = (obj) => {
-                                        if (typeof obj === 'object' && obj !== null) {
-                                            if (obj.desc || obj.description) {
-                                                return obj.desc || obj.description;
-                                            }
-                                            for (let key in obj) {
-                                                if (key === 'desc' || key === 'description') {
-                                                    return obj[key];
-                                                }
-                                                const result = traverse(obj[key]);
-                                                if (result) return result;
-                                            }
-                                        }
-                                        return null;
-                                    };
-                                    return traverse(data);
-                                }
-                            } catch (e) {}
-                        }
-                    }
-                    return null;
-                }
-            """)
+                time.sleep(1)
 
-            if universal_data and len(universal_data.strip()) > 5:
-                content = universal_data.strip()
-        except:
-            pass
+            if not content_loaded:
+                logger.warning(f"⚠️ Content load timeout after {max_wait}s")
+                # Continue anyway and try to extract what we can
 
-        # Method 2: Extract from SIGI_STATE
-        if not content:
+            # Scroll to expand description
             try:
-                sigi_data = self.page.evaluate("""
+                self.page.evaluate("window.scrollTo(0, 150)")
+                time.sleep(1)
+
+                # Try to click "See more" buttons
+                description_area = self.page.query_selector('[data-e2e="browse-video-desc"], [data-e2e="video-desc"]')
+                if description_area:
+                    expand_buttons = description_area.query_selector_all('button, span')
+                    for button in expand_buttons[:3]:
+                        try:
+                            text = button.inner_text().lower()
+                            if 'more' in text or 'เพิ่มเติม' in text or '...' in text:
+                                button.click()
+                                time.sleep(1)
+                                break
+                        except:
+                            pass
+            except:
+                pass
+
+            content = ""
+
+            # Method 1: Extract from __UNIVERSAL_DATA_FOR_REHYDRATION__
+            try:
+                universal_data = self.page.evaluate("""
                     () => {
                         const scripts = document.querySelectorAll('script');
                         for (let script of scripts) {
                             const text = script.textContent;
-                            if (text && text.includes('SIGI_STATE')) {
+                            if (text && text.includes('__UNIVERSAL_DATA_FOR_REHYDRATION__')) {
                                 try {
-                                    const match = text.match(/window\\['SIGI_STATE'\\]\\s*=\\s*({.+?});/);
+                                    const match = text.match(/window\\['__UNIVERSAL_DATA_FOR_REHYDRATION__'\\]\\s*=\\s*({.+})/);
                                     if (match) {
                                         const data = JSON.parse(match[1]);
-                                        if (data.ItemModule) {
-                                            for (let key in data.ItemModule) {
-                                                const item = data.ItemModule[key];
-                                                if (item && item.desc) {
-                                                    return item.desc;
+                                        const traverse = (obj) => {
+                                            if (typeof obj === 'object' && obj !== null) {
+                                                if (obj.desc || obj.description) {
+                                                    return obj.desc || obj.description;
+                                                }
+                                                for (let key in obj) {
+                                                    if (key === 'desc' || key === 'description') {
+                                                        return obj[key];
+                                                    }
+                                                    const result = traverse(obj[key]);
+                                                    if (result) return result;
                                                 }
                                             }
-                                        }
+                                            return null;
+                                        };
+                                        return traverse(data);
                                     }
                                 } catch (e) {}
                             }
@@ -303,46 +287,85 @@ class TikTokPostScraper:
                     }
                 """)
 
-                if sigi_data and len(sigi_data.strip()) > 5:
-                    content = sigi_data.strip()
+                if universal_data and len(str(universal_data).strip()) > 5:
+                    content = str(universal_data).strip()
             except:
                 pass
 
-        # Method 3: Extract from DOM elements
-        if not content:
-            try:
-                selectors = [
-                    '[data-e2e="browse-video-desc"]',
-                    '[data-e2e="video-desc"]',
-                    'h1[data-e2e="browse-video-title"]',
-                    'div[class*="DivVideoInfoContainer"] div[class*="DivText"]',
-                    'div[class*="video-meta-caption"]',
-                    'div[data-testid="video-description"]',
-                    '[class*="StyledVideoDescription"]',
-                    '[class*="video-description"]',
-                    'div[class*="browse-video-desc"]'
-                ]
+            # Method 2: Extract from SIGI_STATE
+            if not content:
+                try:
+                    sigi_data = self.page.evaluate("""
+                        () => {
+                            const scripts = document.querySelectorAll('script');
+                            for (let script of scripts) {
+                                const text = script.textContent;
+                                if (text && text.includes('SIGI_STATE')) {
+                                    try {
+                                        const match = text.match(/window\\['SIGI_STATE'\\]\\s*=\\s*({.+?});/);
+                                        if (match) {
+                                            const data = JSON.parse(match[1]);
+                                            if (data.ItemModule) {
+                                                for (let key in data.ItemModule) {
+                                                    const item = data.ItemModule[key];
+                                                    if (item && item.desc) {
+                                                        return item.desc;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (e) {}
+                                }
+                            }
+                            return null;
+                        }
+                    """)
 
-                for selector in selectors:
-                    elements = self.page.query_selector_all(selector)
-                    for elem in elements:
-                        try:
-                            full_text = elem.inner_text().strip()
+                    if sigi_data and len(str(sigi_data).strip()) > 5:
+                        content = str(sigi_data).strip()
+                except:
+                    pass
 
-                            if full_text and len(full_text) > len(content) and len(full_text) > 10:
-                                unwanted = ['Following', 'Follower', 'Like', 'Share', 'Comment', 'Subscribe']
-                                if not any(word in full_text for word in unwanted):
-                                    content = full_text
-                                    break
-                        except:
-                            continue
+            # Method 3: Extract from DOM elements
+            if not content:
+                try:
+                    logger.info("✅ Content found via DOM elements")
+                    selectors = [
+                        '[data-e2e="browse-video-desc"]',
+                        '[data-e2e="video-desc"]',
+                        'h1[data-e2e="browse-video-title"]',
+                        'div[class*="DivVideoInfoContainer"] div[class*="DivText"]',
+                        'div[class*="video-meta-caption"]',
+                        'div[data-testid="video-description"]',
+                        '[class*="StyledVideoDescription"]',
+                        '[class*="video-description"]',
+                        'div[class*="browse-video-desc"]'
+                    ]
 
-                    if content:
-                        break
-            except:
-                pass
+                    for selector in selectors:
+                        elements = self.page.query_selector_all(selector)
+                        for elem in elements:
+                            try:
+                                full_text = elem.inner_text().strip()
 
-        return content if content else "ไม่พบเนื้อหา"
+                                if full_text and len(full_text) > len(content) and len(full_text) > 10:
+                                    unwanted = ['Following', 'Follower', 'Like', 'Share', 'Comment', 'Subscribe']
+                                    if not any(word in full_text for word in unwanted):
+                                        content = full_text
+                                        break
+                            except:
+                                continue
+
+                        if content:
+                            break
+                except:
+                    pass
+
+            return content if content else "ไม่พบเนื้อหา"
+
+        except Exception as e:
+            logger.error(f"❌ Error getting content: {e}")
+            return "ไม่สามารถดึงข้อมูลได้ (Error)"
 
     def get_saved_count(self) -> int:
         """Extract saved/bookmark count with multiple methods"""
@@ -438,14 +461,18 @@ class TikTokPostScraper:
 
         return 0
 
-    def get_timestamp(self) -> str:
-        """Extract post timestamp with multiple methods"""
+    def get_timestamp(self) -> Tuple[str, Optional[int], Optional[str]]:
+        """
+        Extract post timestamp with multiple methods
+        Returns: (formatted_date, unix_timestamp, iso_string)
+        """
         if self.check_captcha_exists():
-            return "ไม่สามารถดึงวันที่ได้ (CAPTCHA)"
+            logger.warning("⚠️ CAPTCHA detected - skipping timestamp extraction")
+            return "ไม่สามารถดึงวันที่ได้ (CAPTCHA)", None, None
 
         # Method 1: Extract from __UNIVERSAL_DATA_FOR_REHYDRATION__
         try:
-            timestamp_from_data = self.page.evaluate("""
+            timestamp_data = self.page.evaluate("""
                 () => {
                     const scripts = document.querySelectorAll('script');
                     for (let script of scripts) {
@@ -474,12 +501,15 @@ class TikTokPostScraper:
 
                                     const createTime = traverse(data);
                                     if (createTime && createTime > 1500000000) {
-                                        const date = new Date(createTime * 1000);
-                                        return date.toLocaleDateString('th-TH', {
-                                            day: '2-digit',
-                                            month: '2-digit', 
-                                            year: 'numeric'
-                                        });
+                                        return {
+                                            unix: createTime,
+                                            formatted: new Date(createTime * 1000).toLocaleDateString('th-TH', {
+                                                day: '2-digit',
+                                                month: '2-digit', 
+                                                year: 'numeric'
+                                            }),
+                                            iso: new Date(createTime * 1000).toISOString()
+                                        };
                                     }
                                 }
                             } catch (e) {}
@@ -489,14 +519,14 @@ class TikTokPostScraper:
                 }
             """)
 
-            if timestamp_from_data:
-                return timestamp_from_data
+            if timestamp_data:
+                return timestamp_data['formatted'], timestamp_data['unix'], timestamp_data['iso']
         except:
             pass
 
         # Method 2: Extract from SIGI_STATE
         try:
-            sigi_timestamp = self.page.evaluate("""
+            sigi_timestamp_data = self.page.evaluate("""
                 () => {
                     const scripts = document.querySelectorAll('script');
                     for (let script of scripts) {
@@ -512,12 +542,15 @@ class TikTokPostScraper:
                                             const item = data.ItemModule[key];
                                             if (item && item.createTime && typeof item.createTime === 'number') {
                                                 if (item.createTime > 1500000000) {
-                                                    const date = new Date(item.createTime * 1000);
-                                                    return date.toLocaleDateString('th-TH', {
-                                                        day: '2-digit',
-                                                        month: '2-digit',
-                                                        year: 'numeric'
-                                                    });
+                                                    return {
+                                                        unix: item.createTime,
+                                                        formatted: new Date(item.createTime * 1000).toLocaleDateString('th-TH', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric'
+                                                        }),
+                                                        iso: new Date(item.createTime * 1000).toISOString()
+                                                    };
                                                 }
                                             }
                                         }
@@ -530,8 +563,8 @@ class TikTokPostScraper:
                 }
             """)
 
-            if sigi_timestamp:
-                return sigi_timestamp
+            if sigi_timestamp_data:
+                return sigi_timestamp_data['formatted'], sigi_timestamp_data['unix'], sigi_timestamp_data['iso']
         except:
             pass
 
@@ -550,13 +583,13 @@ class TikTokPostScraper:
                     timestamp = int(match)
                     if 1500000000 <= timestamp <= int(time.time()):
                         dt = datetime.fromtimestamp(timestamp)
-                        return dt.strftime('%d/%m/%Y')
+                        return dt.strftime('%d/%m/%Y'), timestamp, dt.isoformat()
         except:
             pass
 
         # Method 4: Extract from DOM elements
         try:
-            dom_timestamp = self.page.evaluate("""
+            dom_timestamp_data = self.page.evaluate("""
                 () => {
                     const timeElements = document.querySelectorAll('time, [datetime]');
                     for (let elem of timeElements) {
@@ -565,11 +598,15 @@ class TikTokPostScraper:
                             try {
                                 const date = new Date(datetime);
                                 if (date.getFullYear() >= 2017 && date.getFullYear() <= new Date().getFullYear()) {
-                                    return date.toLocaleDateString('th-TH', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric'
-                                    });
+                                    return {
+                                        unix: Math.floor(date.getTime() / 1000),
+                                        formatted: date.toLocaleDateString('th-TH', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        }),
+                                        iso: date.toISOString()
+                                    };
                                 }
                             } catch (e) {}
                         }
@@ -578,12 +615,12 @@ class TikTokPostScraper:
                 }
             """)
 
-            if dom_timestamp:
-                return dom_timestamp
+            if dom_timestamp_data:
+                return dom_timestamp_data['formatted'], dom_timestamp_data['unix'], dom_timestamp_data['iso']
         except:
             pass
 
-        return "ไม่พบวันที่"
+        return "ไม่พบวันที่", None, None
 
     def safe_get_metrics(self) -> Tuple[int, int, int]:
         """Extract likes, comments, and shares safely"""
@@ -659,17 +696,9 @@ class TikTokPostScraper:
         """Generate human-like delay"""
         return random.uniform(2, 5)
 
-    def scrape_posts_from_profile(self, profile_url: str, max_posts: int = 50, scroll_rounds: int = 8) -> List[Dict]:
+    def scroll_to_load_all_posts(self, profile_url: str, max_scroll_rounds: int = 50) -> List[Dict]:
         """
-        Main function to scrape posts from TikTok profile
-
-        Args:
-            profile_url: TikTok profile URL (e.g., "https://www.tiktok.com/@username")
-            max_posts: Maximum number of posts to process
-            scroll_rounds: Number of scroll rounds to load posts
-
-        Returns:
-            List of dictionaries containing post data
+        Scroll through profile to load ALL posts before collecting them
         """
         try:
             # Navigate to profile
@@ -677,33 +706,59 @@ class TikTokPostScraper:
                 logger.error(f"❌ Cannot access profile: {profile_url}")
                 return []
 
-            # Extract username for reference
             username = self.extract_username_from_url(profile_url)
-            logger.info(f"🎯 Scraping posts from @{username}")
+            logger.info(f"🎯 Loading all posts from @{username}")
 
-            # Scroll to load more posts
-            logger.info(f"📜 Loading posts with {scroll_rounds} scroll rounds...")
-            for i in range(scroll_rounds):
+            previous_posts_count = 0
+            no_change_count = 0
+            max_no_change = 5
+
+            logger.info(f"📜 Starting to load all posts (max {max_scroll_rounds} rounds)...")
+
+            for scroll_round in range(max_scroll_rounds):
                 try:
-                    self.page.mouse.wheel(0, 2000)
+                    # Check current number of posts
+                    current_posts = self.page.query_selector_all('div[data-e2e="user-post-item"]')
+                    current_count = len(current_posts)
+
+                    logger.info(f"📊 Round {scroll_round + 1}: Found {current_count} posts")
+
+                    # Check if we found new posts
+                    if current_count == previous_posts_count:
+                        no_change_count += 1
+                        logger.info(f"⏳ No new posts found ({no_change_count}/{max_no_change})")
+
+                        if no_change_count >= max_no_change:
+                            logger.info(f"✅ No new posts for {max_no_change} rounds - stopping scroll")
+                            break
+                    else:
+                        no_change_count = 0
+                        logger.info(f"🆕 Found {current_count - previous_posts_count} new posts")
+
+                    previous_posts_count = current_count
+
+                    # Scroll down to load more posts
+                    self.page.mouse.wheel(0, 3000)
                     time.sleep(self.human_like_delay())
 
                     # Check for CAPTCHA during scrolling
                     if self.check_captcha_exists():
-                        logger.warning(f"⚠️ CAPTCHA detected during scroll {i + 1} - stopping scroll")
-                        break
+                        logger.warning(f"⚠️ CAPTCHA detected during scroll round {scroll_round + 1}")
+                        if not self.solve_captcha(max_wait_time=15):
+                            logger.warning("⚠️ CAPTCHA persists - continuing scroll")
+                        continue
+
                 except Exception as e:
-                    logger.error(f"Error during scroll {i + 1}: {e}")
-                    break
+                    logger.error(f"❌ Error during scroll round {scroll_round + 1}: {e}")
+                    continue
 
-            # Extract post elements from profile page
-            posts = self.page.query_selector_all('div[data-e2e="user-post-item"]')
+            # Final collection of all posts
+            final_posts = self.page.query_selector_all('div[data-e2e="user-post-item"]')
+            logger.info(f"🎉 Finished loading! Total posts found: {len(final_posts)}")
+
+            # Extract basic information from all loaded posts
             all_posts = []
-
-            logger.info(f"🔍 Found {len(posts)} posts on profile page")
-
-            # Collect basic post information
-            for i, post in enumerate(posts):
+            for i, post in enumerate(final_posts):
                 try:
                     link_tag = post.query_selector('a')
                     post_url = link_tag.get_attribute('href') if link_tag else ''
@@ -725,25 +780,46 @@ class TikTokPostScraper:
                         "post_url": post_url,
                         "post_thumbnail": post_thumbnail,
                         "views": views,
-                        "username": username
+                        "username": username,
+                        "post_index": i + 1
                     })
-
-                    logger.info(f"📋 Post {i + 1}: Views: {views:,}")
 
                 except Exception as e:
                     logger.error(f"❌ Error collecting post {i + 1}: {e}")
+                    continue
 
-            logger.info(f"✅ Collected {len(all_posts)} posts from profile")
-            total_views = sum(post['views'] for post in all_posts)
-            logger.info(f"📊 Total Views: {total_views:,}")
+            return all_posts
 
-            # Process each post to get detailed information
-            successful_posts = 0
+        except Exception as e:
+            logger.error(f"❌ Critical error in scroll_to_load_all_posts: {e}")
+            return []
+
+    def scrape_posts_from_profile(self, profile_url: str, max_posts: int = None, scroll_rounds: int = 50) -> List[Dict]:
+        """
+        Main function to scrape posts from TikTok profile
+        First loads all posts, then processes them one by one
+        """
+        try:
+            # Step 1: Load all posts by scrolling
+            logger.info("🔄 Step 1: Loading all posts from profile...")
+            all_posts = self.scroll_to_load_all_posts(profile_url, scroll_rounds)
+
+            if not all_posts:
+                logger.error("❌ No posts found or failed to load posts")
+                return []
+
+            # Step 2: Limit posts if max_posts is specified
             posts_to_process = all_posts[:max_posts] if max_posts else all_posts
+            logger.info(f"📋 Step 2: Processing {len(posts_to_process)} posts (out of {len(all_posts)} total)")
+
+            # Step 3: Process each post to get detailed information
+            logger.info("🔄 Step 3: Extracting detailed information from each post...")
+            successful_posts = 0
 
             for i, post in enumerate(posts_to_process):
                 try:
-                    logger.info(f"🔄 Processing post {i + 1}/{len(posts_to_process)}")
+                    logger.info(
+                        f"🔄 Processing post {i + 1}/{len(posts_to_process)}: {post.get('post_url', 'Unknown URL')}")
 
                     # Navigate to individual post
                     if not self.safe_navigate(post["post_url"]):
@@ -751,6 +827,8 @@ class TikTokPostScraper:
                         post.update({
                             "post_content": "ไม่สามารถดึงข้อมูลได้ (Navigation Error)",
                             "timestamp": "ไม่พบวันที่",
+                            "timestamp_unix": None,
+                            "timestamp_iso": None,
                             "reaction": 0,
                             "comment": 0,
                             "shared": 0,
@@ -760,14 +838,16 @@ class TikTokPostScraper:
 
                     # Extract detailed post data
                     post_content = self.get_post_content()
-                    timestamp = self.get_timestamp()
+                    timestamp, timestamp_unix, timestamp_iso = self.get_timestamp()
                     reaction, comment, shared = self.safe_get_metrics()
                     saved = self.get_saved_count()
 
-                    # Update post data
+                    # Update post data with extracted information
                     post.update({
                         "post_content": post_content,
                         "timestamp": timestamp,
+                        "timestamp_unix": timestamp_unix,
+                        "timestamp_iso": timestamp_iso,
                         "reaction": reaction,
                         "comment": comment,
                         "shared": shared,
@@ -791,8 +871,10 @@ class TikTokPostScraper:
                     logger.error(f"❌ Error processing post {i + 1}: {e}")
                     # Add default values even if error occurs
                     post.update({
-                        "post_content": "ไม่สามารถดึงข้อมูลได้ (Error)",
+                        "post_content": "ไม่สามารถดึงข้อมูลได้ (Processing Error)",
                         "timestamp": "ไม่พบวันที่",
+                        "timestamp_unix": None,
+                        "timestamp_iso": None,
                         "reaction": 0,
                         "comment": 0,
                         "shared": 0,
@@ -802,8 +884,9 @@ class TikTokPostScraper:
 
             logger.info(f"🎉 Scraping completed!")
             logger.info(f"✅ Successfully processed {successful_posts} posts out of {len(posts_to_process)}")
+            logger.info(f"📊 Total posts found: {len(all_posts)}")
 
-            return all_posts
+            return posts_to_process  # Return processed posts instead of all_posts
 
         except Exception as e:
             logger.error(f"❌ Critical error in scrape_posts_from_profile: {e}")
@@ -815,21 +898,10 @@ def scrape_tiktok_posts_for_django(profile_url: str,
                                    cookies_file: str = None,
                                    max_posts: int = 50,
                                    headless: bool = False,
-                                   scroll_rounds: int = 20,
+                                   scroll_rounds: int = 50,
                                    timeout: int = 30000) -> Dict:
     """
-    Django-compatible function to scrape TikTok posts
-
-    Args:
-        profile_url: TikTok profile URL (e.g., "https://www.tiktok.com/@username")
-        cookies_file: Path to cookies JSON file (optional)
-        max_posts: Maximum number of posts to process
-        headless: Run browser in headless mode
-        scroll_rounds: Number of scroll rounds to load posts
-        timeout: Page load timeout in milliseconds
-
-    Returns:
-        Dictionary with 'success', 'data', 'message', and 'stats' keys
+    Django-compatible function to scrape TikTok posts with enhanced error handling
     """
     result = {
         'success': False,
@@ -837,6 +909,7 @@ def scrape_tiktok_posts_for_django(profile_url: str,
         'message': '',
         'stats': {
             'total_posts': 0,
+            'processed_posts': 0,
             'successful_posts': 0,
             'total_views': 0,
             'total_likes': 0,
@@ -873,26 +946,73 @@ def scrape_tiktok_posts_for_django(profile_url: str,
             )
 
             if posts_data:
-                # Calculate statistics
+                # Ensure all posts have the required fields with safe defaults
+                cleaned_posts = []
+                for post in posts_data:
+                    try:
+                        # Ensure post is a dictionary
+                        if not isinstance(post, dict):
+                            logger.warning(f"⚠️ Invalid post data type: {type(post)}, skipping")
+                            continue
+
+                        # Create cleaned post with safe defaults and proper data types
+                        cleaned_post = {
+                            "post_url": str(post.get("post_url", "")),
+                            "post_thumbnail": str(post.get("post_thumbnail", "")),
+                            "post_content": str(post.get("post_content", "ไม่พบเนื้อหา")),
+                            "timestamp": str(post.get("timestamp", "ไม่พบวันที่")),
+                            "timestamp_unix": post.get("timestamp_unix"),  # Keep as None if not available
+                            "timestamp_iso": post.get("timestamp_iso"),  # Keep as None if not available
+                            "username": str(post.get("username", username)),
+                            "views": self._safe_int_convert(post.get("views", 0)),
+                            "reaction": self._safe_int_convert(post.get("reaction", 0)),
+                            "comment": self._safe_int_convert(post.get("comment", 0)),
+                            "shared": self._safe_int_convert(post.get("shared", 0)),
+                            "saved": self._safe_int_convert(post.get("saved", 0)),
+                            "post_index": self._safe_int_convert(post.get("post_index", len(cleaned_posts) + 1))
+                        }
+
+                        cleaned_posts.append(cleaned_post)
+
+                    except Exception as e:
+                        logger.error(f"❌ Error cleaning post data: {e}")
+                        continue
+
+                # Calculate statistics with safe handling
                 stats = result['stats']
-                stats['total_posts'] = len(posts_data)
-                stats['successful_posts'] = sum(1 for post in posts_data
-                                                if post.get('post_content',
-                                                            '') != 'ไม่สามารถดึงข้อมูลได้ (Navigation Error)'
-                                                and post.get('post_content', '') != 'ไม่สามารถดึงข้อมูลได้ (Error)')
-                stats['total_views'] = sum(post.get('views', 0) for post in posts_data)
-                stats['total_likes'] = sum(post.get('reaction', 0) for post in posts_data)
-                stats['total_comments'] = sum(post.get('comment', 0) for post in posts_data)
-                stats['total_shares'] = sum(post.get('shared', 0) for post in posts_data)
-                stats['total_saves'] = sum(post.get('saved', 0) for post in posts_data)
+                stats['total_posts'] = len(cleaned_posts)
+                stats['processed_posts'] = len([p for p in cleaned_posts if p.get('post_content') not in [
+                    'ไม่สามารถดึงข้อมูลได้ (Navigation Error)',
+                    'ไม่สามารถดึงข้อมูลได้ (Processing Error)',
+                    'ไม่สามารถดึงข้อมูลได้ (Error)'
+                ]])
+                stats['successful_posts'] = len([p for p in cleaned_posts if p.get('post_content') not in [
+                    'ไม่สามารถดึงข้อมูลได้ (Navigation Error)',
+                    'ไม่สามารถดึงข้อมูลได้ (Processing Error)',
+                    'ไม่สามารถดึงข้อมูลได้ (Error)',
+                    'ไม่พบเนื้อหา',
+                    'ไม่สามารถดึงข้อมูลได้ (CAPTCHA)'
+                ]])
+
+                # Safe numeric calculations
+                try:
+                    stats['total_views'] = sum(self._safe_int_convert(post.get('views', 0)) for post in cleaned_posts)
+                    stats['total_likes'] = sum(
+                        self._safe_int_convert(post.get('reaction', 0)) for post in cleaned_posts)
+                    stats['total_comments'] = sum(
+                        self._safe_int_convert(post.get('comment', 0)) for post in cleaned_posts)
+                    stats['total_shares'] = sum(self._safe_int_convert(post.get('shared', 0)) for post in cleaned_posts)
+                    stats['total_saves'] = sum(self._safe_int_convert(post.get('saved', 0)) for post in cleaned_posts)
+                except Exception as e:
+                    logger.error(f"❌ Error calculating stats: {e}")
 
                 result.update({
                     'success': True,
-                    'data': posts_data,
-                    'message': f'Successfully scraped {len(posts_data)} posts from @{username}'
+                    'data': cleaned_posts,
+                    'message': f'Successfully scraped {len(cleaned_posts)} posts from @{username}'
                 })
 
-                logger.info(f"✅ Django scrape completed: {len(posts_data)} posts from @{username}")
+                logger.info(f"✅ Django scrape completed: {len(cleaned_posts)} posts from @{username}")
 
             else:
                 result['message'] = f'No posts found or failed to access profile @{username}'
@@ -906,85 +1026,178 @@ def scrape_tiktok_posts_for_django(profile_url: str,
     return result
 
 
+def _safe_int_convert(value) -> int:
+    """Helper function to safely convert value to integer"""
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            # Remove commas and convert K, M suffixes
+            clean_value = value.replace(',', '').replace('K', '000').replace('M', '000000').replace('k', '000').replace(
+                'm', '000000')
+            return int(float(clean_value))
+        except (ValueError, AttributeError):
+            return 0
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
+
 def save_posts_to_json(posts_data: List[Dict], filename: str = None) -> bool:
     """
-    Save scraped posts data to JSON file
-
-    Args:
-        posts_data: List of post dictionaries
-        filename: Output filename (auto-generated if None)
-
-    Returns:
-        True if saved successfully, False otherwise
+    Save scraped posts data to JSON file with error handling
     """
     try:
+        if not posts_data:
+            logger.warning("⚠️ No posts data to save")
+            return False
+
+        # Generate filename if not provided
         if not filename:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             username = posts_data[0].get('username', 'unknown') if posts_data else 'unknown'
             filename = f'tiktok_posts_{username}_{timestamp}.json'
 
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(posts_data, f, ensure_ascii=False, indent=2)
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(filename) if os.path.dirname(filename) else '.', exist_ok=True)
 
-        logger.info(f"💾 Saved {len(posts_data)} posts to {filename}")
+        # Ensure all data is JSON serializable
+        serializable_data = []
+        for post in posts_data:
+            try:
+                if isinstance(post, dict):
+                    # Convert all values to JSON-safe types
+                    safe_post = {}
+                    for key, value in post.items():
+                        if isinstance(value, (str, int, float, bool, type(None))):
+                            safe_post[key] = value
+                        else:
+                            safe_post[key] = str(value)
+                    serializable_data.append(safe_post)
+            except Exception as e:
+                logger.error(f"❌ Error serializing post: {e}")
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(serializable_data, f, ensure_ascii=False, indent=2)
+
+        logger.info(f"💾 Saved {len(serializable_data)} posts to {filename}")
         return True
 
     except Exception as e:
-        logger.error(f"❌ Error saving to JSON: {e}")
+        logger.error(f"❌ Error saving file: {e}")  # Fixed: removed undefined variable
         return False
+
+
+def filter_recent_posts(posts_data: List[Dict], days: int = 30) -> List[Dict]:
+    """
+    Filter posts from the last N days
+    """
+    try:
+        if not posts_data:
+            return []
+
+        # If no valid timestamps, return all posts
+        valid_timestamp_posts = [p for p in posts_data if p.get('timestamp_unix')]
+        if not valid_timestamp_posts:
+            logger.info(f"📅 กรองเฉพาะโพสต์ {days} วันแรก")
+            return posts_data
+
+        # Filter by timestamp
+        from datetime import timedelta
+        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_timestamp = cutoff_date.timestamp()
+
+        recent_posts = [
+            post for post in posts_data
+            if post.get('timestamp_unix', 0) >= cutoff_timestamp
+        ]
+
+        logger.info(f"📅 กรองเฉพาะโพสต์ {days} วันแรก")
+        return recent_posts
+
+    except Exception as e:
+        logger.error(f"❌ Error filtering posts: {e}")
+        return posts_data
 
 
 def get_posts_summary(posts_data: List[Dict]) -> Dict:
     """
-    Generate summary statistics from posts data
-
-    Args:
-        posts_data: List of post dictionaries
-
-    Returns:
-        Dictionary with summary statistics
+    Generate summary statistics from posts data with safe handling
     """
     if not posts_data:
-        return {}
+        return {
+            'username': 'unknown',
+            'total_posts': 0,
+            'successful_posts': 0,
+            'success_rate': '0%',
+            'total_views': 0,
+            'total_likes': 0,
+            'total_comments': 0,
+            'total_shares': 0,
+            'total_saves': 0,
+            'average_views': 0,
+            'average_likes': 0
+        }
 
-    total_posts = len(posts_data)
-    successful_posts = sum(1 for post in posts_data
-                           if post.get('post_content', '') not in [
-                               'ไม่สามารถดึงข้อมูลได้ (Navigation Error)',
-                               'ไม่สามารถดึงข้อมูลได้ (Error)',
-                               'ไม่พบเนื้อหา'
-                           ])
+    try:
+        total_posts = len(posts_data)
+        successful_posts = len([
+            post for post in posts_data
+            if isinstance(post, dict) and post.get('post_content', '') not in [
+                'ไม่สามารถดึงข้อมูลได้ (Navigation Error)',
+                'ไม่สามารถดึงข้อมูลได้ (Processing Error)',
+                'ไม่สามารถดึงข้อมูลได้ (Error)',
+                'ไม่พบเนื้อหา',
+                'ไม่สามารถดึงข้อมูลได้ (CAPTCHA)'
+            ]
+        ])
 
-    return {
-        'username': posts_data[0].get('username', 'unknown'),
-        'total_posts': total_posts,
-        'successful_posts': successful_posts,
-        'success_rate': f"{(successful_posts / total_posts * 100):.1f}%" if total_posts > 0 else "0%",
-        'total_views': sum(post.get('views', 0) for post in posts_data),
-        'total_likes': sum(post.get('reaction', 0) for post in posts_data),
-        'total_comments': sum(post.get('comment', 0) for post in posts_data),
-        'total_shares': sum(post.get('shared', 0) for post in posts_data),
-        'total_saves': sum(post.get('saved', 0) for post in posts_data),
-        'average_views': sum(post.get('views', 0) for post in posts_data) // total_posts if total_posts > 0 else 0,
-        'average_likes': sum(post.get('reaction', 0) for post in posts_data) // total_posts if total_posts > 0 else 0
-    }
+        # Safe numeric calculations
+        total_views = sum(_safe_int_convert(post.get('views', 0)) for post in posts_data if isinstance(post, dict))
+        total_likes = sum(_safe_int_convert(post.get('reaction', 0)) for post in posts_data if isinstance(post, dict))
+        total_comments = sum(_safe_int_convert(post.get('comment', 0)) for post in posts_data if isinstance(post, dict))
+        total_shares = sum(_safe_int_convert(post.get('shared', 0)) for post in posts_data if isinstance(post, dict))
+        total_saves = sum(_safe_int_convert(post.get('saved', 0)) for post in posts_data if isinstance(post, dict))
+
+        return {
+            'username': posts_data[0].get('username', 'unknown') if posts_data else 'unknown',
+            'total_posts': total_posts,
+            'successful_posts': successful_posts,
+            'success_rate': f"{(successful_posts / total_posts * 100):.1f}%" if total_posts > 0 else "0%",
+            'total_views': total_views,
+            'total_likes': total_likes,
+            'total_comments': total_comments,
+            'total_shares': total_shares,
+            'total_saves': total_saves,
+            'average_views': total_views // total_posts if total_posts > 0 else 0,
+            'average_likes': total_likes // total_posts if total_posts > 0 else 0
+        }
+    except Exception as e:
+        logger.error(f"❌ Error generating summary: {e}")
+        return {
+            'username': 'error',
+            'total_posts': 0,
+            'successful_posts': 0,
+            'success_rate': '0%',
+            'total_views': 0,
+            'total_likes': 0,
+            'total_comments': 0,
+            'total_shares': 0,
+            'total_saves': 0,
+            'average_views': 0,
+            'average_likes': 0
+        }
 
 
 # Standalone execution function (for testing)
 def run_standalone_scraper(profile_url: str = None,
                            cookies_file: str = None,
-                           max_posts: int = 20,
+                           max_posts: int = None,
                            save_json: bool = True):
     """
     Standalone function for testing the scraper
-
-    Args:
-        profile_url: TikTok profile URL to scrape
-        cookies_file: Path to cookies JSON file
-        max_posts: Maximum number of posts to process
-        save_json: Whether to save results to JSON file
     """
-
     # Default URL for testing (can be changed)
     if not profile_url:
         profile_url = "https://www.tiktok.com/@atlascat_official"
@@ -994,9 +1207,9 @@ def run_standalone_scraper(profile_url: str = None,
         logger.warning(f"Cookies file not found: {cookies_file}")
         cookies_file = None
 
-    print("🚀 Starting TikTok Posts Scraper")
+    print("🚀 Starting Enhanced TikTok Posts Scraper")
     print(f"🎯 Target: {profile_url}")
-    print(f"📊 Max posts: {max_posts}")
+    print(f"📊 Max posts: {max_posts if max_posts else 'ALL POSTS'}")
     print(f"🍪 Cookies: {'✅' if cookies_file else '❌'}")
     print("=" * 80)
 
@@ -1006,15 +1219,18 @@ def run_standalone_scraper(profile_url: str = None,
         cookies_file=cookies_file,
         max_posts=max_posts,
         headless=False,  # Set to True for production
-        scroll_rounds=8,
+        scroll_rounds=50,
         timeout=30000
     )
 
     if result['success']:
         posts_data = result['data']
 
+        # Filter recent posts
+        filtered_posts = filter_recent_posts(posts_data, days=30)
+
         # Display summary
-        summary = get_posts_summary(posts_data)
+        summary = get_posts_summary(filtered_posts)
         print("\n📊 SCRAPING SUMMARY")
         print("=" * 80)
         print(f"👤 Username: @{summary['username']}")
@@ -1030,66 +1246,32 @@ def run_standalone_scraper(profile_url: str = None,
 
         # Save to JSON if requested
         if save_json:
-            save_posts_to_json(posts_data)
+            save_posts_to_json(filtered_posts)
 
         # Display sample post
-        if posts_data:
-            print("\n📄 SAMPLE POST DATA")
+        if filtered_posts:
+            print("\n📄 ตัวอย่างข้อมูลสำหรับ Database:")
             print("=" * 80)
-            sample = posts_data[0]
+            sample = filtered_posts[0]
             sample_json = json.dumps({k: v for k, v in sample.items()},
                                      ensure_ascii=False, indent=2)
             print(sample_json)
 
+        print(f"\n📋 ดึงข้อมูล {len(filtered_posts)} โพสต์จาก TikTok")
+        print("✅ ดึงข้อมูลสำเร็จ")
+
     else:
-        print(f"❌ Scraping failed: {result['message']}")
+        print(f"❌ Error fetching TikTok posts: {result['message']}")
 
-
-# Example Django views.py integration
-"""
-# In your Django views.py:
-
-from .tiktok_post import scrape_tiktok_posts_for_django
-from django.http import JsonResponse
-from django.shortcuts import render
-
-def scrape_tiktok_view(request):
-    if request.method == 'POST':
-        profile_url = request.POST.get('profile_url')
-        max_posts = int(request.POST.get('max_posts', 20))
-
-        # Run scraper
-        result = scrape_tiktok_posts_for_django(
-            profile_url=profile_url,
-            cookies_file='path/to/your/cookies.json',  # Optional
-            max_posts=max_posts,
-            headless=True  # Use headless for production
-        )
-
-        if result['success']:
-            # Save to database or return data
-            return JsonResponse({
-                'status': 'success',
-                'data': result['data'],
-                'stats': result['stats']
-            })
-        else:
-            return JsonResponse({
-                'status': 'error',
-                'message': result['message']
-            })
-
-    return render(request, 'scrape_form.html')
-"""
 
 if __name__ == "__main__":
     # Example usage - change URL as needed
-    profile_url = "https://www.tiktok.com/@atlascat_official"  # Change this URL
-    cookies_file = "tiktok_cookies.json"  # Optional - set path to your cookies file
+    profile_url = "https://www.tiktok.com/@panzylab"  # Change this URL
+    cookies_file = "tiktok_cookies.json"  # Optional
 
     run_standalone_scraper(
         profile_url=profile_url,
         cookies_file=cookies_file if os.path.exists(cookies_file) else None,
-        max_posts=None,  # Adjust as needed
+        max_posts=None,  # Change this number
         save_json=True
     )
