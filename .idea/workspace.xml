@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/cookie.json" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/cookie.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/fb_reel.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/fb_reel.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PageInfo/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/group_detail.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/PageInfo/pageview.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/pageview.html" afterDir="false" />
@@ -102,11 +104,11 @@
       <recent name="C:\FB_WebApp_Project-main\static\assets\img\favicon" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\FB_WebApp_Project-main\templates" />
       <recent name="C:\FB_WebApp_Project-main\accounts\templates\accounts" />
       <recent name="C:\FB_WebApp_Project-main\PageInfo" />
       <recent name="C:\FB_WebApp_Project-main\static\assets\img\favicon" />
       <recent name="C:\FB_WebApp_Project-main\FB_WebApp_Project" />
-      <recent name="C:\FB_WebApp_Project-main\PageInfo\management\commands" />
     </key>
   </component>
   <component name="SharedIndexes">

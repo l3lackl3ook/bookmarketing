@@ -553,10 +553,10 @@ def clean_number(value):
         return 0
 
 async def run_fb_post_video_reel_live_scraper(url, cookie_path, cutoff_dt):
-    posts_scraper = FBPostScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
-    videos_scraper = FBVideoScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
-    reels_scraper = FBReelScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
-    lives_scraper = FBLiveScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
+    posts_scraper = FBPostScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
+    videos_scraper = FBVideoScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
+    reels_scraper = FBReelScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
+    lives_scraper = FBLiveScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
 
     posts = await posts_scraper.run()
     videos = await videos_scraper.run()
@@ -845,6 +845,7 @@ def create_group(request):
 
     # ส่งฟอร์มไปยัง template
     return render(request, 'PageInfo/index.html', {'form': form})
+
 def group_detail(request, group_id):
     group = get_object_or_404(PageGroup, id=group_id)
     pages = group.pages.all().order_by('-page_followers_count')

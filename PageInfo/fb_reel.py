@@ -28,11 +28,8 @@ class FBReelScraperAsync:
             let olderReached = false;
             const containers = document.querySelectorAll('div[data-pagelet^="TimelineFeedUnit_"]');
             for (const post of containers) {
-                const postLink = post.querySelector('a[href*="/reel/"]');
-                if (!postLink) continue;
                 // Try to find a timestamp element: an <abbr> with utime or a Thai date span
                 const dateEl = post.querySelector('span.html-span.x4k7w5x');
-                console.log('date text=', dateEl && (dateEl.dataset && dateEl.dataset.utime ? dateEl.dataset.utime : dateEl ? dateEl.textContent.trim() : null));
                 let epochMs = null;
                 if (dateEl && dateEl.dataset && dateEl.dataset.utime) {
                     // Unix timestamp provided
@@ -44,7 +41,6 @@ class FBReelScraperAsync:
                         "มกราคม": 1, "กุมภาพันธ์": 2, "มีนาคม": 3, "เมษายน": 4,
                         "พฤษภาคม": 5, "มิถุนายน": 6, "กรกฎาคม": 7, "สิงหาคม": 8,
                         "กันยายน": 9, "ตุลาคม": 10, "พฤศจิกายน": 11, "ธันวาคม": 12,
-                        // Abbreviations:
                         "ม.ค.": 1, "ก.พ.": 2, "มี.ค.": 3, "เม.ย.": 4,
                         "พ.ค.": 5, "มิ.ย.": 6, "ก.ค.": 7, "ส.ค.": 8,
                         "ก.ย.": 9, "ต.ค.": 10, "พ.ย.": 11, "ธ.ค.": 12
@@ -66,12 +62,10 @@ class FBReelScraperAsync:
                     } else {
                         const abs = tooltip.match(/(\d+)\s+([^\s]+)\s+เวลา\s+(\d{1,2}):(\d{2})\s+น\.$/);
                         if (abs) {
-                            const d=parseInt(abs[1],10), m=thaiMonths[abs[2]], h=parseInt(abs[3],10), min=parseInt(abs[4],10);
-                            const yr=new Date().getFullYear();
-                            epochMs=new Date(yr,m-1,d,h,min).getTime();
-                        }
-                        else {
-                            // Handle "DD Month YYYY" without time
+                            const d = parseInt(abs[1], 10), m = thaiMonths[abs[2]], h = parseInt(abs[3], 10), min = parseInt(abs[4], 10);
+                            const yr = new Date().getFullYear();
+                            epochMs = new Date(yr, m - 1, d, h, min).getTime();
+                        } else {
                             const absYear = tooltip.match(/(\d+)\s+([^\s]+)\s+(\d{4})$/);
                             if (absYear) {
                                 const dayY = parseInt(absYear[1], 10);
@@ -79,7 +73,6 @@ class FBReelScraperAsync:
                                 const yearY = parseInt(absYear[3], 10);
                                 epochMs = new Date(yearY, monthY - 1, dayY).getTime();
                             } else {
-                                // Try matching abbreviated month first (e.g. "5 ก.ค.")
                                 const absAbbrev = tooltip.match(/(\d{1,2})\s+([ก-ฮ]\.[ก-ฮ]\.)/);
                                 if (absAbbrev) {
                                     const dayA = parseInt(absAbbrev[1], 10);
@@ -87,7 +80,6 @@ class FBReelScraperAsync:
                                     const yearA = new Date().getFullYear();
                                     epochMs = new Date(yearA, monthA - 1, dayA).getTime();
                                 } else {
-                                    // Handle "DD Month" without year/time
                                     const absNoYear = tooltip.match(/(\d+)\s+([^\s]+)$/);
                                     if (absNoYear) {
                                         const dayN = parseInt(absNoYear[1], 10);
@@ -99,21 +91,21 @@ class FBReelScraperAsync:
                             }
                         }
                     }
-                    // existing relative/absolute date parsing logic follows using `tooltip`
                 } else {
                     // No date found, skip this post
                     continue;
                 }
-                console.log('URL=', postLink.href)
-                console.log('time=', epochMs)
-                if (epochMs !== null) {
-                    if (epochMs >= cutoffMs) {
-                        // Post is within cutoff window
-                        results.push({ id: postLink.href, epoch: epochMs });
-                    } else {
-                        olderReached = true;
-                        continue;
-                    }
+
+                // If any post is older than cutoff, stop processing further posts
+                if (epochMs < cutoffMs) {
+                    olderReached = true;
+                    break;
+                }
+
+                // Only collect reel URLs
+                const reelLink = post.querySelector('a[href*="/reel/"]');
+                if (reelLink) {
+                    results.push({ id: reelLink.href, epoch: epochMs });
                 }
             }
             return { results, olderReached };
@@ -590,7 +582,7 @@ if __name__ == "__main__":
     scraper = FBReelScraperAsync(
         cookie_file="cookie.json",
         headless=False,
-        page_url="https://www.facebook.com/mealmateTH",
+        page_url="https://www.facebook.com/skooldio",
         cutoff_dt=datetime(2025, 6, 1, 0, 0),
         # cutoff_dt= None,
         batch_size = 10
