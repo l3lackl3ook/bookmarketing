@@ -217,9 +217,9 @@
               {% elif page.platform == "instagram" %}
                 <img src="{% static 'assets/img/icons/iglogo.png' %}" alt="Instagram Icon" style="width: 35px; height: 28px;" />
               {% elif page.platform == "lemon8" %}
-                <img src="{% static 'assets/img/icons/lemon8logo.png' %}" alt="Lemon8 Icon" style="width: 25px; height: 25 px;" />
+                <img src="{% static 'assets/img/icons/lemon8logo.png' %}" alt="Lemon8 Icon" style="width: 25px; height: 25px;" />
               {% elif page.platform == "youtube" %}
-                <img src="{% static 'assets/img/icons/youtubelogo.png' %}" alt="Youtube Icon" style="width: 25px; height: 25 px;" />
+                <img src="{% static 'assets/img/icons/youtubelogo.png' %}" alt="YouTube Icon" style="width: 25px; height: 25px;" />
               {% endif %}
             </a>
             <a href="{{ page.page_url }}" target="_blank">
@@ -370,11 +370,9 @@
 
 
 
-
   </div>
 </div>
-
-  {% if facebook_posts or facebook_posts_flop %}
+   {% if facebook_posts or facebook_posts_flop %}
 <div class="row">
 
   <!-- 🔥 Top Posts by Engagement -->
@@ -405,7 +403,6 @@
   <!-- รูปเพจ -->
   <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
        width="24" height="24" style="object-fit: cover;">
-
   <!-- ไอคอน Facebook -->
   <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
        width="10" height="10"
@@ -467,7 +464,6 @@
   <!-- รูปเพจ -->
   <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
        width="24" height="24" style="object-fit: cover;">
-
   <!-- ไอคอน Facebook -->
   <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
        width="10" height="10"
@@ -758,7 +754,6 @@
   </div>
 </div>
 
-
 <!-- ✅ Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
@@ -1011,7 +1006,6 @@ window.engagementChart = engagementChart;
   </div>
 </div>
 
-
 <!-- 🧠 Popup Modal -->
 <div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -1148,7 +1142,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-
   <!-- 🕒 Best Times To Post -->
   <div class="col-md-6">
     <div class="card shadow-sm rounded p-3 mb-4" style="aspect-ratio: 4 / 2;" id="bestTimesCard">
@@ -1180,6 +1173,7 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     </div>
   </div>
+</div>
 
 <!-- 📽️ Card Presentation Modal for exporting and presenting individual cards -->
 <!-- Modal used when presenting charts/cards at full screen -->
@@ -1632,85 +1626,83 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   </div>
 
+  <!-- ✅ Google Chart Library -->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(drawFollowerChart);
 
-<!-- ✅ Google Chart Library -->
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript">
-  google.charts.load('current', { packages: ['corechart'] });
-  google.charts.setOnLoadCallback(drawFollowerChart);
-
-  function drawFollowerChart() {
-    // If no follower data, display a message instead of rendering an empty chart
-    const followerDataLength = {{ follower_data|length }};
-    const container = document.getElementById('followerLineChart');
-    if (followerDataLength === 0) {
-      if (container) {
-        container.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100 text-muted">No follower data available</div>';
+    function drawFollowerChart() {
+      // If no follower data, display a message instead of rendering an empty chart
+      const followerDataLength = {{ follower_data|length }};
+      const container = document.getElementById('followerLineChart');
+      if (followerDataLength === 0) {
+        if (container) {
+          container.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100 text-muted">No follower data available</div>';
+        }
+        return;
       }
-      return;
-    }
-    const data = new google.visualization.DataTable();
-    data.addColumn('string', 'Date');
-    data.addColumn('number', 'Follower');
-    data.addRows([
-      {% for row in follower_data %}
-        ['{{ row.date }}', {{ row.followers }}]{% if not forloop.last %},{% endif %}
-      {% endfor %}
-    ]);
-    const options = {
-      chartArea: { left: 60, top: 30, width: '92%', height: '80%' },
-      fontName: 'Inter',
-      legend: { position: 'none' },
-      series: { 0: { color: '#2563eb' } },
-      hAxis: {
-        textStyle: { color: '#485B7D', fontSize: 12 },
-        baselineColor: '#485B7D'
-      },
-      vAxis: {
-        format: 'decimal',
-        textStyle: { color: '#485B7D', fontSize: 12 },
-        baselineColor: '#485B7D',
-        gridlines: { color: '#dce1eb', count: 4 }
-      }
-    };
-    const chart = new google.visualization.LineChart(container);
-    chart.draw(data, options);
-    // Store global reference for export/print functions
-    window.followerLineChart = chart;
-  }
-</script>
-
-<!-- 🔠 Top 50 Hashtags Wordcloud (แบบ Fanpage Karma) -->
-<div class="col-md-6">
-  <!-- Top 50 Hashtags Card with export & presentation controls -->
-  <div id="hashtagCard" class="card shadow-sm border-0 mb-4" style="height: 450px;">
-    <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
-      <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h5 class="mb-2">Top 50 Hashtags by Posts</h5>
-          <p class="text-muted small mb-0">The bigger the word, the more it was used. The greener, the more these posts were interacted with.</p>
-        </div>
-        <div class="d-flex gap-2">
-          <button class="btn-outline-orange" onclick="presentCard('hashtagCard','Top 50 Hashtags')">Present</button>
-          <button class="btn-outline-orange" onclick="exportHashtagsCSV()">CSV</button>
-          <button class="btn-outline-orange" onclick="exportHashtagsPDF()">PDF</button>
-        </div>
-      </div>
-      <div class="d-flex flex-wrap gap-2 overflow-auto" id="hashtagCloudBox" style="max-height: 260px;">
-        {% for tag in top_hashtags %}
-          <a href="#" class="fw-medium" style="font-size: {{ tag.font_size }}em; color: hsl({{ tag.color_hue }}, 60%, 50%); text-decoration: none; line-height: 1.2em;">
-            {{ tag.tag }}
-          </a>
+      const data = new google.visualization.DataTable();
+      data.addColumn('string', 'Date');
+      data.addColumn('number', 'Follower');
+      data.addRows([
+        {% for row in follower_data %}
+          ['{{ row.date }}', {{ row.followers }}]{% if not forloop.last %},{% endif %}
         {% endfor %}
-      </div>
-      <div class="analytics_chartLegend mt-3 small text-muted">
-        <div class="analytics_chartLegendItem">size = frequency</div>
-        <div class="analytics_chartLegendItemGreen">green = high engagement</div>
-        <div class="analytics_chartLegendItemRed">red = low engagement</div>
+      ]);
+      const options = {
+        chartArea: { left: 60, top: 30, width: '92%', height: '80%' },
+        fontName: 'Inter',
+        legend: { position: 'none' },
+        series: { 0: { color: '#2563eb' } },
+        hAxis: {
+          textStyle: { color: '#485B7D', fontSize: 12 },
+          baselineColor: '#485B7D'
+        },
+        vAxis: {
+          format: 'decimal',
+          textStyle: { color: '#485B7D', fontSize: 12 },
+          baselineColor: '#485B7D',
+          gridlines: { color: '#dce1eb', count: 4 }
+        }
+      };
+      const chart = new google.visualization.LineChart(container);
+      chart.draw(data, options);
+      // Store global reference for export/print functions
+      window.followerLineChart = chart;
+    }
+  </script>
+
+  <!-- 🔠 Top 50 Hashtags Wordcloud (แบบ Fanpage Karma) -->
+  <div class="col-md-6">
+    <!-- Top 50 Hashtags Card with export & presentation controls -->
+    <div id="hashtagCard" class="card shadow-sm border-0 mb-4" style="height: 450px;">
+      <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h5 class="mb-2">Top 50 Hashtags by Posts</h5>
+            <p class="text-muted small mb-0">The bigger the word, the more it was used. The greener, the more these posts were interacted with.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn-outline-orange" onclick="presentCard('hashtagCard','Top 50 Hashtags')">Present</button>
+            <button class="btn-outline-orange" onclick="exportHashtagsCSV()">CSV</button>
+            <button class="btn-outline-orange" onclick="exportHashtagsPDF()">PDF</button>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 overflow-auto" id="hashtagCloudBox" style="max-height: 260px;">
+          {% for tag in top_hashtags %}
+            <a href="#" class="fw-medium" style="font-size: {{ tag.font_size }}em; color: hsl({{ tag.color_hue }}, 60%, 50%); text-decoration: none; line-height: 1.2em;">
+              {{ tag.tag }}
+            </a>
+          {% endfor %}
+        </div>
+        <div class="analytics_chartLegend mt-3 small text-muted">
+          <div class="analytics_chartLegendItem">size = frequency</div>
+          <div class="analytics_chartLegendItemGreen">green = high engagement</div>
+          <div class="analytics_chartLegendItemRed">red = low engagement</div>
+        </div>
       </div>
     </div>
   </div>
-</div>
-</div>
 </div>
 {% endblock %}
