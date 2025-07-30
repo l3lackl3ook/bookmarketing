@@ -246,7 +246,18 @@ class FBLiveScraperAsync:
         if not seen_ids:
             video_page_url = f"{self.page_url.rstrip('/')}/live_videos"
             await page.goto(video_page_url)
-        await page.wait_for_selector('div.x1l90r2v.x12qybmz', timeout=10000)
+        # Try waiting for at least one live video container to appear.  On
+        # pages that have no live videos this selector will never exist
+        # which previously resulted in a TimeoutError being raised.  To
+        # gracefully handle such cases we wrap the wait in a try/except and
+        # return an empty batch with ``older_than_cutoff`` flagged to True.
+        try:
+            await page.wait_for_selector('div.x1l90r2v.x12qybmz', timeout=10000)
+        except Exception:
+            # No live video elements found, so there is nothing to fetch.
+            # Set older_than_cutoff to True so the caller can break out
+            # of any loops and report zero posts.
+            return [], True
 
         # Loop until we collect enough or hit older posts
         while len(batch) < max_posts and not older_than_cutoff:
@@ -705,9 +716,19 @@ class FBLiveScraperAsync:
             empty_batch_retries = 0
             max_empty_batch_retries = 3
             while True:
+                # When collecting batches of live posts we should not assume the
+                # presence of any particular post container. The selector used
+                # for live video cards (``div.x1l90r2v.x12qybmz``) will not
+                # exist on pages that have no live videos. In such cases
+                # ``wait_for_selector`` would raise a timeout and abort the
+                # scraper prematurely before we have a chance to report that no
+                # posts were found. To handle this gracefully we rely on
+                # ``_get_post`` to perform its own internal waiting and
+                # fallback when the selector cannot be found. This mirrors
+                # the logic used in ``fb_reel.py`` and ensures that the
+                # scraper behaves consistently regardless of whether the page
+                # contains any live videos.
                 print(f"Collecting batch {batch_index} of posts...")
-                # Wait for the video card selector to appear before collecting posts
-                await self.page.wait_for_selector('div.x1l90r2v.x12qybmz', timeout=10000)
                 batch_posts, older = await self._get_post(
                     page=self.page,
                     cutoff_dt=cutoff_dt,
@@ -771,7 +792,7 @@ if __name__ == "__main__":
     scraper = FBLiveScraperAsync(
         cookie_file="cookie.json",
         headless=False,
-        page_url="https://www.facebook.com/mealmateTH",
+        page_url="https://www.facebook.com/bakingcluboflamsoon",
         # cutoff_dt=datetime(2025, 5, 1, 0, 0),
         cutoff_dt=None,
         batch_size=10
