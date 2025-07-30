@@ -1398,7 +1398,8 @@ def pageview(request, page_id):
                 "post_imgs": [p.post_imgs] if p.post_imgs else [],
                 "post_content": p.post_content or '',
                 "post_timestamp": dt.strftime('%Y-%m-%d %H:%M'),
-                "profile_pic": p.page.profile_pic if p.page else None,
+                # Always include page details for popup rendering
+                "profile_pic": p.page.profile_pic if p.page else '',
                 "page_name": p.page.page_name if p.page else '',
                 "like_count": likes,
                 "comment_count": comments,
@@ -1415,7 +1416,8 @@ def pageview(request, page_id):
                 "post_imgs": [p.post_imgs] if p.post_imgs else [],
                 "post_content": p.post_content or '',
                 "post_timestamp": dt.strftime('%Y-%m-%d %H:%M'),
-                "profile_pic": p.page.profile_pic if p.page else None,
+                # Always include page details for popup rendering
+                "profile_pic": p.page.profile_pic if p.page else '',
                 "page_name": p.page.page_name if p.page else '',
                 "like_count": likes,
                 "comment_count": comments,
@@ -1447,18 +1449,22 @@ def pageview(request, page_id):
         posts_by_day_data = [{"day": day, "count": weekday_counter.get(day, 0)} for day in calendar.day_name]
         bar_day_labels = list(calendar.day_name)
         bar_day_values = [weekday_counter.get(day, 0) for day in bar_day_labels]
-        # ฟังก์ชันเลือกสีตามจำนวนโพสต์
-        def get_bar_color_by_count(count):
-            color_map = {
-                1: "#cdb4db",
-                2: "#c5f6f7",
-                3: "#f9c6c9",
-                4: "#ffd6a5",
-                5: "#FF6962",
-            }
-            return color_map.get(count, "#9E9E9E")
 
-        bar_day_colors = [get_bar_color_by_count(weekday_counter.get(day, 0)) for day in bar_day_labels]
+        # กำหนดสีของแถบในกราฟตามโทนสีหลัก (primary color) และปรับความสว่างให้แตกต่างกันเล็กน้อยแต่ยังอยู่ในสไตล์เดียวกัน
+        base_color = '#2563eb'
+
+        def lighten_color(hex_color: str, factor: float) -> str:
+            """Lighten the given hex color by the given factor (0.0-1.0)."""
+            hex_color = hex_color.lstrip('#')
+            r, g, b = [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]
+            r = int(r + (255 - r) * factor)
+            g = int(g + (255 - g) * factor)
+            b = int(b + (255 - b) * factor)
+            return f'#{r:02x}{g:02x}{b:02x}'
+
+        # สร้างรายการ factor สำหรับแต่ละวันในสัปดาห์ เพื่อให้แต่ละแถบมีเฉดสีนวลตามลำดับ
+        lighten_factors = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+        bar_day_colors = [lighten_color(base_color, lighten_factors[i % len(lighten_factors)]) for i, _ in enumerate(bar_day_labels)]
 
         # สร้างข้อมูล bubble chart (Best Times To Post)
         day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -1509,15 +1515,41 @@ def pageview(request, page_id):
                 "color_hue": color_hue,
             })
 
+        # Build top posts export data for TikTok
+        top_posts_export = []
+        for p in tiktok_posts_top10:
+            top_posts_export.append({
+                'platform': 'tiktok',
+                'post_url': p['post_url'],
+                'post_content': p['post_content'],
+                'post_timestamp': p['post_timestamp'],
+                'like_count': p['like_count'],
+                'comment_count': p['comment_count'],
+                'share_count': p['share_count'],
+                'save_count': p['save_count'],
+                'view_count': p['view_count'],
+                'engagement_rate': p['interaction_rate'],
+                'page_name': p['page_name'],
+            })
+
+        # เตรียมข้อมูล JSON สำหรับการส่งออก/แสดงผลเพิ่มเติม
+        follower_data_json = json.dumps(follower_data, ensure_ascii=False)
+        # Export top_hashtags as tag-count pairs only
+        top_hashtags_export = [{'tag': h['tag'], 'count': h['count']} for h in top_hashtags]
+        top_hashtags_json = json.dumps(top_hashtags_export, ensure_ascii=False)
+
         return render(request, 'PageInfo/pageview.html', {
             'page': page,
             'tiktok_posts': tiktok_posts_data,
             'tiktok_posts_top10': tiktok_posts_top10,
             'tiktok_posts_flop': tiktok_posts_flop10,
             'scatter_data': json.dumps(tiktok_scatter, ensure_ascii=False),
+            'scatter_data_json': json.dumps(tiktok_scatter, ensure_ascii=False),
+            'top_posts_json': json.dumps(top_posts_export, ensure_ascii=False),
             'start_date': start_date,
             'end_date': end_date,
             'follower_data': follower_data,
+            'follower_data_json': follower_data_json,
             'posts_by_day_data': posts_by_day_data,
             'bar_day_labels': json.dumps(bar_day_labels, ensure_ascii=False),
             'bar_day_values': json.dumps(bar_day_values),
@@ -1526,6 +1558,7 @@ def pageview(request, page_id):
             'posts_by_day_json': json.dumps(posts_by_day_json),
             'posts_grouped_json': json.dumps(posts_grouped_by_time),
             'top_hashtags': top_hashtags,
+            'top_hashtags_json': top_hashtags_json,
         })
 
     if page.platform == "facebook":
@@ -1581,8 +1614,10 @@ def pageview(request, page_id):
                 "post_imgs": post.post_imgs,
                 "post_content": post.post_content,
                 "post_timestamp": post.post_timestamp_text,
-                "profile_pic": post.page.profile_pic if post.page else None,
-                "page_name": post.page.page_name if post.page else None,
+                # Always include page details for popup rendering
+                "profile_pic": post.page.profile_pic if post.page else '',
+                "page_name": post.page.page_name if post.page else '',
+                "platform": "facebook",
                 "comment_count": post.comment_count,
                 "share_count": post.share_count,
                 "total_engagement": post.total_engagement,
@@ -1599,10 +1634,10 @@ def pageview(request, page_id):
                 "comment_count": post.comment_count,
                 "share_count": post.share_count,
                 "total_engagement": post.total_engagement,
-                "page": {
-                    "page_name": post.page.page_name if post.page else '',
-                    "profile_pic": post.page.profile_pic if post.page else ''
-                }
+                # Ensure platform and page details at the top level for popup rendering
+                "platform": "facebook",
+                "page_name": post.page.page_name if post.page else '',
+                "profile_pic": post.page.profile_pic if post.page else '',
             })
 
             # ✅ เพิ่มข้อมูลเข้า scatter chart
@@ -1709,7 +1744,17 @@ def pageview(request, page_id):
             }
             return color_map.get(count, "#e2e2e2")  # fallback สีเทา
 
-        bar_day_colors = [get_bar_color_by_count(weekday_counter.get(day, 0)) for day in bar_day_labels]
+        # ปรับโทนสี bar chart สำหรับเพจ Facebook ให้สะท้อนโทนสีหลัก โดยการไล่ระดับความสว่างของสีหลัก
+        base_color_fb = '#2563eb'
+        def lighten_color_fb(hex_color: str, factor: float) -> str:
+            hex_color = hex_color.lstrip('#')
+            r, g, b = [int(hex_color[i:i+2], 16) for i in (0, 2, 4)]
+            r = int(r + (255 - r) * factor)
+            g = int(g + (255 - g) * factor)
+            b = int(b + (255 - b) * factor)
+            return f'#{r:02x}{g:02x}{b:02x}'
+        lighten_factors_fb = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+        bar_day_colors = [lighten_color_fb(base_color_fb, lighten_factors_fb[i % len(lighten_factors_fb)]) for i, _ in enumerate(bar_day_labels)]
 
         # ✅ เตรียมข้อมูลสำหรับ Bubble Chart Best Times to Post
         best_times_data = []
@@ -1791,13 +1836,52 @@ def pageview(request, page_id):
 
             best_times_bubble.append(bubble)
 
+    # Build top posts export data for Facebook
+    top_posts_export = []
+    for p in facebook_posts_top10:
+        # Ensure reactions is a dict
+        reactions = p.reactions or {}
+        if isinstance(reactions, str):
+            try:
+                reactions = json.loads(reactions)
+            except json.JSONDecodeError:
+                reactions = {}
+        like_count = reactions.get("ถูกใจ", 0)
+        comment_count = p.comment_count or 0
+        share_count = p.share_count or 0
+        # Facebook posts do not have save_count or view_count in this model
+        engagement_rate = getattr(p, 'interaction_rate', '0%') or '0%'
+        top_posts_export.append({
+            'platform': 'facebook',
+            'post_id': p.post_id,
+            'post_content': p.post_content,
+            'post_timestamp': p.post_timestamp_text,
+            'like_count': like_count,
+            'comment_count': comment_count,
+            'share_count': share_count,
+            'save_count': 0,
+            'view_count': 0,
+            'engagement_rate': engagement_rate,
+            'page_name': p.page.page_name if p.page else '',
+        })
+    # Prepare scatter data JSON for CSV export
+    scatter_data_json = json.dumps(scatter_data, ensure_ascii=False)
+
+    # เตรียมข้อมูล JSON สำหรับส่งออก
+    follower_data_json_fb = json.dumps(follower_data, ensure_ascii=False)
+    top_hashtags_export_fb = [{'tag': h['tag'], 'count': h['count']} for h in top_hashtags]
+    top_hashtags_json_fb = json.dumps(top_hashtags_export_fb, ensure_ascii=False)
+
     return render(request, 'PageInfo/pageview.html', {
         'page': page,
         'facebook_posts': facebook_posts,
         'facebook_posts_top10': facebook_posts_top10,
         'facebook_posts_flop': facebook_posts_flop10,
         'scatter_data': scatter_data,
+        'scatter_data_json': scatter_data_json,
+        'top_posts_json': json.dumps(top_posts_export, ensure_ascii=False),
         'follower_data': follower_data,  # ✅ ส่งไปยังเทมเพลตด้วย
+        'follower_data_json': follower_data_json_fb,
         'posts_by_day_data': posts_by_day_data,  # ✅ เพิ่มเพื่อส่งให้ Bar Chart
         # ✅ เพิ่ม 2 ตัวนี้เพื่อใช้กับ Chart.js
         'bar_day_labels': json.dumps(bar_day_labels),
@@ -1805,6 +1889,7 @@ def pageview(request, page_id):
         'bubble_data': json.dumps(best_times_bubble),
         'bar_day_colors': json.dumps(bar_day_colors),
         'top_hashtags': top_hashtags,
+        'top_hashtags_json': top_hashtags_json_fb,
         'posts_by_day_json': json.dumps(posts_by_day_json),
         'posts_grouped_json': json.dumps(posts_grouped_by_time),
     })

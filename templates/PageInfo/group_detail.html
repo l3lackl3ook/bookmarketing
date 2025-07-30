@@ -1330,15 +1330,16 @@
 
       let platformIcon;
       if (plat === 'tiktok') {
-        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 14px; height: 14px;" />`;
+        // Use smaller platform icons to match the compact popup design
+        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
       } else if (plat === 'instagram') {
-        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 14px; height: 14px;" />`;
+        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
       } else if (plat === 'lemon8') {
-        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 14px; height: 14px;" />`;
+        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
       } else if (plat === 'youtube') {
-        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 14px; height: 14px;" />`;
+        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
       } else {
-        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 14px; height: 14px;" />`;
+        platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
       }
 
       let postLink;
@@ -1348,9 +1349,10 @@
         postLink = `https://www.facebook.com/${p.post_id}`;
       }
 
+      // Create a 90px square thumbnail similar to the post popup in pageview.html
       const thumbnail = (p.post_imgs && p.post_imgs.length && p.post_imgs[0])
-        ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" style="height: 100%; width: 100px; object-fit: cover;" class="rounded-start" /></a>`
-        : `<div style="height: 100%; width: 100px; background-color: var(--gray-100); border-radius: 8px 0 0 8px;"></div>`;
+        ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>`
+        : `<div style="height: 100%; width: 90px; background-color: var(--gray-100);"></div>`;
 
       let engagementHtml;
       if (plat === 'tiktok') {
@@ -1379,25 +1381,23 @@
       const profilePic = (p.page && p.page.profile_pic) || p.profile_pic || defaultProfilePic;
 
       return `
-        <div class="d-flex border rounded-3 mb-3 overflow-hidden" style="height: 110px; transition: all 0.2s ease;">
-          <div style="width: 90px; height: 110px; flex-shrink: 0;">
+        <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
+          <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
             ${thumbnail}
           </div>
-          <div class="flex-grow-1 p-3 d-flex flex-column justify-content-between" style="min-width: 0;">
-            <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
+            <div class="d-flex justify-content-between align-items-start">
               <div class="d-flex align-items-center gap-2">
-                <!-- Assign a special class to profile images so we can target them in the error handler -->
-                <img src="${profilePic}" class="rounded-circle profile-pic" style="width: 24px; height: 24px; border: 2px solid var(--gray-200);">
+                ${profilePic ? `<img src="${profilePic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
                 ${platformIcon}
-                <span class="fw-semibold" style="color: var(--gray-800);">${pageNameInner}</span>
+                <strong class="text-truncate">${pageNameInner}</strong>
               </div>
-              <div class="text-muted small">${p.post_timestamp}</div>
+              <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp || ''}</div>
             </div>
-            <!-- Add a post-content class for easier styling overrides in modals -->
-            <div class="post-content mb-2 text-dark" style="display: -webkit-box;-webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; font-size: 0.875rem; line-height: 1.3;">
+            <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
               ${p.post_content || ''}
             </div>
-            <div class="d-flex align-items-center text-muted" style="font-size: 0.8rem;">
+            <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
               ${engagementHtml}
             </div>
           </div>

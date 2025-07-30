@@ -2,10 +2,210 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
+  <!-- Minimal modern design variables and component styles (imported from group_detail.html) -->
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #64748b;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --border-radius: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+      font-family: 'Montserrat', 'Prompt', sans-serif;
+      background-color: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+
+    /* Card Improvements */
+    .card {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      background: white;
+      transition: all 0.2s ease;
+    }
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    .card-header {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1.25rem 1.5rem;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    /* Button Improvements */
+    .btn-primary-custom {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary-custom:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+      background: linear-gradient(135deg, #1d4ed8 0%, var(--primary-color) 100%);
+    }
+    .btn-orange {
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-orange:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+      background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+    }
+
+    /* Outline style buttons used for export/presentation controls */
+    .btn-outline-orange {
+      border: 1px solid #FF6B00;
+      color: #FF6B00;
+      background-color: transparent;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+    }
+    .btn-outline-orange:hover {
+      background-color: #FF6B00;
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+    .btn-outline-orange:focus {
+      box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.3);
+    }
+
+    /* Table Improvements */
+    .table {
+      margin-bottom: 0;
+    }
+    .table th {
+      border-top: none;
+      border-bottom: 2px solid var(--gray-200);
+      font-weight: 600;
+      color: var(--gray-700);
+      padding: 1rem 0.75rem;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .table td {
+      padding: 1rem 0.75rem;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: middle;
+    }
+    .table tbody tr:hover {
+      background-color: var(--gray-50);
+    }
+
+    /* Modal Improvements */
+    .modal-content {
+      border: none;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-header {
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1.5rem;
+    }
+    .modal-body {
+      padding: 1.5rem;
+    }
+    .modal-fullscreen .modal-content {
+      border-radius: 0;
+    }
+
+    /* Close Button Improvements */
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      z-index: 1051;
+      transition: all 0.2s ease;
+    }
+    .btn-close:hover {
+      color: var(--gray-800);
+      transform: scale(1.1);
+    }
+
+    /* Chart Container Improvements */
+    .chart-container {
+      position: relative;
+      height: 350px;
+    }
+
+    /* Profile Image Improvements */
+    .profile-img {
+      border: 2px solid white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Platform Icon Improvements */
+    .platform-icon {
+      border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Hover Effects */
+    .hover-count {
+      position: relative;
+      cursor: pointer;
+    }
+    .hover-count .full {
+      display: none;
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--gray-800);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 10;
+    }
+  </style>
 <!-- Content wrapper -->
 <div class="content-wrapper">
   <div class="container-xxl flex-grow-1 container-p-y">
-    <div class="card p-4 mb-4">
+    <div id="pageInfoCard" class="card p-4 mb-4">
       <div class="row justify-content-between align-items-start mb-4">
         <div class="col-md-9 d-flex">
           <div class="position-relative me-3">
@@ -53,8 +253,10 @@
             {% endif %}
           </div>
         </div>
-        <div class="col-md-3 d-flex justify-content-end">
-          <input type="date" class="form-control" style="max-width: 180px; font-size: 0.9rem;" />
+        <div class="col-auto ms-auto d-flex align-items-center gap-2">
+          <!-- Export buttons for page info -->
+          <button class="btn btn-orange" style="padding: 0.5rem 1rem; font-size: 0.875rem; border-radius: 6px;" onclick="exportPageInfoPDF()">Export to PDF</button>
+          <button class="btn btn-orange" style="padding: 0.5rem 1rem; font-size: 0.875rem; border-radius: 6px;" onclick="exportPageInfoCSV()">Export to CSV</button>
         </div>
       </div>
 
@@ -175,11 +377,14 @@
   {% if facebook_posts or facebook_posts_flop %}
 <div class="row">
 
-  <!-- 🔥 Top 10 Facebook Posts -->
+  <!-- 🔥 Top Posts by Engagement -->
   <div class="col-lg-6 mb-4">
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0" id="topPostsCard">
       <div class="card-body p-3">
-        <h5 class="card-title mb-3">Top 10 Facebook Posts</h5>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">Top 10 Posts by Engagement</h5>
+          <!-- Removed presentation/export controls for Top Posts by request -->
+        </div>
         <div style="max-height: 600px; overflow-y: auto;">
           {% for post in facebook_posts_top10 %}
           <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
@@ -210,7 +415,7 @@
                 </div>
                 <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
               </div>
-              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                 {{ post.post_content }}
               </div>
               <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
@@ -241,7 +446,7 @@
   <div class="col-lg-6 mb-4">
     <div class="card shadow-sm border-0">
       <div class="card-body p-3">
-        <h5 class="card-title mb-3">Flop 10 Facebook Posts</h5>
+        <h5 class="card-title mb-3">Flop 10 Posts by Engagement</h5>
         <div style="max-height: 600px; overflow-y: auto;">
           {% for post in facebook_posts_flop %}
           <div class="d-flex border rounded mb-2 small overflow-hidden">
@@ -272,7 +477,7 @@
                 </div>
                 <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp_dt|date:"j M Y - H:i" }}</div>
               </div>
-              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+              <div class="mt-1 text-dark" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                 {{ post.post_content }}
               </div>
               <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
@@ -334,7 +539,7 @@
                   </div>
                   <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp|default:'' }}</div>
                 </div>
-                <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                <div class="mt-1 text-dark" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                   {{ post.post_content|default:'' }}
                 </div>
                 <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
@@ -380,7 +585,7 @@
                   </div>
                   <div class="text-muted small" style="font-size: 0.65rem;">{{ post.post_timestamp|default:'' }}</div>
                 </div>
-                <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
+                <div class="mt-1 text-dark" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
                   {{ post.post_content|default:'' }}
                 </div>
                 <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
@@ -529,13 +734,19 @@
     </div>
   </div>
 </div>
-          <br>
 <!-- 📊 Engagement Scatter Chart Section -->
-<div class="card shadow-sm border-0 mb-5" style="width: 100%; margin: 0 auto;">
+<div class="card shadow-sm border-0 mb-5" style="width: 100%; margin: 0 auto;" id="engagementCard">
   <div class="card-body p-4" style="padding: 1.5rem;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="card-title mb-0">Engagement Scatter Chart</h5>
-      <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h5 class="card-title mb-1">Engagement Scatter Chart</h5>
+        <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+      </div>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="presentCard('engagementCard','Engagement Scatter Chart')">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportEngagementCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportEngagementPDF()">PDF</button>
+      </div>
     </div>
     <div class="d-flex align-items-center mb-3">
       <span class="badge bg-primary rounded-circle me-2" style="width: 10px; height: 10px;"></span>
@@ -556,8 +767,16 @@
 <script>
 const ctx = document.getElementById('engagementScatterChart').getContext('2d');
 
+// Retrieve primary color from CSS variables for scatter chart
+const primaryColorValue = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim() || '#2563eb';
+// Use the primary color directly for scatter points to match the overall theme
+const scatterColor = primaryColorValue;
+
+
 // กำหนดแพลตฟอร์มจากฝั่งเซิร์ฟเวอร์
 const platform = "{{ page.platform }}";
+// Provide fallback page name for use when posts do not include page_name (e.g. grouped JSON)
+const pageName = "{{ page.page_name|escapejs }}";
 
 // สร้างข้อมูล scatter สำหรับ Facebook
 const scatterDataFacebook = {
@@ -576,7 +795,8 @@ const scatterDataFacebook = {
         }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ],
-    backgroundColor: '#FFBBDA',
+    // Use the primary color instead of a hard-coded pink hue to match the theme
+    backgroundColor: scatterColor,
     pointRadius: 6,
     pointHoverRadius: 8,
   }]
@@ -599,7 +819,8 @@ const scatterDataTikTok = {
         }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ],
-    backgroundColor: '#FFBBDA',
+    // Use the same primary color for TikTok dataset
+    backgroundColor: scatterColor,
     pointRadius: 6,
     pointHoverRadius: 8,
   }]
@@ -607,6 +828,41 @@ const scatterDataTikTok = {
 
 // เลือกข้อมูลตามแพลตฟอร์ม
 const scatterData = platform === 'tiktok' ? scatterDataTikTok : scatterDataFacebook;
+
+// 🟢 Dynamic colour scaling for scatter points based on engagement
+// Helper to convert hex colour to RGB
+function hexToRgb(hex) {
+  const clean = hex.replace('#','');
+  const bigint = parseInt(clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return {r, g, b};
+}
+// Helper to lighten a colour by mixing it with white according to factor (0-1)
+function lightenColorJs(hex, factor) {
+  const {r, g, b} = hexToRgb(hex);
+  const newR = Math.round(r + (255 - r) * factor);
+  const newG = Math.round(g + (255 - g) * factor);
+  const newB = Math.round(b + (255 - b) * factor);
+  return `rgb(${newR}, ${newG}, ${newB})`;
+}
+// Compute colour for each point: lower engagement => lighter; higher engagement => darker
+try {
+  const maxY = Math.max(...scatterData.datasets[0].data.map(d => d.y || 0));
+  const baseColor = primaryColorValue || '#2563eb';
+  const pointColors = scatterData.datasets[0].data.map(d => {
+    const ratio = maxY > 0 ? (d.y || 0) / maxY : 0;
+    // Lighten factor from 0.8 (lowest) down to 0.2 (highest)
+    const factor = 0.8 - 0.6 * ratio;
+    return lightenColorJs(baseColor, factor);
+  });
+  // Assign dynamic colours to scatter points
+  scatterData.datasets[0].backgroundColor = pointColors;
+} catch (err) {
+  // if any error, fallback to single scatter colour
+  scatterData.datasets[0].backgroundColor = scatterColor;
+}
 
 // ฟังก์ชันแสดง tooltip และการคลิกที่จุดใน scatter chart
 const scatterOptions = {
@@ -694,7 +950,8 @@ const scatterOptions = {
         text: 'Date'
       },
       ticks: {
-        color: '#888'
+        // Use a medium gray tone defined by our CSS variables for axis labels
+        color: '#64748b'
       }
     },
      y: {
@@ -702,24 +959,27 @@ const scatterOptions = {
     suggestedMax: 200,        // หรือค่าสูงสุดของคุณ
     ticks: {
       stepSize: 20,           // ✅ ให้เส้น Y-grid ห่างเท่ากันและตรงกับจุด
-      color: '#888'
+      color: '#64748b'
     },
     title: {
       display: true,
       text: 'Engagement'
     },
     grid: {
-      color: '#e0e0e0'
+      // Lighten grid lines to blend better with the minimal theme
+      color: '#e2e8f0'
     }
     }
   }
 };
 
-new Chart(ctx, {
+// Initialize scatter chart and store instance globally for export/print functions
+const engagementChart = new Chart(ctx, {
   type: 'scatter',
   data: scatterData,
   options: scatterOptions
 });
+window.engagementChart = engagementChart;
 </script>
 
 <style>
@@ -732,14 +992,18 @@ new Chart(ctx, {
   position: absolute;
 }
 </style>
-<br>
 <!-- 📊 Number of posts by days & Best Times To Post -->
 <div class="row">
 <!-- 📊 Number of posts by days -->
 <div class="col-md-6">
-  <div class="card shadow-sm rounded p-3 mb-4 w-100" style="aspect-ratio: 4 / 2;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="mb-0">Number of posts by days</h6>
+  <div class="card shadow-sm rounded p-3 mb-4 w-100" style="aspect-ratio: 4 / 2;" id="postsByDayCard">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0">Posts by Day</h6>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="presentCard('postsByDayCard','Posts by Day')">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportPostsByDayCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportPostsByDayPDF()">PDF</button>
+      </div>
     </div>
     <div class="position-relative" style="width: 100%; height: 100%;">
       <canvas id="postsByDayChart" style="width: 100%; height: 100%;"></canvas>
@@ -786,23 +1050,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
           // สร้าง HTML สำหรับแต่ละโพสต์ตามแพลตฟอร์ม
           const html = posts.map(p => {
-            // เลือกไอคอนแพลตฟอร์ม (fallback จาก page.platform หาก p.platform ไม่กำหนด)
-            let platformIcon;
+            // Determine the correct platform icon path
+            let platformIconPath;
             const plat = p.platform || platform;
             if (plat === 'tiktok') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/tiktoklogo.webp`;
             } else if (plat === 'instagram') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/iglogo.png`;
             } else if (plat === 'lemon8') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/lemon8logo.png`;
             } else if (plat === 'youtube') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/youtubelogo.png`;
             } else {
-              // Facebook เป็นค่าเริ่มต้น
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/facebooklogo.png`;
             }
-
-            // เลือก HTML แสดงปฏิสัมพันธ์ตามแพลตฟอร์ม
+            // Interaction HTML based on platform
             let engagementHtml = '';
             if (p.platform === 'tiktok') {
               engagementHtml = `
@@ -813,7 +1075,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 <span class="ms-auto fw-semibold text-dark">👁 ${p.view_count || 0}</span>
               `;
             } else {
-              // Facebook และแพลตฟอร์มอื่น ๆ ใช้ปฏิสัมพันธ์แบบนี้
               const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
                 const emoji = { 'ถูกใจ': '👍', 'รักเลย': '❤️', 'เศร้า': '😢', 'โกรธ': '😡', 'ว้าว': '😮', 'ฮ่าๆ': '😂', 'ห่วงใย': '🥰' }[r] || '';
                 return `<span>${emoji} ${c}</span>`;
@@ -825,7 +1086,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
               `;
             }
-
+            // Prepare profile picture and page name with fallbacks
+            const pageNameValue = p.page_name || pageName;
+            const profilePic = p.profile_pic || window.DEFAULT_PROFILE_PIC;
+            const profileAndPlatform = profilePic ? `<div class="position-relative d-inline-block" style="width: 16px; height: 16px;"><img src="${profilePic}" class="rounded-circle border border-white" width="16" height="16" style="object-fit: cover;"><img src="${platformIconPath}" width="8" height="8" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white"></div>` : '';
             return `
               <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
                 <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
@@ -834,9 +1098,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
                   <div class="d-flex justify-content-between align-items-start">
                     <div class="d-flex align-items-center gap-2">
-                      ${p.profile_pic || window.DEFAULT_PROFILE_PIC ? `<img src="${p.profile_pic || window.DEFAULT_PROFILE_PIC}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                      ${platformIcon}
-                      <strong class="text-truncate">${p.page_name}</strong>
+                      ${profileAndPlatform}
+                      <strong class="text-truncate">${pageNameValue}</strong>
                     </div>
                     <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
                   </div>
@@ -880,15 +1143,22 @@ document.addEventListener("DOMContentLoaded", function () {
       maintainAspectRatio: false
     }
   });
+  // Store instance globally for export/print
+  window.postsByDayChart = postsByDayChart;
 });
 </script>
 
 
   <!-- 🕒 Best Times To Post -->
   <div class="col-md-6">
-    <div class="card shadow-sm rounded p-3 mb-4" style="aspect-ratio: 4 / 2;">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="card shadow-sm rounded p-3 mb-4" style="aspect-ratio: 4 / 2;" id="bestTimesCard">
+      <div class="d-flex justify-content-between align-items-center mb-2">
         <h6 class="mb-0">Best Times To Post</h6>
+        <div class="d-flex gap-1">
+          <button class="btn-outline-orange btn-sm" onclick="presentCard('bestTimesCard','Best Times To Post')">Presentation</button>
+          <button class="btn-outline-orange btn-sm" onclick="exportBestTimesCSV()">CSV</button>
+          <button class="btn-outline-orange btn-sm" onclick="exportBestTimesPDF()">PDF</button>
+        </div>
       </div>
       <div class="position-relative" style="width: 100%; height: 100%;">
         <canvas id="bestTimesChart"></canvas>
@@ -910,6 +1180,286 @@ document.addEventListener("DOMContentLoaded", function () {
       </div>
     </div>
   </div>
+
+<!-- 📽️ Card Presentation Modal for exporting and presenting individual cards -->
+<!-- Modal used when presenting charts/cards at full screen -->
+<div class="modal fade" id="cardPresentationModal" tabindex="-1" aria-hidden="true">
+  <!-- Use full screen dialog so the presented content fills the viewport -->
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-semibold" id="cardPresentationTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!-- Use flexbox to keep content centered and allow scrolling if the content overflows -->
+      <div class="modal-body d-flex justify-content-center align-items-start" id="cardPresentationContent" style="overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================== Export & Presentation Functions ======================
+// Generic CSV exporter
+function exportToCSV(headers, rows, filename) {
+  let csv = '';
+  csv += headers.join(',') + '\n';
+  rows.forEach(r => {
+    csv += r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Helper: print specific card to PDF
+function printCard(cardId, title) {
+  const card = document.getElementById(cardId);
+  if (!card) {
+    window.print();
+    return;
+  }
+  const newWin = window.open('', '', 'width=900,height=600');
+  const doc = newWin.document;
+  doc.open();
+  doc.write('<html><head><title>' + title + '</title>');
+  doc.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+  doc.write('<style>body{font-family: Montserrat, Prompt, sans-serif;} .card{margin:1rem;} </style>');
+  doc.write('</head><body></body></html>');
+  doc.close();
+  // Clone the card and remove any presentation/export buttons before printing
+  const clone = card.cloneNode(true);
+  const buttons = clone.querySelectorAll('button');
+  buttons.forEach(btn => btn.remove());
+  // Replace Chart.js canvases with images generated from their respective chart instances
+  const canvasEls = clone.querySelectorAll('canvas');
+  canvasEls.forEach(canvas => {
+    const id = canvas.id;
+    let chartInstance = null;
+    if (id === 'engagementScatterChart') {
+      chartInstance = window.engagementChart;
+    } else if (id === 'postsByDayChart') {
+      chartInstance = window.postsByDayChart;
+    } else if (id === 'bestTimesChart') {
+      chartInstance = window.bestTimesChart;
+    }
+    if (chartInstance && typeof chartInstance.toBase64Image === 'function') {
+      try {
+        const imgData = chartInstance.toBase64Image();
+        const imgEl = document.createElement('img');
+        imgEl.src = imgData;
+        imgEl.style.width = canvas.style.width || canvas.width + 'px';
+        imgEl.style.height = canvas.style.height || canvas.height + 'px';
+        canvas.replaceWith(imgEl);
+      } catch (e) {
+        // If conversion fails, leave the canvas as is
+      }
+    }
+  });
+  // Replace Google Chart (follower line chart) with an image if available
+  const followerContainer = clone.querySelector('#followerLineChart');
+  if (followerContainer && window.followerLineChart && typeof window.followerLineChart.getImageURI === 'function') {
+    try {
+      const uri = window.followerLineChart.getImageURI();
+      const imgEl = document.createElement('img');
+      imgEl.src = uri;
+      imgEl.style.width = '100%';
+      imgEl.style.height = '100%';
+      followerContainer.innerHTML = '';
+      followerContainer.appendChild(imgEl);
+    } catch (e) {
+      // ignore if conversion fails
+    }
+  }
+  newWin.document.body.appendChild(clone);
+  setTimeout(() => {
+    newWin.focus();
+    newWin.print();
+    newWin.close();
+  }, 500);
+}
+
+// Show a card in a modal presentation (convert charts to images)
+function presentCard(cardId, title) {
+  // Attempt to close any currently open popup modal (e.g. posts list) before presenting
+  const popupEl = document.getElementById('popupModal');
+  if (popupEl) {
+    const existing = bootstrap.Modal.getInstance(popupEl);
+    if (existing) {
+      existing.hide();
+    }
+  }
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const modalTitleEl = document.getElementById('cardPresentationTitle');
+  const modalBodyEl = document.getElementById('cardPresentationContent');
+  if (modalTitleEl) modalTitleEl.textContent = title;
+  if (modalBodyEl) {
+    modalBodyEl.innerHTML = '';
+    const canvases = card.querySelectorAll('canvas');
+    let converted = false;
+    if (canvases.length > 0) {
+      canvases.forEach(cv => {
+        try {
+          const img = document.createElement('img');
+          img.src = cv.toDataURL('image/png');
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          img.classList.add('mb-3');
+          modalBodyEl.appendChild(img);
+          converted = true;
+        } catch (err) {
+          // When conversion fails (e.g. due to CORS-tainted canvas), we will fallback below
+          console.error('Error converting canvas to image', err);
+        }
+      });
+    }
+    // Fallback: if no canvases or conversion failed, clone the card content without buttons
+    if (!converted) {
+      const clone = card.cloneNode(true);
+      clone.querySelectorAll('button').forEach(btn => btn.remove());
+      // Try to only extract the card-body for cleaner presentation
+      const body = clone.querySelector('.card-body');
+      if (body) {
+        modalBodyEl.appendChild(body.cloneNode(true));
+      } else {
+        modalBodyEl.appendChild(clone);
+      }
+    }
+  }
+  const modal = new bootstrap.Modal(document.getElementById('cardPresentationModal'));
+  modal.show();
+}
+
+// Export Engagement Scatter Chart
+function exportEngagementCSV() {
+  try {
+    const data = JSON.parse(`{{ scatter_data_json|safe }}`);
+    const headers = ['Timestamp','Engagement','Content','Page'];
+    const rows = data.map(d => [d.x, d.y, (d.content || '').replace(/\n/g,' ').replace(/\r/g,''), d.page_name || '']);
+    exportToCSV(headers, rows, 'engagement_scatter.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportEngagementPDF() {
+  printCard('engagementCard', 'Engagement Scatter Chart');
+}
+
+// Export Posts By Day
+function exportPostsByDayCSV() {
+  const labels = JSON.parse(`{{ bar_day_labels|safe }}`);
+  const values = JSON.parse(`{{ bar_day_values|safe }}`);
+  const headers = ['Day','Posts'];
+  const rows = labels.map((d,i) => [d, values[i]]);
+  exportToCSV(headers, rows, 'posts_by_day.csv');
+}
+function exportPostsByDayPDF() {
+  printCard('postsByDayCard', 'Posts by Day');
+}
+
+// Export Best Times
+function exportBestTimesCSV() {
+  const data = JSON.parse(`{{ bubble_data|safe }}`);
+  const headers = ['Label','DayIndex','Hour','Posts','Likes','Comments','Shares'];
+  const rows = data.map(b => [b.tooltip_label || b.label, b.x, b.y, b.count, b.likes, b.comments, b.shares]);
+  exportToCSV(headers, rows, 'best_times.csv');
+}
+function exportBestTimesPDF() {
+  printCard('bestTimesCard', 'Best Times To Post');
+}
+
+// Export Top Posts
+function exportTopPostsCSV() {
+  try {
+    const data = JSON.parse(`{{ top_posts_json|safe }}`);
+    if (!Array.isArray(data)) return;
+    const headers = ['Platform','Post ID/URL','Post Content','Timestamp','Likes','Comments','Shares','Saves','Views','Engagement Rate','Page Name'];
+    const rows = data.map(p => {
+      const postIdOrUrl = p.platform === 'tiktok' ? (p.post_url || '') : (p.post_id || '');
+      return [
+        p.platform,
+        postIdOrUrl,
+        (p.post_content || '').replace(/\n/g,' ').replace(/\r/g,''),
+        p.post_timestamp,
+        p.like_count || 0,
+        p.comment_count || 0,
+        p.share_count || 0,
+        p.save_count || 0,
+        p.view_count || 0,
+        p.engagement_rate,
+        p.page_name || ''
+      ];
+    });
+    exportToCSV(headers, rows, 'top_posts.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportTopPostsPDF() {
+  printCard('topPostsCard', 'Top Posts by Engagement');
+}
+
+// Export Page Info (summary)
+function exportPageInfoCSV() {
+  try {
+    const headers = ['Property','Value'];
+    const rows = [];
+    rows.push(['Page Name', '{{ page.page_name|escapejs }}']);
+    rows.push(['Page Username', '{{ page.page_username|escapejs }}']);
+    // Include category only for facebook pages
+    {% if page.platform == 'facebook' %}
+    rows.push(['Page Categories', '{{ page.page_category|default:"-"|escapejs }}']);
+    {% endif %}
+    rows.push(['Page Website', '{{ page.page_website|default:"-"|escapejs }}']);
+    rows.push(['Page Email', '{{ page.page_email|default:"-"|escapejs }}']);
+    rows.push(['Page Number', '{{ page.page_number|default:"-"|escapejs }}']);
+    rows.push(['Page Address', '{{ page.page_address|default:"-"|escapejs }}']);
+    rows.push(['Followers', '{{ page.page_followers_count|default:0 }}']);
+    rows.push(['Likes', '{{ page.page_likes_count|default:0 }}']);
+    exportToCSV(headers, rows, 'page_info.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportPageInfoPDF() {
+  printCard('pageInfoCard', 'Page Information');
+}
+
+// Export Follower Chart
+function exportFollowerCSV() {
+  try {
+    const data = JSON.parse(`{{ follower_data_json|safe }}`);
+    const headers = ['Date','Followers'];
+    const rows = data.map(d => [d.date, d.followers]);
+    exportToCSV(headers, rows, 'followers_by_date.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportFollowerPDF() {
+  printCard('followerCard', 'Follower Line Chart');
+}
+
+// Export Hashtags Wordcloud
+function exportHashtagsCSV() {
+  try {
+    const data = JSON.parse(`{{ top_hashtags_json|safe }}`);
+    const headers = ['Hashtag','Count'];
+    const rows = data.map(d => [d.tag, d.count]);
+    exportToCSV(headers, rows, 'top_hashtags.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportHashtagsPDF() {
+  printCard('hashtagCard', 'Top 50 Hashtags');
+}
+</script>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -925,14 +1475,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const max = 30;
     const ratio = Math.min(count / max, 1);
     const hue = (1 - ratio) * 240;
-    return `hsl(${hue}, 70%, 60%)`;
+    // Use colours similar to group_detail: adjust saturation and lightness
+    return `hsl(${hue}, 70%, 65%)`;
   }
 
   const bubbles = JSON.parse('{{ bubble_data|escapejs }}');
   const postMap = JSON.parse('{{ posts_grouped_json|escapejs }}');
 
   const ctx = document.getElementById("bestTimesChart").getContext("2d");
-  const chart = new Chart(ctx, {
+  const bestTimesChart = new Chart(ctx, {
     type: 'bubble',
     data: {
       datasets: bubbles.map(b => ({
@@ -970,28 +1521,28 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         y: { min: 0, max: 24, ticks: { stepSize: 2 } }
       },
-      onClick: (e, elements) => {
+        onClick: (e, elements) => {
         if (elements.length) {
-          const key = chart.data.datasets[elements[0].datasetIndex].data[0].key;
+          const key = bestTimesChart.data.datasets[elements[0].datasetIndex].data[0].key;
           const posts = postMap[key] || [];
 
           document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected Time Slot';
 
           // แสดงโพสต์ทั้งหมดในช่วงเวลาที่เลือก โดยใช้แพลตฟอร์มกำหนดไอคอนและปฏิสัมพันธ์
           const html = posts.map(p => {
-            // ไอคอนแพลตฟอร์ม (ใช้ p.platform หรือ platform จากเซิร์ฟเวอร์เป็น fallback)
-            let platformIcon;
+            // เตรียมรูปโปรไฟล์เพจและไอคอนแพลตฟอร์ม (แบบซ้อนทับคล้าย group_detail)
             const plat2 = p.platform || platform;
+            let platformIconPath;
             if (plat2 === 'tiktok') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/tiktoklogo.webp`;
             } else if (plat2 === 'instagram') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/iglogo.png`;
             } else if (plat2 === 'lemon8') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/lemon8logo.png`;
             } else if (plat2 === 'youtube') {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/youtubelogo.png`;
             } else {
-              platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
+              platformIconPath = `${window.STATIC_URL}assets/img/icons/facebooklogo.png`;
             }
 
             // ปฏิสัมพันธ์ตามแพลตฟอร์ม
@@ -1025,9 +1576,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
                   <div class="d-flex justify-content-between align-items-start">
                     <div class="d-flex align-items-center gap-2">
-                      ${p.profile_pic || window.DEFAULT_PROFILE_PIC ? `<img src="${p.profile_pic || window.DEFAULT_PROFILE_PIC}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                      ${platformIcon}
-                      <strong class="text-truncate">${p.page_name}</strong>
+                      ${p.profile_pic || window.DEFAULT_PROFILE_PIC ? `<div class="position-relative d-inline-block" style="width: 24px; height: 24px;"><img src="${p.profile_pic || window.DEFAULT_PROFILE_PIC}" class="rounded-circle border border-white" width="24" height="24" style="object-fit: cover;"><img src="${platformIconPath}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white"></div>` : ''}
+                      <strong class="text-truncate">${p.page_name || pageName}</strong>
                     </div>
                     <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp || ''}</div>
                   </div>
@@ -1048,21 +1598,28 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+  // Store instance globally for export/print
+  window.bestTimesChart = bestTimesChart;
 });
 </script>
-
-
-<br>
 
 <!-- 👥 Follower Line Chart & 🔠 Top 50 Hashtags -->
 <div class="row">
   <!-- 👥 Follower Line Chart -->
   <div class="col-md-6">
-    <div class="card shadow-sm border-0 mb-4" style="aspect-ratio: 4 / 2;">
+    <!-- Follower Line Chart Card with export & presentation controls -->
+    <div id="followerCard" class="card shadow-sm border-0 mb-4" style="aspect-ratio: 4 / 2;">
       <div class="card-body p-4 d-flex flex-column justify-content-between" style="height: 450px;">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="card-title mb-0">Follower Line Chart</h5>
-          <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+          <div>
+            <h5 class="card-title mb-0">Follower Line Chart</h5>
+            <span class="text-muted small">{{ start_date }} - {{ end_date }}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn-outline-orange" onclick="presentCard('followerCard','Follower Line Chart')">Present</button>
+            <button class="btn-outline-orange" onclick="exportFollowerCSV()">CSV</button>
+            <button class="btn-outline-orange" onclick="exportFollowerPDF()">PDF</button>
+          </div>
         </div>
         <div class="d-flex align-items-center mb-3">
           <span class="badge bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></span>
@@ -1083,62 +1640,69 @@ document.addEventListener("DOMContentLoaded", function () {
   google.charts.setOnLoadCallback(drawFollowerChart);
 
   function drawFollowerChart() {
+    // If no follower data, display a message instead of rendering an empty chart
+    const followerDataLength = {{ follower_data|length }};
+    const container = document.getElementById('followerLineChart');
+    if (followerDataLength === 0) {
+      if (container) {
+        container.innerHTML = '<div class="d-flex justify-content-center align-items-center h-100 text-muted">No follower data available</div>';
+      }
+      return;
+    }
     const data = new google.visualization.DataTable();
     data.addColumn('string', 'Date');
     data.addColumn('number', 'Follower');
-
     data.addRows([
       {% for row in follower_data %}
         ['{{ row.date }}', {{ row.followers }}]{% if not forloop.last %},{% endif %}
       {% endfor %}
     ]);
-
     const options = {
-  chartArea: { left: 60, top: 30, width: '92%', height: '80%' },
-  fontName: 'Inter',
-  legend: { position: 'none' },
-  series: { 0: { color: '#FFA266' } },
-  hAxis: {
-    textStyle: { color: '#485B7D', fontSize: 12 },
-    baselineColor: '#485B7D'
-  },
-  vAxis: {
-    format: 'decimal',
-    textStyle: { color: '#485B7D', fontSize: 12 },
-    baselineColor: '#485B7D',
-    gridlines: { color: '#dce1eb', count: 4 }
-  }
-};
-
-
-    const chart = new google.visualization.LineChart(document.getElementById('followerLineChart'));
+      chartArea: { left: 60, top: 30, width: '92%', height: '80%' },
+      fontName: 'Inter',
+      legend: { position: 'none' },
+      series: { 0: { color: '#2563eb' } },
+      hAxis: {
+        textStyle: { color: '#485B7D', fontSize: 12 },
+        baselineColor: '#485B7D'
+      },
+      vAxis: {
+        format: 'decimal',
+        textStyle: { color: '#485B7D', fontSize: 12 },
+        baselineColor: '#485B7D',
+        gridlines: { color: '#dce1eb', count: 4 }
+      }
+    };
+    const chart = new google.visualization.LineChart(container);
     chart.draw(data, options);
+    // Store global reference for export/print functions
+    window.followerLineChart = chart;
   }
 </script>
 
 <!-- 🔠 Top 50 Hashtags Wordcloud (แบบ Fanpage Karma) -->
 <div class="col-md-6">
-  <div class="card shadow-sm border-0 mb-4" style="height: 450px;">
+  <!-- Top 50 Hashtags Card with export & presentation controls -->
+  <div id="hashtagCard" class="card shadow-sm border-0 mb-4" style="height: 450px;">
     <div class="card-body p-4 d-flex flex-column justify-content-between h-100">
-      <div>
-        <h6 class="mb-2">Top 50 Hashtags by Posts</h6>
-        <p class="text-muted small">The bigger the word, the more it was used. The greener, the more these posts were interacted with.</p>
-
-        <div class="d-flex flex-wrap gap-2 overflow-auto" id="hashtagCloudBox" style="max-height: 280px;">
-          {% for tag in top_hashtags %}
-            <a href="#" class="fw-medium"
-              style="
-                font-size: {{ tag.font_size }}em;
-                color: hsl({{ tag.color_hue }}, 60%, 50%);
-                text-decoration: none;
-                line-height: 1.2em;
-              ">
-              {{ tag.tag }}
-            </a>
-          {% endfor %}
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h5 class="mb-2">Top 50 Hashtags by Posts</h5>
+          <p class="text-muted small mb-0">The bigger the word, the more it was used. The greener, the more these posts were interacted with.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn-outline-orange" onclick="presentCard('hashtagCard','Top 50 Hashtags')">Present</button>
+          <button class="btn-outline-orange" onclick="exportHashtagsCSV()">CSV</button>
+          <button class="btn-outline-orange" onclick="exportHashtagsPDF()">PDF</button>
         </div>
       </div>
-
+      <div class="d-flex flex-wrap gap-2 overflow-auto" id="hashtagCloudBox" style="max-height: 260px;">
+        {% for tag in top_hashtags %}
+          <a href="#" class="fw-medium" style="font-size: {{ tag.font_size }}em; color: hsl({{ tag.color_hue }}, 60%, 50%); text-decoration: none; line-height: 1.2em;">
+            {{ tag.tag }}
+          </a>
+        {% endfor %}
+      </div>
       <div class="analytics_chartLegend mt-3 small text-muted">
         <div class="analytics_chartLegendItem">size = frequency</div>
         <div class="analytics_chartLegendItemGreen">green = high engagement</div>
@@ -1148,6 +1712,5 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
 </div>
 </div>
-
-          <br>
+</div>
 {% endblock %}
