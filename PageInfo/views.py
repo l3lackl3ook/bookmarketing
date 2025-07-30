@@ -1001,50 +1001,129 @@ def group_detail(request, group_id):
 
     # 📊 Followers Chart & Interaction Pie Chart
     chart_data = []
+    # Calculate total interactions by summing total engagement for Facebook and TikTok posts separately
+    interaction_totals = defaultdict(int)
+    # Facebook posts
+    for f_post in posts:
+        if not f_post.page:
+            continue
+        # Sum up like_count from reactions and comments/shares
+        reactions = f_post.reactions or {}
+        if isinstance(reactions, str):
+            try:
+                reactions = json.loads(reactions)
+            except json.JSONDecodeError:
+                reactions = {}
+        like_count = reactions.get('ถูกใจ', 0)
+        total_eng = like_count + (f_post.comment_count or 0) + (f_post.share_count or 0)
+        interaction_totals[str(f_post.page.id)] += total_eng
+    # TikTok posts
+    for t_post in tiktok_posts:
+        if not t_post.page:
+            continue
+        total_eng = (t_post.like_count or 0) + (t_post.comment_count or 0) + (t_post.share_count or 0) + (t_post.save_count or 0)
+        interaction_totals[str(t_post.page.id)] += total_eng
+    total_interactions = sum(interaction_totals.values())
     interaction_data = []
-    total_interactions = sum(int(str(p.page_talking_count or '0').replace(',', '')) for p in pages)
-
     for i, page in enumerate(pages):
-        interaction = int(str(page.page_talking_count or '0').replace(',', ''))
+        interactions = interaction_totals.get(str(page.id), 0)
         interaction_data.append({
             'id': page.id,
             'name': page.page_name or page.page_username or 'Unnamed',
-            'interactions': interaction,
-            'percent': round((interaction / total_interactions * 100) if total_interactions else 0, 1),
-            'color': colors[i % len(colors)]
+            'interactions': interactions,
+            'percent': round((interactions / total_interactions * 100) if total_interactions else 0, 1),
+            'color': colors[i % len(colors)],
+            'platform': page.platform or 'facebook',
         })
+        # Use page_followers_count when available, otherwise fallback to page_followers
+        follower_count = page.page_followers_count or page.page_followers or 0
         chart_data.append({
             'id': page.id,
             'name': page.page_name or page.page_username or 'Unnamed',
-            'followers': page.page_followers_count or 0,
+            'followers': follower_count,
             'profile_pic': page.profile_pic or '',
             'platform': page.platform or 'facebook',
             'color': colors[i % len(colors)]
         })
 
     # 🔁 followers_posts_map เพื่อ popup โพสต์ของแต่ละเพจ
+    # Include posts from both Facebook and TikTok so the bar chart popup shows posts for all platforms.
     followers_posts_map = defaultdict(list)
-    for post in posts:
-        if not post.page:
+    # Facebook posts: add platform and page info for each post
+    for f_post in posts:
+        # Skip posts without a page relationship
+        if not f_post.page:
             continue
-        followers_posts_map[str(post.page.id)].append({
-            'post_id': post.post_id,
-            'post_content': post.post_content,
-            'post_imgs': post.post_imgs,
-            'post_timestamp': post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if post.post_timestamp_dt else '',
-            'reactions': post.reactions or {},
-            'comment_count': post.comment_count,
-            'share_count': post.share_count,
-            'total_engagement': (
-                    (sum(post.reactions.values()) if isinstance(post.reactions, dict) else 0) +
-                    (post.comment_count or 0) +
-                    (post.share_count or 0)
-            ),
+        reactions = f_post.reactions or {}
+        # If reactions field is a JSON string, attempt to decode it
+        if isinstance(reactions, str):
+            try:
+                reactions = json.loads(reactions)
+            except json.JSONDecodeError:
+                reactions = {}
+        like_count = reactions.get('ถูกใจ', 0)
+        total_eng = like_count + (f_post.comment_count or 0) + (f_post.share_count or 0)
+        post_entry = {
+            'platform': 'facebook',
+            'post_id': f_post.post_id,
+            'post_url': None,
+            'post_content': f_post.post_content,
+            'post_imgs': f_post.post_imgs or [],
+            'post_timestamp': f_post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M') if f_post.post_timestamp_dt else '',
+            'reactions': reactions,
+            'comment_count': f_post.comment_count or 0,
+            'share_count': f_post.share_count or 0,
+            'like_count': like_count,
+            'save_count': 0,
+            'view_count': 0,
+            'total_engagement': total_eng,
+            # duplicate page info at top level for convenience
+            'profile_pic': f_post.page.profile_pic,
+            'page_name': f_post.page.page_name,
+            # nested page details (may include platform)
             'page': {
-                'page_name': post.page.page_name,
-                'profile_pic': post.page.profile_pic,
+                'page_name': f_post.page.page_name,
+                'profile_pic': f_post.page.profile_pic,
+                'platform': 'facebook',
             }
-        })
+        }
+        followers_posts_map[str(f_post.page.id)].append(post_entry)
+
+    # TikTok posts
+    for t_post in tiktok_posts:
+        if not t_post.page:
+            continue
+        # Determine timestamp string (TikTok may have only date string)
+        if t_post.post_timestamp_dt:
+            timestamp_str = t_post.post_timestamp_dt.strftime('%Y-%m-%d %H:%M')
+        else:
+            timestamp_str = t_post.post_timestamp or ''
+        post_entry = {
+            'platform': 'tiktok',
+            'post_id': None,
+            'post_url': t_post.post_url,
+            'post_content': t_post.post_content,
+            # TikTokPost has post_imgs as single string; wrap in list for template
+            'post_imgs': [t_post.post_imgs] if t_post.post_imgs else [],
+            'post_timestamp': timestamp_str,
+            'reactions': None,
+            'comment_count': t_post.comment_count or 0,
+            'share_count': t_post.share_count or 0,
+            'like_count': t_post.like_count or 0,
+            'save_count': t_post.save_count or 0,
+            'view_count': t_post.view_count or 0,
+            'total_engagement': (t_post.like_count or 0) + (t_post.comment_count or 0) + (t_post.share_count or 0) + (t_post.save_count or 0),
+            # duplicate page info at top level
+            'profile_pic': t_post.page.profile_pic,
+            'page_name': t_post.page.page_name,
+            # nested page details with platform
+            'page': {
+                'page_name': t_post.page.page_name,
+                'profile_pic': t_post.page.profile_pic,
+                'platform': 'tiktok',
+            }
+        }
+        followers_posts_map[str(t_post.page.id)].append(post_entry)
 
     # 📅 Number of posts by weekday (Bar Chart) for combined posts (Facebook + TikTok)
     day_labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -1155,6 +1234,9 @@ def group_detail(request, group_id):
         "pillar_summary": pillar_summary,
         'posts_by_pillar': posts_by_pillar,
         'sidebar': sidebar,
+        # include JSON for pillar summary and top posts for export functions
+        'pillar_summary_json': json.dumps(list(pillar_summary.values('content_pillar', 'post_count')) if pillar_summary else []),
+        'top_posts_json': json.dumps(top10_posts_data),
     })
 
 @login_required

@@ -2,198 +2,709 @@
 {% load static %}
 {% load humanize %}
 {% block content %}
-    <!-- 🔸 หัวข้อกลุ่ม + ปุ่ม Add Page -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">{{ group.group_name }}</h3>
-      <form method="POST" action="{% url 'add_page' group.id %}">
-        {% csrf_token %}
-        <div class="d-flex">
-          {{ form.url }} <!-- หรือถ้าต้องการซ่อน input url ไว้ใช้เป็น hidden ได้ -->
-          <button type="submit" class="btn text-white fw-semibold" style="
-            background-color: #ff6f00;  /* สีส้มแบบปุ่ม Add Group For Page */
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;">
-            Add Page
-          </button>
-        </div>
-      </form>
+
+<!-- Load Google Fonts for Montserrat (English) and Prompt (Thai) -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* Minimal Professional Styling */
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #64748b;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+  /* Use Montserrat for English and Prompt for Thai. The browser will automatically select the correct script. */
+  font-family: 'Montserrat', 'Prompt', sans-serif;
+  background-color: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.6;
+}
+
+/* Card Improvements */
+.card {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 1.25rem 1.5rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* Button Improvements */
+.btn-primary-custom {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #1d4ed8 0%, var(--primary-color) 100%);
+}
+
+.btn-orange {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-orange:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+}
+
+/* Table Improvements */
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  border-top: none;
+  border-bottom: 2px solid var(--gray-200);
+  font-weight: 600;
+  color: var(--gray-700);
+  padding: 1rem 0.75rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.table tbody tr:hover {
+  background-color: var(--gray-50);
+}
+
+/* Modal Improvements */
+.modal-content {
+  border: none;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--gray-200);
+  padding: 1.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-fullscreen .modal-content {
+  border-radius: 0;
+}
+
+/* Close Button Improvements */
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  z-index: 1051;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  color: var(--gray-800);
+  transform: scale(1.1);
+}
+
+/* Chart Container Improvements */
+.chart-container {
+  position: relative;
+  height: 350px;
+}
+
+/* Profile Image Improvements */
+.profile-img {
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Platform Icon Improvements */
+.platform-icon {
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover Effects */
+.hover-count {
+  position: relative;
+  cursor: pointer;
+}
+
+.hover-count .full {
+  display: none;
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--gray-800);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.hover-count:hover .short {
+  display: none;
+}
+
+.hover-count:hover .full {
+  display: block;
+}
+
+/* Top Posts Grid Improvements */
+.post-card {
+  transition: all 0.3s ease;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Badge Improvements */
+.badge-pillar {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--gray-800);
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Search Input Improvements */
+.form-control {
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+}
+
+/* Content Pillar table styling */
+#pillarCard .table th {
+  background-color: var(--gray-100);
+  font-weight: 600;
+}
+#pillarCard .table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Animation Improvements */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Outline orange button for presentation/export dropdowns */
+/* Orange outline buttons matching the Add Page color */
+/* Outline buttons matching Growfox orange (#FF6B00) */
+.btn-outline-orange {
+  border: 1px solid #FF6B00;
+  color: #FF6B00;
+  background-color: transparent;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.btn-outline-orange:hover {
+  background-color: #FF6B00;
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+.btn-outline-orange:focus {
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.3);
+}
+</style>
+
+<div class="container-fluid px-4 py-3">
+  <!-- Header Section -->
+  <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+    <div>
+      <h2 class="fw-bold mb-1" style="color: var(--gray-800);">{{ group.group_name }}</h2>
+      <p class="text-muted mb-0">Page Campaign Analytics Dashboard</p>
     </div>
 
-    <!-- 🔹 ตาราง All Page Metric Overview (ตามที่ทำไปแล้ว) -->
-    {% if pages %}
-    <div class="card shadow-sm rounded mb-4 w-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">All Page Metric Overview</h5>
-        <input type="text" placeholder="Search Page" class="form-control w-25">
+    <form method="POST" action="{% url 'add_page' group.id %}">
+      {% csrf_token %}
+      <div class="d-flex align-items-center gap-3">
+        {{ form.url }}
+        <button type="submit" class="btn-orange">
+          <i class="fas fa-plus me-2"></i>
+          Add Page
+        </button>
       </div>
-      <div class="table-responsive">
-  <table class="table table-striped align-middle text-center">
-    <thead class="table-light">
-      <tr>
-        <th scope="col">Page</th>
-        <th scope="col">Followers</th>
-
-        {# Show specific columns depending on platform #}
-        {% if pages|length > 0 and pages.0.platform == "youtube" %}
-          <th scope="col">Likes</th>
-          <th scope="col">Videos</th>
-        {% else %}
-          <th scope="col">Likes</th>
-          <th scope="col">Talking</th>
-        {% endif %}
-
-        <th scope="col">Website</th>
-        <th scope="col">Email</th>
-        <th scope="col">Phone</th>
-      </tr>
-    </thead>
-
-<tbody>
-{% for page in pages %}
-<tr>
-<td class="d-flex align-items-center">
-  <!-- 🔵 Profile Picture + Platform Icon -->
-  <div class="position-relative me-2" style="width: 40px; height: 40px;">
-    {% if page.profile_pic %}
-      <img src="{{ page.profile_pic }}" class="rounded-circle border border-white"
-           width="40" height="40" style="object-fit: cover;">
-    {% else %}
-      <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white"
-           width="40" height="40" style="object-fit: cover;">
-    {% endif %}
-
-    <!-- ✅ Platform Icon -->
-    {% if page.platform == "facebook" %}
-      <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="12" height="12"
-           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-    {% elif page.platform == "tiktok" %}
-      <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="12" height="12"
-           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-    {% elif page.platform == "instagram" %}
-      <img src="{% static 'assets/img/icons/iglogo.png' %}" width="12" height="12"
-           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-    {% elif page.platform == "lemon8" %}
-      <img src="{% static 'assets/img/icons/lemon8logo.png' %}" width="12" height="12"
-           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-    {% elif page.platform == "youtube" %}
-      <img src="{% static 'assets/img/icons/youtubelogo.png' %}" width="12" height="12"
-           class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-    {% endif %}
+    </form>
   </div>
 
-  <!-- 🔗 Page Name -->
-  <div class="text-start">
-    <a href="{% url 'pageview' page.id %}" class="page-name-link">
-      {{ page.page_name|default:page.page_username }}
-    </a>
+  <!-- Overview Table -->
+  {% if pages %}
+  <div class="card mb-4 fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-semibold">Page Overview</h5>
+      <div class="d-flex align-items-center gap-3">
+        <input type="text" placeholder="Search pages..." class="form-control" style="width: 250px;">
+        <span class="text-muted small">{{ pages|length }} page{{ pages|length|pluralize }}</span>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Page</th>
+            <th class="text-center">Followers</th>
+            {% if pages|length > 0 and pages.0.platform == "youtube" %}
+              <th class="text-center">Likes</th>
+              <th class="text-center">Videos</th>
+            {% else %}
+              <th class="text-center">Likes</th>
+              <th class="text-center">Talking</th>
+            {% endif %}
+            <th class="text-center">Website</th>
+            <th class="text-center">Email</th>
+            <th class="text-center">Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for page in pages %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="position-relative me-3">
+                  {% if page.profile_pic %}
+                    <img src="{{ page.profile_pic }}" class="rounded-circle profile-img" width="40" height="40" style="object-fit: cover;">
+                  {% else %}
+                    <img src="{% static 'assets/img/icons/default_profile.png' %}" onerror="this.onerror=null;this.src='https://via.placeholder.com/40';" class="rounded-circle profile-img" width="40" height="40" style="object-fit: cover;">
+                  {% endif %}
+
+                  {% if page.platform == "facebook" %}
+                    <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="14" height="14" class="position-absolute bottom-0 end-0 platform-icon rounded-circle">
+                  {% elif page.platform == "tiktok" %}
+                    <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="14" height="14" class="position-absolute bottom-0 end-0 platform-icon rounded-circle">
+                  {% elif page.platform == "instagram" %}
+                    <img src="{% static 'assets/img/icons/iglogo.png' %}" width="14" height="14" class="position-absolute bottom-0 end-0 platform-icon rounded-circle">
+                  {% elif page.platform == "lemon8" %}
+                    <img src="{% static 'assets/img/icons/lemon8logo.png' %}" width="14" height="14" class="position-absolute bottom-0 end-0 platform-icon rounded-circle">
+                  {% elif page.platform == "youtube" %}
+                    <img src="{% static 'assets/img/icons/youtubelogo.png' %}" width="14" height="14" class="position-absolute bottom-0 end-0 platform-icon rounded-circle">
+                  {% endif %}
+                </div>
+
+                <div>
+                  <a href="{% url 'pageview' page.id %}" class="fw-semibold text-decoration-none" style="color: var(--gray-800);">
+                    {{ page.page_name|default:page.page_username }}
+                  </a>
+                  <div class="small text-muted">{{ page.platform|capfirst }}</div>
+                </div>
+              </div>
+            </td>
+
+            <td class="text-center hover-count">
+              <span class="short fw-semibold">{{ page.page_followers|intcomma|default:"-" }}</span>
+              <span class="full">{{ page.page_followers_count|intcomma|default:"-" }}</span>
+            </td>
+
+            <td class="text-center hover-count">
+              <span class="short fw-semibold">
+                {% if page.platform == "lemon8" %}
+                  {{ page.page_likes|default:"-" }}
+                {% else %}
+                  {{ page.page_likes|intcomma|default:"-" }}
+                {% endif %}
+              </span>
+              <span class="full">
+                {% if page.platform == "lemon8" %}
+                  {{ page.page_likes|default:"-" }}
+                {% else %}
+                  {{ page.page_likes_count|intcomma|default:"-" }}
+                {% endif %}
+              </span>
+            </td>
+
+            {% if page.platform == "facebook" %}
+              <td class="text-center">{{ page.page_talking_count|default:"0" }}</td>
+              <td class="text-center">
+                {% if page.page_website %}
+                  <a href="https://{{ page.page_website|lower }}" target="_blank" class="text-decoration-none fw-medium" style="color: var(--primary-color);">
+                    {{ page.page_website|truncatechars:20 }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if page.page_email %}
+                  <a href="mailto:{{ page.page_email }}" class="text-decoration-none fw-medium" style="color: var(--primary-color);">
+                    {{ page.page_email|truncatechars:20 }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center">{{ page.page_phone|default:"-" }}</td>
+            {% elif page.platform == "instagram" %}
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center">
+                {% if page.page_website %}
+                  <a href="{{ page.page_website }}" target="_blank" class="text-decoration-none fw-medium" style="color: var(--primary-color);">Link</a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+            {% elif page.platform == "lemon8" %}
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center">
+                {% if page.page_website %}
+                  <a href="{{ page.page_website }}" target="_blank" class="text-decoration-none fw-medium" style="color: var(--primary-color);">Link</a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+            {% elif page.platform == "youtube" or page.platform == "tiktok" %}
+              <td class="text-center">{{ page.page_videos_count|default:"-" }}</td>
+              <td class="text-center">
+                {% if page.page_website %}
+                  <a href="{{ page.page_website }}" target="_blank" class="text-decoration-none fw-medium" style="color: var(--primary-color);">Link</a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+            {% else %}
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+              <td class="text-center"><span class="text-muted">-</span></td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
-</td>
-
-
-  <!-- Followers -->
-  <td class="hover-count">
-    <span class="short">{{ page.page_followers|intcomma|default:"-" }}</span>
-    <span class="full">{{ page.page_followers_count|intcomma|default:"-" }}</span>
-  </td>
-
-  <!-- Likes หรือค่าที่แพลตฟอร์มอื่นใช้ -->
-  <td class="hover-count">
-    <span class="short">
-      {% if page.platform == "lemon8" %}
-        {{ page.page_likes|default:"-" }}
-      {% else %}
-        {{ page.page_likes|intcomma|default:"-" }}
-      {% endif %}
-    </span>
-    <span class="full">
-      {% if page.platform == "lemon8" %}
-        {{ page.page_likes|default:"-" }}
-      {% else %}
-        {{ page.page_likes_count|intcomma|default:"-" }}
-      {% endif %}
-    </span>
-  </td>
-
-  <style>
-  .hover-count .full {
-    display: none;
-    background-color: black;
-    color: white;
-    padding: 2px 5px;
-    border-radius: 4px;
-  }
-  .hover-count:hover .short {
-    display: none;
-  }
-  .hover-count:hover .full {
-    display: inline;
-  }
-  </style>
-
-  <!-- Talking/Videos, Website, Email, Phone -->
-  {% if page.platform == "facebook" %}
-    <td>{{ page.page_talking_count|default:"0" }}</td>
-    <td>
-      {% if page.page_website %}
-        <a href="https://{{ page.page_website|lower }}" target="_blank" class="page-name-link" style="font-weight: bold;">
-          {{ page.page_website }}
-        </a>
-      {% else %}
-        -
-      {% endif %}
-    </td>
-    <td><a href="mailto:{{ page.page_email }}" class="page-name-link">{{ page.page_email|default:"-" }}</a></td>
-    <td>{{ page.page_phone|default:"-" }}</td>
-  {% elif page.platform == "instagram" %}
-    <td>-</td>
-    <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
-    <td>-</td>
-    <td>-</td>
-  {% elif page.platform == "lemon8" %}
-    <td>-</td>
-    <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
-    <td>-</td>
-    <td>-</td>
-  {% elif page.platform == "youtube" or page.platform == "tiktok" %}
-    <td>{{ page.page_videos_count|default:"-" }}</td>
-    <td><a href="{{ page.page_website }}" target="_blank">{{ page.page_website|default:"-" }}</a></td>
-    <td>-</td>
-    <td>-</td>
   {% else %}
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
-    <td>-</td>
+  <div class="card mb-4 fade-in">
+    <div class="card-body text-center py-5">
+      <div class="mb-3">
+        <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--gray-300);"></i>
+      </div>
+      <h5 class="text-muted">No Pages Added</h5>
+      <p class="text-muted mb-0">Add pages to see your analytics dashboard</p>
+    </div>
+  </div>
   {% endif %}
-</tr>
-{% endfor %}
-</tbody>
+
+  <!-- Analytics Charts -->
+  <div class="row g-4 mb-4">
+    <!-- Followers Chart -->
+    <div class="col-lg-6">
+      <div class="card h-100 fade-in" id="followersCard">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-semibold mb-0" style="color: var(--gray-800);">Top Profiles by Followers</h6>
+            <!-- Presentation and export buttons -->
+            <div class="d-flex gap-1">
+              <button class="btn-outline-orange btn-sm" onclick="presentCard('followersCard', 'Top Profiles by Followers')">Presentation</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportFollowersCSV()">CSV</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportFollowersPDF()">PDF</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="followersBarChart"></canvas>
+            <div id="chartOverlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interaction Share -->
+    <div class="col-lg-6">
+      <div class="card h-100 fade-in" id="interactionCard">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <h6 class="fw-semibold mb-1" style="color: var(--gray-800);">Share of Interaction</h6>
+              <p class="text-muted small mb-0">Which profile got the most interactions</p>
+            </div>
+            <div class="d-flex gap-1">
+              <button class="btn-outline-orange btn-sm" onclick="presentCard('interactionCard', 'Share of Interaction')">Presentation</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportInteractionCSV()">CSV</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportInteractionPDF()">PDF</button>
+            </div>
+          </div>
+          <div id="shareInteractionChart" style="height: 300px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posts Analytics -->
+  <div class="row g-4 mb-4">
+    <!-- Posts by Day -->
+    <div class="col-lg-6">
+      <div class="card h-100 fade-in" id="postsByDayCard">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-semibold mb-0" style="color: var(--gray-800);">Posts by Day</h6>
+            <div class="d-flex gap-1">
+              <button class="btn-outline-orange btn-sm" onclick="presentCard('postsByDayCard', 'Posts by Day')">Presentation</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportPostsByDayCSV()">CSV</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportPostsByDayPDF()">PDF</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="postsByDayChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Times to Post -->
+    <div class="col-lg-6">
+      <div class="card h-100 fade-in" id="bestTimesCard">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-semibold mb-0" style="color: var(--gray-800);">Best Times to Post</h6>
+            <div class="d-flex gap-1">
+              <button class="btn-outline-orange btn-sm" onclick="presentCard('bestTimesCard', 'Best Times to Post')">Presentation</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportBestTimesCSV()">CSV</button>
+              <button class="btn-outline-orange btn-sm" onclick="exportBestTimesPDF()">PDF</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="bestTimesChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Posts Section -->
+  <div class="card mb-4 fade-in" id="topPostsCard">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-semibold">Top 10 Posts by Engagement</h5>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="openPresentation()">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportTopPostsCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportTopPostsPDF()">PDF</button>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <div class="row g-3">
+        {% for post in facebook_posts_top10 %}
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+          <a href="{% if post.platform == 'tiktok' %}{{ post.post_url }}{% else %}https://www.facebook.com/{{ post.post_id }}{% endif %}"
+             target="_blank" class="text-decoration-none">
+            <div class="post-card position-relative" style="aspect-ratio: 4/5;">
+              <img src="{{ post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover;">
+
+              <!-- Profile & Platform -->
+              <div class="position-absolute top-0 start-0 m-2">
+                <div class="position-relative" style="width: 24px; height: 24px;">
+                  {% if post.page_profile_pic %}
+                    <img src="{{ post.page_profile_pic }}" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                  {% else %}
+                    <img src="{% static 'assets/img/icons/default_profile.png' %}" onerror="this.onerror=null;this.src='https://via.placeholder.com/40';" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                  {% endif %}
+
+                  {% if post.platform == 'facebook' %}
+                    <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                  {% elif post.platform == 'tiktok' %}
+                    <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                  {% elif post.platform == 'instagram' %}
+                    <img src="{% static 'assets/img/icons/iglogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                  {% elif post.platform == 'lemon8' %}
+                    <img src="{% static 'assets/img/icons/lemon8logo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                  {% elif post.platform == 'youtube' %}
+                    <img src="{% static 'assets/img/icons/youtubelogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Engagement Rate -->
+              <div class="position-absolute top-0 end-0 m-2">
+                <span class="badge bg-dark bg-opacity-75 text-white">{{ post.engagement_rate }}%</span>
+              </div>
+
+              <!-- Content Info -->
+              <div class="position-absolute bottom-0 start-0 text-white p-2 w-100"
+                   style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                <div class="mb-1">
+                  <span class="badge-pillar">📌 {{ post.content_pillar }}</span>
+                </div>
+                <div class="small">{{ post.post_timestamp }}</div>
+                <div class="fw-medium text-truncate small">{{ post.post_content|truncatechars:40 }}</div>
+              </div>
+
+              <!-- Post Type -->
+              <div class="position-absolute bottom-0 end-0 m-2">
+                {% if post.post_type == "video" %}
+                  <i class="fas fa-play-circle text-white" style="font-size: 14px;"></i>
+                {% else %}
+                  <i class="fas fa-image text-white" style="font-size: 14px;"></i>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Pillar Summary -->
+  {% if pillar_summary %}
+  <div class="card fade-in" id="pillarCard" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-semibold">Content Pillar Summary</h5>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="presentCard('pillarCard', 'Content Pillar Summary')">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportPillarCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportPillarPDF()">PDF</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width: 70%;">Content Pillar</th>
+              <th class="text-end">Posts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in pillar_summary %}
+            <tr style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#pillarModal-{{ row.content_pillar|slugify }}">
+              <td>
+                <div class="d-flex align-items-center">
+                  <span class="me-2">
+                    {% if row.content_pillar == "Realtime" %}🕒{% elif row.content_pillar == "Recipe" %}📋{% elif row.content_pillar == "Promotion" %}💸
+                    {% elif row.content_pillar == "Product" %}📦{% elif row.content_pillar == "Activity" %}🎯{% elif row.content_pillar == "CSR" %}🌱
+                    {% elif row.content_pillar == "PR and Event" %}📢{% elif row.content_pillar == "Knowledge" %}📘{% elif row.content_pillar == "Lifestyle" %}🌟
+                    {% else %}📁{% endif %}
+                  </span>
+                  <span class="fw-medium">{{ row.content_pillar }}</span>
+                </div>
+              </td>
+              <td class="text-end">
+                <span class="badge bg-primary">{{ row.post_count }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
       </div>
     </div>
-    {% else %}
-    <p class="text-muted">Add Page to see Overview Dashboard</p>
-    {% endif %}
   </div>
+  {% endif %}
 
-  <!-- 🧊 Grid Row สำหรับสองกราฟ -->
-  <!-- ✅ Layout: 2 แถว แถวละ 2 การ์ด (ความสูงเท่ากันทั้งหมด 460px) -->
-<div class="row">
-  <!-- 🔴 Profiles with the most followers -->
-  <div class="col-md-6 d-flex">
-    <div class="card shadow-sm border-0 p-4 w-100" style="height: 460px;">
-      <h6 class="mb-3 fw-semibold">Profiles with the most followers</h6>
-      <div class="position-relative" style="width: 100%; height: 360px;">
-        <canvas id="followersBarChart"></canvas>
-        <div id="chartOverlays" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2;"></div>
-      </div>
-    </div>
-  </div>
+<!-- Modals -->
 
-  <div class="modal fade" id="followersPostsModal" tabindex="-1" aria-hidden="true">
+<!-- Followers Posts Modal -->
+<div class="modal fade" id="followersPostsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content rounded">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title fw-semibold">Posts by Selected Page</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -203,229 +714,7 @@
   </div>
 </div>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- ✅ Custom Tooltip Style -->
-  <style>
-    canvas#followersBarChart {
-      z-index: 1;
-      position: relative;
-    }
-
-    #external-tooltip {
-      position: absolute;
-      background: #333;
-      color: white;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-family: 'Inter';
-      border-radius: 6px;
-      pointer-events: none;
-      z-index: 9999;
-      white-space: nowrap;
-    }
-  </style>
-
-<script>
-const chartData = JSON.parse(`{{ chart_data_json|safe }}`);
-const labels = chartData.map(p => p.name);
-const data = chartData.map(p => p.followers);
-const colors = chartData.map(p => p.color);
-
-const ctx = document.getElementById('followersBarChart').getContext('2d');
-
-const followersChart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: labels,
-    datasets: [{
-      data: data,
-      backgroundColor: colors,
-      borderRadius: 6,
-      barThickness: 20
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: { top: 20 }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        enabled: false,
-        external: function (context) {
-          let tooltipEl = document.getElementById('external-tooltip');
-          if (!tooltipEl) {
-            tooltipEl = document.createElement('div');
-            tooltipEl.id = 'external-tooltip';
-            document.body.appendChild(tooltipEl);
-          }
-
-          const tooltipModel = context.tooltip;
-          if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = 0;
-            return;
-          }
-
-          const point = tooltipModel.dataPoints[0];
-          const label = point.label;
-          const value = point.raw.toLocaleString() + ' followers';
-
-          tooltipEl.innerHTML = `<strong>${label}</strong><br>${value}`;
-          tooltipEl.style.opacity = 1;
-
-          const canvasRect = context.chart.canvas.getBoundingClientRect();
-          tooltipEl.style.left = canvasRect.left + window.scrollX + tooltipModel.caretX + 'px';
-          tooltipEl.style.top = canvasRect.top + window.scrollY + tooltipModel.caretY - 70 + 'px';
-        }
-      }
-    },
-    onClick: function (evt, elements) {
-      if (elements.length > 0) {
-        const index = elements[0].index;
-        const page = chartData[index];
-        const postsMap = JSON.parse(`{{ followers_posts_map|escapejs }}`);
-        const posts = postsMap[page.id] || [];
-
-        const html = posts.map(p => `
-          <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-            <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-              ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank">
-                <img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` :
-                `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
-            </div>
-            <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-              <div class="d-flex justify-content-between align-items-start">
-                <div class="d-flex align-items-center gap-2">
-                  ${p.page?.profile_pic ? `<img src="${p.page.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                  <i class="bi bi-facebook text-primary"></i>
-                  <strong class="text-truncate">${p.page?.page_name || 'Unnamed'}</strong>
-                </div>
-                <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-              </div>
-              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                ${p.post_content || ''}
-              </div>
-              <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                ${Object.entries(p.reactions || {}).map(([reaction, count]) => {
-                  const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[reaction] || '';
-                  return `<span>${emoji} ${count}</span>`;
-                }).join('')}
-                <span>💬 ${p.comment_count || 0}</span>
-                <span>↪ ${p.share_count || 0}</span>
-                <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-        document.getElementById('followersPostsModalBody').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('followersPostsModal')).show();
-      }
-    },
-    animation: {
-      onComplete: function () {
-        const meta = followersChart.getDatasetMeta(0);
-        const overlays = document.getElementById('chartOverlays');
-        overlays.innerHTML = '';
-
-        meta.data.forEach((bar, i) => {
-          const x = bar.x;
-          const y = bar.y;
-          const page = chartData[i];
-          if (!page || !page.profile_pic || !page.platform) return;
-
-          const wrapper = document.createElement('div');
-          wrapper.style.position = 'absolute';
-          wrapper.style.left = (x - 18) + 'px';
-          wrapper.style.top = (y - 44) + 'px';
-          wrapper.style.width = '36px';
-          wrapper.style.height = '36px';
-
-          const img = document.createElement('img');
-          img.src = page.profile_pic;
-          img.style.width = '36px';
-          img.style.height = '36px';
-          img.style.borderRadius = '50%';
-          img.style.border = '2px solid white';
-          img.style.boxShadow = '0 1px 2px rgba(0,0,0,0.15)';
-          wrapper.appendChild(img);
-
-          const icon = document.createElement('img');
-          if (page.platform === "facebook")
-            icon.src = "{% static 'assets/img/icons/facebook-icon.webp' %}";
-          else if (page.platform === "tiktok")
-            icon.src = "{% static 'assets/img/icons/tiktoklogo.webp' %}";
-          else if (page.platform === "instagram")
-            icon.src = "{% static 'assets/img/icons/iglogo.png' %}";
-          else if (page.platform === "lemon8")
-            icon.src = "{% static 'assets/img/icons/lemon8logo.png' %}";
-          else if (page.platform === "youtube")
-            icon.src = "{% static 'assets/img/icons/youtubelogo.png' %}";
-
-          icon.style.width = '14px';
-          icon.style.height = '14px';
-          icon.style.position = 'absolute';
-          icon.style.bottom = '0';
-          icon.style.right = '0';
-          icon.style.borderRadius = '50%';
-          icon.style.border = '1px solid white';
-          icon.style.backgroundColor = 'white';
-          wrapper.appendChild(icon);
-
-          overlays.appendChild(wrapper);
-        });
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#2b2c40',
-          font: { size: 11 },
-          maxRotation: 0,
-          minRotation: 0
-        },
-        grid: { display: false }
-      },
-      y: {
-        beginAtZero: true,
-        suggestedMax: Math.max(...data) * 1.2,
-        ticks: {
-          color: '#adb5bd',
-          font: { size: 12 },
-          callback: value => value.toLocaleString()
-        },
-        grid: {
-          color: '#e9ecef',
-          drawBorder: false
-        }
-      }
-    }
-  }
-});
-</script>
-
-
-
-
-  <!-- 🟡 Share of Interaction -->
-  <div class="col-md-6 d-flex">
-    <div class="card shadow-sm border-0 p-4 w-100 d-flex flex-column">
-      <div>
-        <h6 class="mb-1 fw-semibold" style="font-size: 18px;">Share of Interaction</h6>
-        <p class="text-muted" style="font-size: 14px;">Which profile got the most interactions on their posts?</p>
-      </div>
-      <div id="shareInteractionChart" style="width: 100%; height: 100%;"></div>
-    </div>
-  </div>
-</div>
-
-          <br>
-
-<!-- 🧊 Modal: Posts by Selected Page -->
+<!-- Interaction Posts Modal -->
 <div class="modal fade" id="interactionPostsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -433,16 +722,384 @@ const followersChart = new Chart(ctx, {
         <h5 class="modal-title fw-semibold">Posts by Selected Page</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="interactionPostsContent">
-        <!-- Injected Posts -->
+      <div class="modal-body" id="interactionPostsContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- General Popup Modal -->
+<div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Posts in Selected Period</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="popupContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Presentation Modal -->
+<div class="modal fade" id="presentationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <button type="button" class="btn-close position-absolute end-0 m-4" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1051;"></button>
+
+      <div class="modal-body d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 2rem;">
+        <div class="d-flex w-100 h-100">
+          <!-- Title Section -->
+          <div class="d-flex align-items-center justify-content-center" style="min-width: 300px; max-width: 400px;">
+            <div class="text-center">
+              <h1 class="fw-bold mb-3" style="font-size: 2.5rem; color: var(--gray-800);">Top 10 Posts</h1>
+              <h2 class="fw-normal text-muted" style="font-size: 1.5rem;">by Engagement</h2>
+            </div>
+          </div>
+
+          <!-- Posts Grid -->
+          <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <div class="row g-4" style="max-width: 1200px;">
+              {% for post in facebook_posts_top10 %}
+              <!-- Adjust grid classes to make posts larger in full view -->
+              <div class="col-6 col-sm-4 col-md-3 col-lg-3 col-xl-3">
+                <a href="{% if post.platform == 'tiktok' %}{{ post.post_url }}{% else %}https://www.facebook.com/{{ post.post_id }}{% endif %}"
+                   target="_blank" class="text-decoration-none">
+                  <div class="post-card position-relative" style="aspect-ratio: 4/5;">
+                    <img src="{{ post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover; border-radius: var(--border-radius);">
+
+                    <!-- Profile & Platform -->
+                    <div class="position-absolute top-0 start-0 m-3">
+                      <div class="position-relative" style="width: 28px; height: 28px;">
+                        {% if post.page_profile_pic %}
+                          <img src="{{ post.page_profile_pic }}" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                        {% else %}
+                          <img src="{% static 'assets/img/icons/default_profile.png' %}" onerror="this.onerror=null;this.src='https://via.placeholder.com/40';" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                        {% endif %}
+
+                        {% if post.platform == 'facebook' %}
+                          <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                        {% elif post.platform == 'tiktok' %}
+                          <img src="{% static 'assets/img/icons/tiktoklogo.webp' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                        {% elif post.platform == 'instagram' %}
+                          <img src="{% static 'assets/img/icons/iglogo.png' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                        {% elif post.platform == 'lemon8' %}
+                          <img src="{% static 'assets/img/icons/lemon8logo.png' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                        {% elif post.platform == 'youtube' %}
+                          <img src="{% static 'assets/img/icons/youtubelogo.png' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <!-- Engagement Rate -->
+                    <div class="position-absolute top-0 end-0 m-3">
+                      <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1">{{ post.engagement_rate }}%</span>
+                    </div>
+
+                    <!-- Content Info -->
+                    <div class="position-absolute bottom-0 start-0 text-white p-3 w-100"
+                         style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                      <div class="mb-2">
+                        <span class="badge-pillar">📌 {{ post.content_pillar }}</span>
+                      </div>
+                      <div class="small mb-1">{{ post.post_timestamp }}</div>
+                      <div class="fw-medium text-truncate">{{ post.post_content|truncatechars:35 }}</div>
+                    </div>
+
+                    <!-- Post Type -->
+                    <div class="position-absolute bottom-0 end-0 m-3">
+                      {% if post.post_type == "video" %}
+                        <i class="fas fa-play-circle text-white" style="font-size: 16px;"></i>
+                      {% else %}
+                        <i class="fas fa-image text-white" style="font-size: 16px;"></i>
+                      {% endif %}
+                    </div>
+                  </div>
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Google Charts API -->
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<!-- Generic Card Presentation Modal -->
+<div class="modal fade" id="cardPresentationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-semibold" id="cardPresentationTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body d-flex justify-content-center align-items-start" id="cardPresentationContent" style="overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Content Pillar Detail Modals -->
+{% for row in pillar_summary %}
+<div class="modal fade" id="pillarModal-{{ row.content_pillar|slugify }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <button type="button" class="btn-close position-absolute end-0 m-4" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1051;"></button>
+
+      <div class="modal-body d-flex justify-content-center align-items-center" style="min-height: 100vh; padding: 2rem;">
+        <div class="d-flex w-100 h-100">
+          <!-- Title Section -->
+          <div class="d-flex align-items-center justify-content-center" style="min-width: 300px; max-width: 400px;">
+            <div class="text-center">
+              <h1 class="fw-bold mb-2" style="font-size: 1.8rem; color: var(--gray-800);">Posts in Category</h1>
+              <h2 class="fw-normal mb-0" style="font-size: 2rem; color: var(--primary-color);">
+                {% if row.content_pillar == "Realtime" %}🕒{% elif row.content_pillar == "Recipe" %}📋{% elif row.content_pillar == "Promotion" %}💸
+                {% elif row.content_pillar == "Product" %}📦{% elif row.content_pillar == "Activity" %}🎯{% elif row.content_pillar == "CSR" %}🌱
+                {% elif row.content_pillar == "PR and Event" %}📢{% elif row.content_pillar == "Knowledge" %}📘{% elif row.content_pillar == "Lifestyle" %}🌟
+                {% else %}📁{% endif %}
+                "{{ row.content_pillar }}"
+              </h2>
+            </div>
+          </div>
+
+          <!-- Posts Grid -->
+          <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="max-height: 90vh; overflow-y: auto;">
+            <div class="row g-4" style="max-width: 1200px;">
+              {% with found_posts=posts_by_pillar|dictsort:"pillar" %}
+                {% for item in found_posts %}
+                  {% if item.pillar == row.content_pillar %}
+                  <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <a href="https://www.facebook.com/{{ item.post.post_id }}" target="_blank" class="text-decoration-none">
+                      <div class="post-card position-relative" style="aspect-ratio: 4/5;">
+                        <img src="{{ item.post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover; border-radius: var(--border-radius);">
+
+                        <div class="position-absolute top-0 start-0 m-3">
+                          <div class="position-relative" style="width: 28px; height: 28px;">
+                            {% if item.post.page.profile_pic %}
+                              <img src="{{ item.post.page.profile_pic }}" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                            {% else %}
+                            <img src="{% static 'assets/img/icons/default_profile.png' %}" onerror="this.onerror=null;this.src='https://via.placeholder.com/40';" class="rounded-circle border-2 border-white w-100 h-100" style="object-fit: cover;">
+                            {% endif %}
+                            <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="12" height="12" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
+                          </div>
+                        </div>
+
+                        <div class="position-absolute bottom-0 start-0 text-white p-3 w-100"
+                             style="background: linear-gradient(transparent, rgba(0,0,0,0.8));">
+                          <div class="mb-2">
+                            <span class="badge-pillar">📌 {{ item.pillar }}</span>
+                          </div>
+                          <div class="small mb-1">{{ item.post.post_timestamp_dt|date:"Y-m-d H:i" }}</div>
+                          <div class="fw-medium text-truncate">{{ item.post.post_content|truncatechars:35 }}</div>
+                        </div>
+
+                        <div class="position-absolute bottom-0 end-0 m-3">
+                          <i class="fas fa-image text-white" style="font-size: 16px;"></i>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+
 <script>
+// Global variables
+window.STATIC_URL = window.STATIC_URL || "{% static '' %}";
+const defaultProfilePic = `${window.STATIC_URL}assets/img/icons/default_profile.png`;
+
+// Followers Bar Chart
+document.addEventListener('DOMContentLoaded', function() {
+  const chartData = JSON.parse(`{{ chart_data_json|safe }}`);
+  const labels = chartData.map(p => p.name);
+  const data = chartData.map(p => p.followers);
+  const colors = chartData.map(p => p.color);
+
+  const ctx = document.getElementById('followersBarChart').getContext('2d');
+  const followersChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 8,
+        barThickness: 24
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { top: 30 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: function (context) {
+            let tooltipEl = document.getElementById('external-tooltip');
+            if (!tooltipEl) {
+              tooltipEl = document.createElement('div');
+              tooltipEl.id = 'external-tooltip';
+              tooltipEl.style.cssText = `
+                position: absolute;
+                background: var(--gray-800);
+                color: white;
+                padding: 8px 12px;
+                font-size: 13px;
+                border-radius: 6px;
+                pointer-events: none;
+                z-index: 9999;
+                white-space: nowrap;
+                font-family: 'Montserrat, Prompt', sans-serif;
+              `;
+              document.body.appendChild(tooltipEl);
+            }
+
+            const tooltipModel = context.tooltip;
+            if (tooltipModel.opacity === 0) {
+              tooltipEl.style.opacity = 0;
+              return;
+            }
+
+            const point = tooltipModel.dataPoints[0];
+            const label = point.label;
+            const value = point.raw.toLocaleString() + ' followers';
+
+            tooltipEl.innerHTML = `<strong>${label}</strong><br>${value}`;
+            tooltipEl.style.opacity = 1;
+
+            const canvasRect = context.chart.canvas.getBoundingClientRect();
+            tooltipEl.style.left = canvasRect.left + window.scrollX + tooltipModel.caretX + 'px';
+            tooltipEl.style.top = canvasRect.top + window.scrollY + tooltipModel.caretY - 70 + 'px';
+          }
+        }
+      },
+      onClick: function (evt, elements) {
+        if (elements.length > 0) {
+          const index = elements[0].index;
+          const page = chartData[index];
+          const postsMap = JSON.parse(`{{ followers_posts_map|escapejs }}`);
+          const posts = postsMap[page.id] || [];
+
+          if (posts.length === 0) {
+            const msg = `<div class="text-center py-4 text-muted">No posts available for this page.</div>`;
+            document.getElementById('followersPostsModalBody').innerHTML = msg;
+            new bootstrap.Modal(document.getElementById('followersPostsModal')).show();
+            return;
+          }
+
+          const html = posts.map(p => generatePostHTML(p)).join('');
+          document.getElementById('followersPostsModalBody').innerHTML = html;
+          new bootstrap.Modal(document.getElementById('followersPostsModal')).show();
+        }
+      },
+      animation: {
+        onComplete: function () {
+          const meta = followersChart.getDatasetMeta(0);
+          const overlays = document.getElementById('chartOverlays');
+          overlays.innerHTML = '';
+
+          meta.data.forEach((bar, i) => {
+            const x = bar.x;
+            const y = bar.y;
+            const page = chartData[i];
+            if (!page || !page.profile_pic || !page.platform) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+              position: absolute;
+              left: ${x - 20}px;
+              top: ${y - 50}px;
+              width: 40px;
+              height: 40px;
+            `;
+
+            const img = document.createElement('img');
+            img.src = page.profile_pic;
+            img.style.cssText = `
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: var(--shadow-md);
+            `;
+            wrapper.appendChild(img);
+
+            const icon = document.createElement('img');
+            if (page.platform === "facebook")
+              icon.src = "{% static 'assets/img/icons/facebooklogo.png' %}";
+            else if (page.platform === "tiktok")
+              icon.src = "{% static 'assets/img/icons/tiktoklogo.webp' %}";
+            else if (page.platform === "instagram")
+              icon.src = "{% static 'assets/img/icons/iglogo.png' %}";
+            else if (page.platform === "lemon8")
+              icon.src = "{% static 'assets/img/icons/lemon8logo.png' %}";
+            else if (page.platform === "youtube")
+              icon.src = "{% static 'assets/img/icons/youtubelogo.png' %}";
+
+            icon.style.cssText = `
+              width: 16px;
+              height: 16px;
+              position: absolute;
+              bottom: -2px;
+              right: -2px;
+              border-radius: 50%;
+              border: 2px solid white;
+              background-color: white;
+            `;
+            wrapper.appendChild(icon);
+
+            overlays.appendChild(wrapper);
+          });
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: 'var(--gray-600)',
+            font: { size: 11, family: 'Montserrat, Prompt' },
+            maxRotation: 0,
+            minRotation: 0
+          },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          suggestedMax: Math.max(...data) * 1.2,
+          ticks: {
+            color: 'var(--gray-500)',
+            font: { size: 12, family: 'Montserrat, Prompt' },
+            callback: value => value.toLocaleString()
+          },
+          // Hide horizontal grid lines for a cleaner look
+          grid: {
+            display: false,
+            drawBorder: false
+          }
+        }
+      }
+    }
+  });
+
+  // Store the followers chart instance on the window object so we can
+  // generate an image from the canvas when showing in the presentation modal.
+  window.followersChart = followersChart;
+
+  // Share of Interaction Chart
   google.charts.load("current", { packages: ["corechart"] });
   google.charts.setOnLoadCallback(drawShareInteractionChart);
 
@@ -453,7 +1110,7 @@ const followersChart = new Chart(ctx, {
 
     const dataArray = [['Page', 'Interactions', { role: 'tooltip', p: { html: true } }, { role: 'style' }]];
     interactionData.forEach((p, i) => {
-      const tooltip = `<div style='padding:6px 8px'><b>${p.name}</b><br>${p.interactions} interactions</div>`;
+      const tooltip = `<div style='padding:8px 12px; font-family: Montserrat, Prompt;'><b>${p.name}</b><br>${p.interactions.toLocaleString()} interactions</div>`;
       dataArray.push([p.name, p.interactions, tooltip, `color: ${p.color}`]);
     });
 
@@ -462,631 +1119,719 @@ const followersChart = new Chart(ctx, {
     const options = {
       pieHole: 0.65,
       tooltip: { isHtml: true },
-      legend: { position: 'labeled', textStyle: { fontSize: 13, color: '#333' } },
+      legend: {
+        position: 'labeled',
+        // Use Montserrat and Prompt fonts for legend labels
+        textStyle: { fontSize: 13, color: 'var(--gray-700)', fontName: 'Montserrat, Prompt' }
+      },
       pieSliceText: 'none',
       colors: interactionData.map(p => p.color),
-      chartArea: { width: '85%', height: '90%' },
-      fontName: 'Inter',
-      animation: { duration: 500, easing: 'out' },
+      chartArea: { width: '90%', height: '90%' },
+      // Set default font for Google charts
+      fontName: 'Montserrat, Prompt',
+      animation: { duration: 600, easing: 'out' },
       backgroundColor: 'transparent'
     };
 
     const chart = new google.visualization.PieChart(chartDiv);
     chart.draw(data, options);
 
-    // Click Event for Slice
     google.visualization.events.addListener(chart, 'select', () => {
       const selectedItem = chart.getSelection()[0];
-      if (selectedItem) {
-        const pageName = data.getValue(selectedItem.row, 0);
-        const pageObj = interactionData.find(p => p.name === pageName);
-        const pageId = pageObj ? pageObj.id || null : null;
-        const posts = postsMap[pageId] || [];
+      if (!selectedItem) return;
 
-        document.querySelector('#interactionPostsModal .modal-title').innerText = `Posts by ${pageName}`;
+      const pageName = data.getValue(selectedItem.row, 0);
+      const pageObj = interactionData.find(p => p.name === pageName);
+      const pageId = pageObj ? pageObj.id : null;
+      const posts = postsMap[pageId] || [];
 
-        const html = posts.map(p => `
-          <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-            <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-              ${p.post_imgs?.[0] ? `<a href="https://www.facebook.com/${p.post_id}" target="_blank">
-              <img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` :
-              `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`}
-            </div>
-            <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-              <div class="d-flex justify-content-between align-items-start">
-                <div class="d-flex align-items-center gap-2">
-                  ${p.page?.profile_pic ? `<img src="${p.page.profile_pic}" class="rounded-circle" style="width: 16px; height: 16px;">` : ''}
-                  <i class="bi bi-facebook text-primary"></i>
-                  <strong class="text-truncate">${p.page?.page_name || 'Unnamed'}</strong>
-                </div>
-                <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-              </div>
-              <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                ${p.post_content || ''}
-              </div>
-              <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                ${Object.entries(p.reactions || {}).map(([r, c]) => {
-                  const emoji = { 'ถูกใจ': '👍', 'รักเลย': '❤️', 'เศร้า': '😢', 'โกรธ': '😡', 'ว้าว': '😮', 'ฮ่าๆ': '😂', 'ห่วงใย': '🥰' }[r] || '';
-                  return `<span>${emoji} ${c}</span>`;
-                }).join('')}
-                <span>💬 ${p.comment_count || 0}</span>
-                <span>↪ ${p.share_count || 0}</span>
-                <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-        document.getElementById('interactionPostsContent').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('interactionPostsModal')).show();
-      }
+      document.querySelector('#interactionPostsModal .modal-title').innerText = `Posts by ${pageName}`;
+      const html = posts.map(p => generatePostHTML(p)).join('');
+      document.getElementById('interactionPostsContent').innerHTML = html;
+      new bootstrap.Modal(document.getElementById('interactionPostsModal')).show();
     });
 
     window.addEventListener('resize', drawShareInteractionChart);
   }
-</script>
 
+  // Posts by Day Chart
+  const postsByDayChart = new Chart(document.getElementById("postsByDayChart").getContext("2d"), {
+    type: "bar",
+    data: {
+      labels: {{ bar_day_labels|safe }},
+      datasets: [{
+        label: "Number of posts",
+        data: {{ bar_day_values|safe }},
+        backgroundColor: {{ bar_day_colors|safe }},
+        borderRadius: 8,
+        barThickness: 28
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      onClick: function (e, elements) {
+        if (elements.length > 0) {
+          const dayIndex = elements[0].index;
+          const postsMap = JSON.parse('{{ posts_by_day_json|escapejs }}');
+          const posts = postsMap[dayIndex] || [];
 
-  <!-- 📊 Number of posts by days & Best Times To Post -->
-  <div class="row">
-    <!-- 📊 Number of posts by days -->
-    <div class="col-md-6 d-flex">
-      <div class="card shadow-sm border-0 p-4 w-100">
-        <h6 class="mb-3">Number of posts by days</h6>
-        <canvas id="postsByDayChart" style="width:100%; height:100%;"></canvas>
-      </div>
-    </div>
-   <!-- 🧠 Popup Modal -->
-  <div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title">Posts in Selected By Day</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="popupContent"></div>
-      </div>
-    </div>
-  </div>
-
-    <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // กำหนด STATIC_URL เพื่ออ้างอิงไอคอนของแต่ละแพลตฟอร์ม
-    window.STATIC_URL = "{% static '' %}";
-    // default profile pic for posts without profile pic
-    const defaultProfilePic = `${window.STATIC_URL}assets/img/icons/default_profile.png`;
-
-    const postsByDayChart = new Chart(document.getElementById("postsByDayChart").getContext("2d"), {
-      type: "bar",
-      data: {
-        labels: {{ bar_day_labels|safe }},
-        datasets: [{
-          label: "Number of posts",
-          data: {{ bar_day_values|safe }},
-          backgroundColor: {{ bar_day_colors|safe }},
-          borderRadius: 6,
-          barThickness: 28
-        }]
+          document.querySelector('#popupModal .modal-title').innerText = 'Posts by Selected Day';
+          const html = posts.map(p => generatePostHTML(p)).join('');
+          document.getElementById('popupContent').innerHTML = html;
+          new bootstrap.Modal(document.getElementById('popupModal')).show();
+        }
       },
-      options: {
-        onClick: function (e, elements) {
-          if (elements.length > 0) {
-            const dayIndex = elements[0].index;
-            const postsMap = JSON.parse('{{ posts_by_day_json|escapejs }}');
-            const posts = postsMap[dayIndex] || [];
-
-            document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected By Day';
-
-            // สร้าง HTML สำหรับแต่ละโพสต์ตามแพลตฟอร์ม
-            const html = posts.map(p => {
-              // ระบุไอคอนแพลตฟอร์ม
-              let platformIcon;
-              const plat = p.platform || '{{ group.pages.first.platform|default:"facebook" }}';
-              if (plat === 'tiktok') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'instagram') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'lemon8') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'youtube') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
-              } else {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
-              }
-
-              // เนื้อหา Engagement ตามแพลตฟอร์ม
-              let engagementHtml = '';
-              if (plat === 'tiktok') {
-                engagementHtml = `
-                  <span>❤️ ${p.like_count || 0}</span>
-                  <span>💬 ${p.comment_count || 0}</span>
-                  <span>↪ ${p.share_count || 0}</span>
-                  <span>🔖 ${p.save_count || 0}</span>
-                  <span class="ms-auto fw-semibold text-dark">👁 ${p.view_count || 0}</span>
-                `;
-              } else {
-                const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
-                  const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[r] || '';
-                  return `<span>${emoji} ${c}</span>`;
-                }).join('');
-                engagementHtml = `
-                  ${reactions}
-                  <span>💬 ${p.comment_count || 0}</span>
-                  <span>↪ ${p.share_count || 0}</span>
-                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
-                `;
-              }
-
-              // URL สำหรับลิงก์ไปที่โพสต์
-              let postLink;
-              if (plat === 'tiktok') {
-                postLink = p.post_url || '#';
-              } else {
-                postLink = `https://www.facebook.com/${p.post_id}`;
-              }
-
-              const imgThumb = (p.post_imgs?.length && p.post_imgs[0]) ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" class="rounded-start" style="height: 100%; width: 90px; object-fit: cover;" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`;
-
-              return `
-                <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-                  <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-                    ${imgThumb}
-                  </div>
-                  <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <div class="d-flex align-items-center gap-2">
-                        <img src="${p.profile_pic || defaultProfilePic}" class="rounded-circle" style="width: 16px; height: 16px;">
-                        ${platformIcon}
-                        <strong class="text-truncate">${p.page_name || ''}</strong>
-                      </div>
-                      <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-                    </div>
-                    <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                      ${p.post_content || ''}
-                    </div>
-                    <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                      ${engagementHtml}
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('');
-
-            document.getElementById('popupContent').innerHTML = html;
-            new bootstrap.Modal(document.getElementById('popupModal')).show();
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0,
+            color: 'var(--gray-500)',
+            font: { family: 'Montserrat, Prompt' }
+          },
+          // Hide horizontal grid lines
+          grid: {
+            display: false,
+            drawBorder: false
           }
         },
-        scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 } },
-          x: { grid: { display: false } }
+        x: {
+          // Hide vertical grid lines
+          grid: { display: false },
+          ticks: {
+            color: 'var(--gray-600)',
+            font: { family: 'Montserrat, Prompt' }
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'var(--gray-800)',
+          titleColor: 'white',
+          bodyColor: 'white',
+          borderColor: 'var(--gray-600)',
+          borderWidth: 1
+        }
+      }
+    }
+  });
+
+  // Expose postsByDayChart globally for presentation image conversion
+  window.postsByDayChart = postsByDayChart;
+
+  // Best Times Chart
+  function getColorByPostCount(count) {
+    const max = 30;
+    const ratio = Math.min(count / max, 1);
+    const hue = (1 - ratio) * 240;
+    return `hsl(${hue}, 70%, 65%)`;
+  }
+
+  const bubbles = JSON.parse('{{ bubble_data|escapejs }}');
+  const postMap = JSON.parse('{{ posts_grouped_json|escapejs }}');
+
+  const bestTimesChart = new Chart(document.getElementById("bestTimesChart").getContext("2d"), {
+    type: 'bubble',
+    data: {
+      datasets: bubbles.map(b => ({
+        data: [{
+          x: b.x, y: b.y, r: b.r,
+          count: b.count,
+          likes: b.likes,
+          comments: b.comments,
+          shares: b.shares,
+          key: b.key,
+          label: b.tooltip_label
+        }],
+        backgroundColor: getColorByPostCount(b.count),
+        hoverBackgroundColor: getColorByPostCount(b.count),
+        borderColor: 'white',
+        borderWidth: 2
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          backgroundColor: 'var(--gray-800)',
+          titleColor: 'white',
+          bodyColor: 'white',
+          borderColor: 'var(--gray-600)',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => [
+              ctx.raw.label,
+              `${ctx.raw.count} posts`,
+              `${ctx.raw.likes} likes, ${ctx.raw.comments} comments, ${ctx.raw.shares} shares`
+            ]
+          }
         },
-        plugins: { legend: { display: false } }
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          min: -0.5, max: 6.5,
+          ticks: {
+            callback: v => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][v],
+            color: 'var(--gray-600)',
+            font: { family: 'Montserrat, Prompt' }
+          },
+          // Hide vertical grid lines
+          grid: {
+            display: false,
+            drawBorder: false
+          }
+        },
+        y: {
+          min: 0, max: 24,
+          ticks: {
+            stepSize: 2,
+            color: 'var(--gray-600)',
+            font: { family: 'Montserrat, Prompt' }
+          },
+          // Hide horizontal grid lines
+          grid: {
+            display: false,
+            drawBorder: false
+          }
+        }
+      },
+      onClick: (e, elements) => {
+        if (!elements.length) return;
+        const key = bestTimesChart.data.datasets[elements[0].datasetIndex].data[0].key;
+        const posts = postMap[key] || [];
+
+        document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected Time Slot';
+        const html = posts.map(p => generatePostHTML(p)).join('');
+        document.getElementById('popupContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('popupModal')).show();
+      }
+    }
+  });
+
+  // Expose bestTimesChart globally for presentation image conversion
+  window.bestTimesChart = bestTimesChart;
+
+  // Utility function to generate post HTML
+  function generatePostHTML(p) {
+    const plat = p.platform || (p.page && p.page.platform) || 'facebook';
+
+    let platformIcon;
+    if (plat === 'tiktok') {
+      platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 14px; height: 14px;" />`;
+    } else if (plat === 'instagram') {
+      platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 14px; height: 14px;" />`;
+    } else if (plat === 'lemon8') {
+      platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 14px; height: 14px;" />`;
+    } else if (plat === 'youtube') {
+      platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 14px; height: 14px;" />`;
+    } else {
+      platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 14px; height: 14px;" />`;
+    }
+
+    let postLink;
+    if (plat === 'tiktok') {
+      postLink = p.post_url || '#';
+    } else {
+      postLink = `https://www.facebook.com/${p.post_id}`;
+    }
+
+    const thumbnail = (p.post_imgs && p.post_imgs.length && p.post_imgs[0])
+      ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" style="height: 100%; width: 100px; object-fit: cover;" class="rounded-start" /></a>`
+      : `<div style="height: 100%; width: 100px; background-color: var(--gray-100); border-radius: 8px 0 0 8px;"></div>`;
+
+    let engagementHtml;
+    if (plat === 'tiktok') {
+      engagementHtml = `
+        <span class="me-3">❤️ ${(p.like_count || 0).toLocaleString()}</span>
+        <span class="me-3">💬 ${(p.comment_count || 0).toLocaleString()}</span>
+        <span class="me-3">↪ ${(p.share_count || 0).toLocaleString()}</span>
+        <span class="me-3">🔖 ${(p.save_count || 0).toLocaleString()}</span>
+        <span class="ms-auto fw-semibold" style="color: var(--primary-color);">👁 ${(p.view_count || 0).toLocaleString()}</span>
+      `;
+    } else {
+      const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
+        const emojiMap = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' };
+        const emoji = emojiMap[r] || '';
+        return `<span class="me-2">${emoji} ${c}</span>`;
+      }).join('');
+      engagementHtml = `
+        ${reactions}
+        <span class="me-3">💬 ${(p.comment_count || 0).toLocaleString()}</span>
+        <span class="me-3">↪ ${(p.share_count || 0).toLocaleString()}</span>
+        <span class="ms-auto fw-semibold" style="color: var(--primary-color);">🔥 ${(p.total_engagement || 0).toLocaleString()}</span>
+      `;
+    }
+
+    const pageNameInner = (p.page && p.page.page_name) || p.page_name || 'Unnamed';
+    const profilePic = (p.page && p.page.profile_pic) || p.profile_pic || defaultProfilePic;
+
+    return `
+      <div class="d-flex border rounded-3 mb-3 overflow-hidden" style="height: 110px; transition: all 0.2s ease;">
+        <div style="width: 90px; height: 110px; flex-shrink: 0;">
+          ${thumbnail}
+        </div>
+        <div class="flex-grow-1 p-3 d-flex flex-column justify-content-between" style="min-width: 0;">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="d-flex align-items-center gap-2">
+              <img src="${profilePic}" class="rounded-circle" style="width: 24px; height: 24px; border: 2px solid var(--gray-200);">
+              ${platformIcon}
+              <span class="fw-semibold" style="color: var(--gray-800);">${pageNameInner}</span>
+            </div>
+            <div class="text-muted small">${p.post_timestamp}</div>
+          </div>
+          <div class="mb-2 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; font-size: 0.875rem; line-height: 1.3;">
+            ${p.post_content || ''}
+          </div>
+          <div class="d-flex align-items-center text-muted" style="font-size: 0.8rem;">
+            ${engagementHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+});
+
+// Presentation function
+function openPresentation() {
+  const modal = new bootstrap.Modal(document.getElementById('presentationModal'));
+  modal.show();
+}
+
+// Fade in animation on scroll
+const observerOptions = {
+  threshold: 0.1,
+  rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, observerOptions);
+
+// Observe all fade-in elements
+document.querySelectorAll('.fade-in').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  observer.observe(el);
+});
+
+// Search functionality
+const searchInput = document.querySelector('input[placeholder="Search pages..."]');
+if (searchInput) {
+  searchInput.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    tableRows.forEach(row => {
+      const pageNameCell = row.querySelector('td:first-child');
+      const pageName = pageNameCell ? pageNameCell.textContent.toLowerCase() : '';
+
+      if (pageName.includes(searchTerm)) {
+        row.style.display = '';
+        row.style.animation = 'fadeIn 0.3s ease';
+      } else {
+        row.style.display = 'none';
       }
     });
   });
-  </script>
+}
 
+// Enhanced modal handling
+document.addEventListener('DOMContentLoaded', function() {
+  // Ensure all modals can be properly closed
+  const modals = document.querySelectorAll('.modal');
+  modals.forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function() {
+      // Remove any backdrop that might be stuck
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(backdrop => backdrop.remove());
 
-  <!-- 🕒 Best Times To Post -->
-    <div class="col-md-6 d-flex">
-      <div class="card shadow-sm border-0 p-4 w-100">
-        <h6 class="mb-3">Best Times To Post</h6>
-        <canvas id="bestTimesChart" style="width:100%; height:100%;"></canvas>
-      </div>
-    </div>
-  </div>
+      // Reset body scroll
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    });
 
-  <!-- 📊 Popup Template -->
-  <div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h6 class="modal-title">Posts in Selected Time Slot</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="popupContent">
-          <!-- Content Injected by JS -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    function getColorByPostCount(count) {
-      const max = 30;
-      const ratio = Math.min(count / max, 1);
-      const hue = (1 - ratio) * 240; // 240 = น้ำเงิน → 0 = แดง
-      return `hsl(${hue}, 70%, 60%)`;
-    }
-
-    const bubbles = JSON.parse('{{ bubble_data|escapejs }}');
-    const postMap = JSON.parse('{{ posts_grouped_json|escapejs }}');
-
-    const ctx = document.getElementById("bestTimesChart").getContext("2d");
-    const chart = new Chart(ctx, {
-      type: 'bubble',
-      data: {
-        datasets: bubbles.map(b => ({
-          data: [{
-            x: b.x, y: b.y, r: b.r,
-            count: b.count,
-            likes: b.likes,
-            comments: b.comments,
-            shares: b.shares,
-            key: b.key,
-            label: b.tooltip_label
-          }],
-          backgroundColor: getColorByPostCount(b.count),
-          hoverBackgroundColor: getColorByPostCount(b.count)
-        }))
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: ctx => [
-                ctx.raw.label,
-                `${ctx.raw.count} Number of posts`,
-                `${ctx.raw.likes} Likes, ${ctx.raw.comments} Comments, ${ctx.raw.shares} Shares`
-              ]
-            }
-          },
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            min: -0.5, max: 6.5,
-            ticks: { callback: v => ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][v] }
-          },
-          y: { min: 0, max: 24, ticks: { stepSize: 2 } }
-        },
-        onClick: (e, elements) => {
-          if (elements.length) {
-            const key = chart.data.datasets[elements[0].datasetIndex].data[0].key;
-            const posts = postMap[key] || [];
-
-            document.querySelector('#popupModal .modal-title').innerText = 'Posts in Selected Time Slot';
-
-            const html = posts.map(p => {
-              // Determine platform and set icon
-              const plat = p.platform || '{{ group.pages.first.platform|default:"facebook" }}';
-              let platformIcon;
-              if (plat === 'tiktok') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/tiktoklogo.webp" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'instagram') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/iglogo.png" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'lemon8') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/lemon8logo.png" style="width: 12px; height: 12px;" />`;
-              } else if (plat === 'youtube') {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/youtubelogo.png" style="width: 12px; height: 12px;" />`;
-              } else {
-                platformIcon = `<img src="${window.STATIC_URL}assets/img/icons/facebooklogo.png" style="width: 12px; height: 12px;" />`;
-              }
-
-              // Engagement HTML
-              let engagementHtml;
-              if (plat === 'tiktok') {
-                engagementHtml = `
-                  <span>❤️ ${p.like_count || 0}</span>
-                  <span>💬 ${p.comment_count || 0}</span>
-                  <span>↪ ${p.share_count || 0}</span>
-                  <span>🔖 ${p.save_count || 0}</span>
-                  <span class="ms-auto fw-semibold text-dark">👁 ${p.view_count || 0}</span>
-                `;
-              } else {
-                const reactions = Object.entries(p.reactions || {}).map(([r, c]) => {
-                  const emoji = { 'ถูกใจ':'👍', 'รักเลย':'❤️', 'เศร้า':'😢', 'โกรธ':'😡', 'ว้าว':'😮', 'ฮ่าๆ':'😂', 'ห่วงใย':'🥰' }[r] || '';
-                  return `<span>${emoji} ${c}</span>`;
-                }).join('');
-                engagementHtml = `
-                  ${reactions}
-                  <span>💬 ${p.comment_count || 0}</span>
-                  <span>↪ ${p.share_count || 0}</span>
-                  <span class="ms-auto fw-semibold text-dark">🔥 ${p.total_engagement || 0}</span>
-                `;
-              }
-
-              // Thumbnail and link
-              let postLink;
-              if (plat === 'tiktok') {
-                postLink = p.post_url || '#';
-              } else {
-                postLink = `https://www.facebook.com/${p.post_id}`;
-              }
-              const thumb = (p.post_imgs?.length && p.post_imgs[0]) ? `<a href="${postLink}" target="_blank"><img src="${p.post_imgs[0]}" style="height: 100%; width: 90px; object-fit: cover;" class="rounded-start" /></a>` : `<div style="height: 100%; width: 90px; background-color: #f8f9fa;"></div>`;
-
-              return `
-                <div class="d-flex border rounded mb-2 small overflow-hidden" style="height: 90px;">
-                  <div style="width: 90px; height: 90px; flex-shrink: 0; overflow: hidden;">
-                    ${thumb}
-                  </div>
-                  <div class="flex-grow-1 px-2 py-1 d-flex flex-column justify-content-between" style="min-width: 0;">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <div class="d-flex align-items-center gap-2">
-                        <img src="${p.profile_pic || defaultProfilePic}" class="rounded-circle" style="width: 16px; height: 16px;">
-                        ${platformIcon}
-                        <strong class="text-truncate">${p.page_name || ''}</strong>
-                      </div>
-                      <div class="text-muted small" style="font-size: 0.65rem;">${p.post_timestamp}</div>
-                    </div>
-                    <div class="mt-1 text-dark" style="display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;font-size: 0.8rem;">
-                      ${p.post_content || ''}
-                    </div>
-                    <div class="d-flex gap-2 text-muted align-items-center" style="font-size: 0.7rem;">
-                      ${engagementHtml}
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('');
-
-            document.getElementById('popupContent').innerHTML = html;
-            new bootstrap.Modal(document.getElementById('popupModal')).show();
-          }
+    // Handle escape key
+    modal.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+          modalInstance.hide();
         }
       }
     });
   });
-  </script>
 
-<br>
-<!-- 📌 Top 10 Posts: Engagement Section -->
-<div class="card shadow-sm rounded mb-5" style="max-width: 100%; height: 550px; overflow-y: auto; position: relative;">
-  <!-- ✅ Sticky Header -->
-  <div class="d-flex justify-content-between align-items-center"
-       style="position: sticky; top: 0; z-index: 10; background: white; padding: 12px 16px; border-bottom: 1px solid #eee;">
-    <h5 class="fw-bold mb-0" style="font-size: 16px;">Top 10 Posts: Engagement</h5>
-    <button class="btn btn-light btn-sm border" onclick="openPresentation()">📊 Presentation</button>
-  </div>
+  // Ensure close buttons work properly
+  const closeButtons = document.querySelectorAll('.btn-close, [data-bs-dismiss="modal"]');
+  closeButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      const modal = this.closest('.modal');
+      if (modal) {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+    });
+  });
+});
 
-  <!-- ✅ Grid Layout -->
-  <div class="px-3 py-2">
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-6 g-3">
-      {% for post in facebook_posts_top10 %}
-      <div class="col">
-        <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank" class="text-decoration-none">
-          <div class="position-relative rounded overflow-hidden shadow-sm" style="height: 250px;">
-            <!-- 🔺 Background Image -->
-            <img src="{{ post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover;">
+// Performance optimizations
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
-            <!-- 🔵 Profile Picture + Facebook Icon -->
-            <div class="position-absolute top-0 start-0 m-1">
-              <div class="position-relative" style="width: 24px; height: 24px;">
-                {% if post.page_profile_pic %}
-                <img src="{{ post.page_profile_pic }}" class="rounded-circle border border-white"
-                     width="24" height="24" style="object-fit: cover;">
-                {% else %}
-                <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white"
-                     width="24" height="24" style="object-fit: cover;">
-                {% endif %}
-                <img src="{% static 'assets/img/icons/facebooklogo.png' %}"
-                     width="10" height="10"
-                     class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-              </div>
-            </div>
+// Debounced window resize handler
+window.addEventListener('resize', debounce(function() {
+  // Redraw charts on resize
+  if (typeof followersChart !== 'undefined') {
+    followersChart.resize();
+  }
+  if (typeof postsByDayChart !== 'undefined') {
+    postsByDayChart.resize();
+  }
+  if (typeof bestTimesChart !== 'undefined') {
+    bestTimesChart.resize();
+  }
+}, 250));
 
-            <!-- 📈 Engagement Rate -->
-            <div class="position-absolute top-0 end-0 m-1">
-              <span class="bg-dark text-white small px-1 py-0 rounded" style="opacity: 0.85; font-size: 11px;">
-                {{ post.engagement_rate }}%
-              </span>
-            </div>
+// Loading states
+function showLoading(element) {
+  element.classList.add('loading');
+  const spinner = document.createElement('div');
+  spinner.className = 'spinner-border spinner-border-sm me-2';
+  spinner.setAttribute('role', 'status');
+  element.prepend(spinner);
+}
 
-            <!-- 🕒 Timestamp & Content -->
-            <div class="position-absolute bottom-0 start-0 text-white text-shadow px-2 py-1"
-                 style="font-size: 10px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.6));">
-              <div class="small mt-1">
-                <span class="badge bg-light text-dark" style="font-size: 9px; opacity: 0.85;">
-                  📌 {{ post.content_pillar }}
-                   </span>
-              </div>
+function hideLoading(element) {
+  element.classList.remove('loading');
+  const spinner = element.querySelector('.spinner-border');
+  if (spinner) {
+    spinner.remove();
+  }
+}
 
-              <div>{{ post.post_timestamp }}</div>
-              <div class="fw-semibold text-truncate">{{ post.post_content }}</div>
-            </div>
+// Add loading states to buttons
+document.querySelectorAll('button[type="submit"]').forEach(button => {
+  button.addEventListener('click', function() {
+    showLoading(this);
+  });
+});
 
-            <!-- 📷 Post Type Icon -->
-            <div class="position-absolute bottom-0 end-0 m-1">
-              {% if post.post_type == "video" %}
-              <i class="fas fa-play-circle text-white" style="font-size: 12px;"></i>
-              {% else %}
-              <i class="fas fa-image text-white" style="font-size: 12px;"></i>
-              {% endif %}
-            </div>
-          </div>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
+// Smooth scroll for internal links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  });
+});
 
+// Enhanced tooltip functionality
+function createTooltip(element, content) {
+  const tooltip = document.createElement('div');
+  tooltip.className = 'custom-tooltip';
+  tooltip.innerHTML = content;
+  tooltip.style.cssText = `
+    position: absolute;
+    background: var(--gray-800);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  `;
 
-<!-- 📊 Presentation Modal -->
-<div id="presentationModal" class="modal fade" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen">
-    <div class="modal-content">
+  document.body.appendChild(tooltip);
 
-      <div class="modal-body p-4 d-flex justify-content-center align-items-center" style="height: 100vh;">
-          <!-- 🟦 Left Title Section -->
-  <div class="pe-5" style="min-width: 300px;">
-    <h2 class="fw-bold mb-0" style="font-size: 26px;">Top 10 Posts: Engagement</h2>
-  </div>
+  element.addEventListener('mouseenter', function(e) {
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + 'px';
+    tooltip.style.opacity = '1';
+  });
 
-  <!-- 🟨 Right Cards Section -->
-  <div class="flex-grow-1" style="max-width: 1100px;">
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-5 g-3">
-      {% for post in facebook_posts_top10 %}
-      <div class="col">
-        <a href="https://www.facebook.com/{{ post.post_id }}" target="_blank" class="text-decoration-none">
-          <div class="position-relative rounded overflow-hidden shadow-sm" style="width: 100%; aspect-ratio: 4/5;">
-            <!-- 🔺 Background Image -->
-            <img src="{{ post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover;">
+  element.addEventListener('mouseleave', function() {
+    tooltip.style.opacity = '0';
+  });
 
-            <!-- 🔵 Profile Picture + Facebook Icon -->
-            <div class="position-absolute top-0 start-0 m-2">
-              <div class="position-relative" style="width: 24px; height: 24px;">
-                {% if post.page_profile_pic %}
-                  <img src="{{ post.page_profile_pic }}" class="rounded-circle border border-white w-100 h-100" style="object-fit: cover;">
-                {% else %}
-                  <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white w-100 h-100" style="object-fit: cover;">
-                {% endif %}
-                <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-              </div>
-            </div>
+  // Clean up on element removal
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.removedNodes.forEach(function(node) {
+        if (node === element) {
+          tooltip.remove();
+          observer.disconnect();
+        }
+      });
+    });
+  });
 
-            <!-- 📈 Engagement Rate -->
-            <div class="position-absolute top-0 end-0 m-2">
-              <span class="bg-dark text-white small px-2 py-1 rounded" style="opacity: 0.85;">{{ post.engagement_rate }}%</span>
-            </div>
+  observer.observe(document.body, { childList: true, subtree: true });
+}
 
-            <!-- 🕒 Timestamp & Content -->
-            <div class="position-absolute bottom-0 start-0 text-white text-shadow p-2" style="font-size: 11px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.55));">
-              <div class="mt-1">
-                <span class="badge bg-light text-dark" style="font-size: 10px; opacity: 0.85;">
-                  📌 {{ post.content_pillar }}
-                </span>
-              </div>
+// Add custom tooltips to interactive elements
+document.querySelectorAll('[data-tooltip]').forEach(element => {
+  createTooltip(element, element.getAttribute('data-tooltip'));
+});
 
+// Accessibility improvements
+document.addEventListener('keydown', function(e) {
+  // Focus management for modals
+  if (e.key === 'Tab') {
+    const activeModal = document.querySelector('.modal.show');
+    if (activeModal) {
+      const focusableElements = activeModal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
 
-              <div>{{ post.post_timestamp }}</div>
-              <div class="fw-semibold text-truncate">{{ post.post_content }}</div>
-            </div>
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    }
+  }
+});
 
-            <!-- 📷 Post Type -->
-            <div class="position-absolute bottom-0 end-0 m-2">
-              {% if post.post_type == "video" %}
-                <i class="fas fa-play-circle text-white"></i>
-              {% else %}
-                <i class="fas fa-image text-white"></i>
-              {% endif %}
-            </div>
-          </div>
-        </a>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
+// Error handling for images
+document.querySelectorAll('img').forEach(img => {
+  img.addEventListener('error', function() {
+    if (this.src !== defaultProfilePic) {
+      this.src = defaultProfilePic;
+    }
+  });
+});
 
-    </div>
-  </div>
-</div>
+// Progressive loading for charts
+function loadChartsProgressively() {
+  const charts = ['followersBarChart', 'shareInteractionChart', 'postsByDayChart', 'bestTimesChart'];
 
-<script>
-function openPresentation() {
-  var modal = new bootstrap.Modal(document.getElementById('presentationModal'));
+  charts.forEach((chartId, index) => {
+    setTimeout(() => {
+      const chartElement = document.getElementById(chartId);
+      if (chartElement) {
+        chartElement.style.opacity = '0';
+        chartElement.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+          chartElement.style.opacity = '1';
+        }, 100);
+      }
+    }, index * 200);
+  });
+}
+
+// Initialize progressive loading
+setTimeout(loadChartsProgressively, 500);
+
+// ====================== Export & Presentation Functions ======================
+// Generic CSV exporter
+function exportToCSV(headers, rows, filename) {
+  let csv = '';
+  csv += headers.join(',') + '\n';
+  rows.forEach(r => {
+    csv += r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Helper: print specific card to PDF
+function printCard(cardId, title) {
+  const card = document.getElementById(cardId);
+  if (!card) {
+    window.print();
+    return;
+  }
+  const newWin = window.open('', '', 'width=900,height=600');
+  const doc = newWin.document;
+  doc.open();
+  doc.write('<html><head><title>' + title + '</title>');
+  doc.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+  doc.write('<style>body{font-family: Montserrat, Prompt, sans-serif;} .card{margin:1rem;} .post-card{border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.1);} </style>');
+  doc.write('</head><body></body></html>');
+  doc.close();
+  // Clone the card and remove any presentation/export buttons before printing
+  const clone = card.cloneNode(true);
+  const buttons = clone.querySelectorAll('button');
+  buttons.forEach(btn => btn.remove());
+  newWin.document.body.appendChild(clone);
+  newWin.focus();
+  newWin.print();
+  newWin.close();
+}
+
+// Wrapper for presentation (currently prints the card)
+function presentCard(cardId, title) {
+  // Show a modal with the cloned content of the given card (without export buttons)
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const modalTitleEl = document.getElementById('cardPresentationTitle');
+  const modalBodyEl = document.getElementById('cardPresentationContent');
+  if (modalTitleEl) modalTitleEl.textContent = title;
+  if (modalBodyEl) {
+    modalBodyEl.innerHTML = '';
+    // Check if this card contains any chart canvases. If so, convert each to an image
+    const canvases = card.querySelectorAll('canvas');
+    if (canvases.length > 0) {
+      canvases.forEach(cv => {
+        try {
+          // Convert the current canvas to a data URL
+          const img = document.createElement('img');
+          img.src = cv.toDataURL('image/png');
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+          img.classList.add('mb-3');
+          modalBodyEl.appendChild(img);
+        } catch (err) {
+          console.error('Error converting canvas to image', err);
+        }
+      });
+    } else {
+      // Clone the card's body content for presentation if no chart canvases
+      const clone = card.cloneNode(true);
+      clone.querySelectorAll('button').forEach(btn => btn.remove());
+      const body = clone.querySelector('.card-body');
+      if (body) {
+        modalBodyEl.appendChild(body.cloneNode(true));
+      } else {
+        modalBodyEl.appendChild(clone);
+      }
+    }
+  }
+  const modal = new bootstrap.Modal(document.getElementById('cardPresentationModal'));
   modal.show();
+}
+
+// Export Top Posts
+function exportTopPostsCSV() {
+  try {
+    const data = JSON.parse(`{{ top_posts_json|safe }}`);
+    if (!Array.isArray(data)) return;
+    const headers = ['Platform','Post ID/URL','Post Content','Timestamp','Likes','Comments','Shares','Saves','Views','Engagement Rate','Page Name'];
+    const rows = data.map(p => {
+      const postIdOrUrl = p.platform === 'tiktok' ? (p.post_url || '') : (p.post_id || '');
+      return [
+        p.platform,
+        postIdOrUrl,
+        (p.post_content || '').replace(/\n/g,' ').replace(/\r/g,''),
+        p.post_timestamp,
+        p.like_count || 0,
+        p.comment_count || 0,
+        p.share_count || 0,
+        p.save_count || 0,
+        p.view_count || 0,
+        p.engagement_rate,
+        p.page_name || ''
+      ];
+    });
+    exportToCSV(headers, rows, 'top_posts.csv');
+  } catch (err) {
+    console.error(err);
+  }
+}
+function exportTopPostsPDF() {
+  printCard('topPostsCard', 'Top Posts by Engagement');
+}
+
+// Export Followers
+function exportFollowersCSV() {
+  const data = JSON.parse(`{{ chart_data_json|safe }}`);
+  const headers = ['Page','Followers'];
+  const rows = data.map(p => [p.name, p.followers]);
+  exportToCSV(headers, rows, 'followers_data.csv');
+}
+function exportFollowersPDF() {
+  printCard('followersCard', 'Top Profiles by Followers');
+}
+
+// Export Interaction
+function exportInteractionCSV() {
+  const data = JSON.parse(`{{ interaction_data_json|safe }}`);
+  const headers = ['Page','Interactions','Percent'];
+  const rows = data.map(p => [p.name, p.interactions, p.percent]);
+  exportToCSV(headers, rows, 'interaction_data.csv');
+}
+function exportInteractionPDF() {
+  printCard('interactionCard', 'Share of Interaction');
+}
+
+// Export Posts by Day
+function exportPostsByDayCSV() {
+  const labels = JSON.parse(`{{ bar_day_labels|safe }}`);
+  const values = JSON.parse(`{{ bar_day_values|safe }}`);
+  const headers = ['Day','Posts'];
+  const rows = labels.map((d,i) => [d, values[i]]);
+  exportToCSV(headers, rows, 'posts_by_day.csv');
+}
+function exportPostsByDayPDF() {
+  printCard('postsByDayCard', 'Posts by Day');
+}
+
+// Export Best Times
+function exportBestTimesCSV() {
+  const data = JSON.parse(`{{ bubble_data|safe }}`);
+  const headers = ['Label','DayIndex','Hour','Posts','Likes','Comments','Shares'];
+  const rows = data.map(b => [b.tooltip_label, b.x, b.y, b.count, b.likes, b.comments, b.shares]);
+  exportToCSV(headers, rows, 'best_times.csv');
+}
+function exportBestTimesPDF() {
+  printCard('bestTimesCard', 'Best Times to Post');
+}
+
+// Export Pillar Summary
+function exportPillarCSV() {
+  const data = JSON.parse(`{{ pillar_summary_json|safe }}`);
+  const headers = ['Content Pillar','Posts'];
+  const rows = data.map(r => [r.content_pillar, r.post_count]);
+  exportToCSV(headers, rows, 'pillar_summary.csv');
+}
+function exportPillarPDF() {
+  printCard('pillarCard', 'Content Pillar Summary');
 }
 </script>
 
-  <br>
-
-{% if pillar_summary %}
-<!-- 📚 Content Pillar Summary Table -->
-<div class="card shadow-sm rounded p-4 mb-4 w-100" style="max-width: 700px; margin: auto;">
-  <div class="card-body p-2">
-    <h6 class="fw-semibold mb-3" style="font-size: 18px;">Content Pillar Summary</h6>
-    <table class="table table-hover small mb-0">
-      <thead class="table-light">
-        <tr>
-          <th style="width: 70%;">Content Pillar</th>
-          <th class="text-end">จำนวนโพสต์</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in pillar_summary %}
-          <tr style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#pillarModal-{{ row.content_pillar|slugify }}">
-            <td>
-              {% if row.content_pillar == "Realtime" %}🕒{% elif row.content_pillar == "Recipe" %}📋{% elif row.content_pillar == "Promotion" %}💸
-              {% elif row.content_pillar == "Product" %}📦{% elif row.content_pillar == "Activity" %}🎯{% elif row.content_pillar == "CSR" %}🌱
-              {% elif row.content_pillar == "PR and Event" %}📢{% elif row.content_pillar == "Knowledge" %}📘{% elif row.content_pillar == "Lifestyle" %}🌟
-              {% else %}📁{% endif %}
-              {{ row.content_pillar }}
-            </td>
-            <td class="text-end fw-bold">{{ row.post_count }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- 🪟 MODALS -->
-{% for row in pillar_summary %}
-<div id="pillarModal-{{ row.content_pillar|slugify }}" class="modal fade" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen">
-    <div class="modal-content">
-      <div class="modal-body p-4 d-flex justify-content-center align-items-center" style="height: 100vh; overflow: hidden;">
-        <!-- Left Title -->
-        <div class="pe-5" style="min-width: 300px;">
-          <h2 class="fw-bold mb-1" style="font-size: 22px;">โพสต์ในหมวด</h2>
-          <h2 class="fw-semibold text-muted" style="font-size: 26px;">
-            {% if row.content_pillar == "Realtime" %}🕒{% elif row.content_pillar == "Recipe" %}📋{% elif row.content_pillar == "Promotion" %}💸
-            {% elif row.content_pillar == "Product" %}📦{% elif row.content_pillar == "Activity" %}🎯{% elif row.content_pillar == "CSR" %}🌱
-            {% elif row.content_pillar == "PR and Event" %}📢{% elif row.content_pillar == "Knowledge" %}📘{% elif row.content_pillar == "Lifestyle" %}🌟
-            {% else %}📁{% endif %}
-            "{{ row.content_pillar }}"
-          </h2>
-        </div>
-
-        <!-- Right Posts -->
-        <div class="flex-grow-1" style="max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
-          <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-xl-5 g-3">
-            {% with found_posts=posts_by_pillar|dictsort:"pillar" %}
-              {% for item in found_posts %}
-                {% if item.pillar == row.content_pillar %}
-                <div class="col">
-                  <a href="https://www.facebook.com/{{ item.post.post_id }}" target="_blank" class="text-decoration-none">
-                    <div class="position-relative rounded overflow-hidden shadow-sm" style="width: 100%; aspect-ratio: 4/5;">
-                      <img src="{{ item.post.post_imgs.0 }}" class="w-100 h-100" style="object-fit: cover;">
-                      <div class="position-absolute top-0 start-0 m-2">
-                        <div class="position-relative" style="width: 24px; height: 24px;">
-                          {% if item.post.page.profile_pic %}
-                            <img src="{{ item.post.page.profile_pic }}" class="rounded-circle border border-white w-100 h-100" style="object-fit: cover;">
-                          {% else %}
-                            <img src="{% static 'assets/img/icons/default_profile.png' %}" class="rounded-circle border border-white w-100 h-100" style="object-fit: cover;">
-                          {% endif %}
-                          <img src="{% static 'assets/img/icons/facebooklogo.png' %}" width="10" height="10" class="position-absolute bottom-0 end-0 bg-white rounded-circle border border-white">
-                        </div>
-                      </div>
-                      <div class="position-absolute bottom-0 start-0 text-white text-shadow p-2" style="font-size: 11px; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.55));">
-                        <div class="mt-1">
-                          <span class="badge bg-light text-dark" style="font-size: 10px; opacity: 0.85;">
-                            📌 {{ item.pillar }}
-                          </span>
-                        </div>
-                        <div>{{ item.post.post_timestamp_dt|date:"Y-m-d H:i" }}</div>
-                        <div class="fw-semibold text-truncate">{{ item.post.post_content }}</div>
-                      </div>
-                      <div class="position-absolute bottom-0 end-0 m-2">
-                        <i class="fas fa-image text-white"></i>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-                {% endif %}
-              {% endfor %}
-              {% if not found_posts|length %}
-              <div class="text-muted ms-3">ยังไม่มีโพสต์ในหมวดนี้</div>
-              {% endif %}
-            {% endwith %}
-          </div>
-        </div>
-      </div>
-    </div>
-{% endfor %}
-
-{% else %}
-<!-- ✅ Empty State ถ้าไม่มีเพจเลย -->
-<div class="card shadow-sm rounded p-4 mb-4 w-100 text-center" style="max-width: 700px; margin: auto;">
-  <div class="text-muted">Page not found, Add Page to see more Dashboard</div>
-</div>
-{% endif %}
-          <br>
 {% endblock %}
