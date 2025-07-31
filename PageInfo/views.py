@@ -1516,7 +1516,6 @@ def pageview(request, page_id):
                 "label": tooltip_label,
                 "tooltip_label": tooltip_label,
                 "key": key_str,
-                "color": get_bar_color_by_count(val["count"]),
                 "customTooltip": {
                     "line1": tooltip_label,
                     "line2": f"{val['count']} Number of posts",
