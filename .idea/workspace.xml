@@ -6,6 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="553eceb5-156c-4feb-95ea-725f453f4aca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/ai_sentiment_analyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/ai_sentiment_analyzer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/cookie.json" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/cookie.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/update_sentiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/update_sentiment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PageInfo/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/PageInfo/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/PageInfo/comment_dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/comment_dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/PageInfo/pageview.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/PageInfo/pageview.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

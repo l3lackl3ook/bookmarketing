@@ -1,20 +1,16 @@
 {% extends 'base1.html' %}
 {% load static %}
 {% block content %}
-
-<!-- Content wrapper -->
 {% if dashboard %}
+  <!-- Dashboard Header -->
   <div class="mb-3">
-    <div class="border rounded shadow-sm px-4 py-3" style="background-color: #fff;">
+    <div class="border rounded shadow-sm px-4 py-3 bg-white">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
         <h4 class="fw-bold mb-2 mb-md-0 d-flex align-items-center text-dark">
           <i class="bx bxs-dashboard text-primary me-2" style="font-size: 1.5rem;"></i>
           {{ dashboard.dashboard_name }}
         </h4>
-        <a href="{{ dashboard.link_url }}"
-           target="_blank"
-           class="text-decoration-none"
-           style="word-break: break-word; font-size: 14px; color: #0d6efd;">
+        <a href="{{ dashboard.link_url }}" target="_blank" class="text-decoration-none" style="word-break: break-word; font-size: 14px; color: #0d6efd;">
           🔗 {{ dashboard.link_url }}
         </a>
       </div>
@@ -23,51 +19,508 @@
       </div>
     </div>
   </div>
+{% endif %}
 
-<div class="mt-2">
-  <button class="btn btn-sm btn-danger me-2" onclick="exportPDF()">
-    <i class="bx bxs-file-pdf"></i> Export to PDF
-  </button>
-  <button class="btn btn-sm btn-success" onclick="exportGoogleSheet()">
-    <i class="bx bxs-spreadsheet"></i> Export to Google Sheets
-  </button>
-</div>
-<br>
-
-
-<div id="charts-only">
-
-  {% if dashboard.screenshot_path %}
-    <div class="mb-3">
-      <div class="row g-4 align-items-stretch">
-
-  <!-- 🔵 รูปภาพ -->
-  <div class="col-md-4 d-flex align-items-start ps-3">
-    <img src="{{ dashboard.screenshot_path.url }}"
-         alt="post screenshot"
-         class="rounded shadow-sm"
-         style="width: auto; height: auto; max-width: 100%;"
+<!-- Sentiment Analysis Card (Screenshot + Bar & Pie Charts) -->
+<div class="card mb-4" id="sentimentCard">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="fw-semibold mb-0 text-dark">Comments by Sentiment</h6>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="presentCard('sentimentCard','Comments by Sentiment')">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportSentimentCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportSentimentPDF()">PDF</button>
       </div>
-  </div>
-
-
-  <!-- 🟢 Bar Chart -->
-  <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
-    <h6 class="text-center fw-semibold mb-2">Bar Chart by Sentiment</h6>
-    <div class="flex-fill w-100" style="min-height: 300px; max-height: 400px;"> <!-- ✅ แก้ min/max height -->
-      <canvas id="sentimentBarChart" style="width: 100%; height: 100%;"></canvas>
+    </div>
+    <div class="row g-4 align-items-stretch">
+      {% if dashboard.screenshot_path %}
+      <!-- Post Screenshot -->
+      <div class="col-md-4 d-flex align-items-start">
+        <img src="{{ dashboard.screenshot_path.url }}" alt="post screenshot" class="rounded shadow-sm" style="width: auto; height: auto; max-width: 100%;">
+      </div>
+      <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
+        <h6 class="text-center fw-semibold mb-2">Bar Chart by Sentiment</h6>
+        <div class="w-100" style="min-height: 300px; max-height: 400px;">
+          <canvas id="sentimentBarChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+      <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
+        <h6 class="text-center fw-semibold mb-2">Pie Chart Percent by Sentiment</h6>
+        <div class="w-100" style="min-height: 300px; max-height: 400px;">
+          <canvas id="sentimentPieChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+      {% else %}
+      <!-- If no screenshot, use two columns for charts -->
+      <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+        <h6 class="text-center fw-semibold mb-2">Bar Chart by Sentiment</h6>
+        <div class="w-100" style="min-height: 300px; max-height: 400px;">
+          <canvas id="sentimentBarChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+      <div class="col-md-6 d-flex flex-column align-items-center justify-content-center">
+        <h6 class="text-center fw-semibold mb-2">Pie Chart Percent by Sentiment</h6>
+        <div class="w-100" style="min-height: 300px; max-height: 400px;">
+          <canvas id="sentimentPieChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
+</div>
 
-  <!-- 🟡 Doughnut Chart -->
-  <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
-    <h6 class="text-center fw-semibold mb-2">Pie Chart Percent by Sentiment</h6>
-    <div class="flex-fill w-100" style="min-height: 300px; max-height: 400px;"> <!-- ✅ แก้ min/max height -->
-      <canvas id="sentimentPieChart" style="width: 100%; height: 100%;"></canvas>
+<!-- Breakdown Charts (Category & Keyword Group) -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100" id="categoryCard">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-semibold mb-0 text-dark">Breakdown of Comments by Category</h6>
+          <div class="d-flex gap-1">
+            <button class="btn-outline-orange btn-sm" onclick="presentCard('categoryCard','Breakdown by Category')">Presentation</button>
+            <button class="btn-outline-orange btn-sm" onclick="exportCategoryCSV()">CSV</button>
+            <button class="btn-outline-orange btn-sm" onclick="exportCategoryPDF()">PDF</button>
+          </div>
+        </div>
+        <div style="width: 100%; height: 250px;">
+          <canvas id="categoryChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
     </div>
   </div>
+  <div class="col-md-6">
+    <div class="card h-100" id="keywordCard">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-semibold mb-0 text-dark">Breakdown of Comments by Keyword Group</h6>
+          <div class="d-flex gap-1">
+            <button class="btn-outline-orange btn-sm" onclick="presentCard('keywordCard','Breakdown by Keyword Group')">Presentation</button>
+            <button class="btn-outline-orange btn-sm" onclick="exportKeywordCSV()">CSV</button>
+            <button class="btn-outline-orange btn-sm" onclick="exportKeywordPDF()">PDF</button>
+          </div>
+        </div>
+        <div style="width: 100%; height: 250px;">
+          <canvas id="keywordGroupChart" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-      <!-- 🧠 Comments Modal -->
+<!-- Comments List (Seeding/Organic or Liked/Unliked) -->
+<div class="card" id="commentsCard">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h6 class="fw-semibold mb-0 text-dark">Comments (Seeding &amp; Organic)</h6>
+      <div class="d-flex gap-1">
+        <button class="btn-outline-orange btn-sm" onclick="presentCard('commentsCard','Comments (Seeding & Organic)')">Presentation</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportCommentsCSV()">CSV</button>
+        <button class="btn-outline-orange btn-sm" onclick="exportCommentsPDF()">PDF</button>
+      </div>
+    </div>
+    {% if dashboard.dashboard_type == "seeding" %}
+      {% if seeding_comments or organic_comments %}
+      <div class="row">
+        <!-- 🟢 Seeding Comments -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-3 text-success">🟢 Seeding Comments ({{ seeding_comments|length }})</h6>
+          <div class="d-flex flex-column" style="gap: 6px;">
+            {% for comment in seeding_comments %}
+            <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
+              <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative" style="border: 2px solid #198754; word-break: break-word;">
+                {% if comment.sentiment %}
+                <span class="badge position-absolute top-0 end-0 m-2"
+                      style="font-size: 11px; padding: 4px 6px;
+                      {% if comment.sentiment == 'Positive' %}background-color: #28a745;
+                      {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
+                      {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
+                      {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
+                  {{ comment.sentiment }}
+                </span>
+                {% endif %}
+                <div class="d-flex align-items-start mb-1">
+                  {% if comment.profile_img_url %}
+                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
+                  {% endif %}
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
+                    <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
+                      {{ comment.content }}
+                    </div>
+                  </div>
+                </div>
+                {% if comment.image_url %}
+                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
+                {% endif %}
+                {% if comment.reply %}
+                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
+                  <strong>Reply:</strong> {{ comment.reply }}
+                </div>
+                {% endif %}
+                {% if comment.reaction %}
+                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
+                  <img src="{% static 'assets/img/icons/like.png' %}" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
+                  {{ comment.reaction }}
+                </div>
+                {% endif %}
+              </div>
+              <!-- Edit Comment Button -->
+              <button type="button" class="btn btn-sm text-muted mt-1" style="background: none; border: none; padding: 0;" title="Edit Comment"
+                      data-bs-toggle="modal" data-bs-target="#editModal{{ comment.id }}">
+                <i class="bx bx-edit-alt" style="font-size: 1.1rem;"></i>
+              </button>
+            </div>
+            <!-- Edit Comment Modal (Seeding) -->
+            <div class="modal fade" id="editModal{{ comment.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{% url 'edit_comment' comment.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Comment</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Sentiment</label>
+                        <input name="sentiment" class="form-control" value="{{ comment.sentiment }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input name="category" class="form-control" value="{{ comment.category }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Keyword Group</label>
+                        <input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input name="reason" class="form-control" value="{{ comment.reason }}">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">ไม่มีคอมเมนต์จากฝั่ง Seeding</p>
+            {% endfor %}
+          </div>
+        </div>
+        <!-- 🔴 Organic Comments -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-3" style="color: #FF6B00;">🟠 Organic Comments ({{ organic_comments|length }})</h6>
+          <div class="d-flex flex-column" style="gap: 6px;">
+            {% for comment in organic_comments %}
+            <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
+              <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative" style="border: 2px solid #FF6B00; word-break: break-word;">
+                {% if comment.sentiment %}
+                <span class="badge position-absolute top-0 end-0 m-2"
+                      style="font-size: 11px; padding: 4px 6px;
+                      {% if comment.sentiment == 'Positive' %}background-color: #28a745;
+                      {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
+                      {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
+                      {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
+                  {{ comment.sentiment }}
+                </span>
+                {% endif %}
+                <div class="d-flex align-items-start mb-1">
+                  {% if comment.profile_img_url %}
+                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
+                  {% endif %}
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
+                    <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
+                      {{ comment.content }}
+                    </div>
+                  </div>
+                </div>
+                {% if comment.image_url %}
+                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
+                {% endif %}
+                {% if comment.reply %}
+                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
+                  <strong>Reply:</strong> {{ comment.reply }}
+                </div>
+                {% endif %}
+                {% if comment.reaction %}
+                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
+                  <img src="{% static 'assets/img/icons/like.png' %}" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
+                  {{ comment.reaction }}
+                </div>
+                {% endif %}
+              </div>
+              <!-- Edit Comment Button -->
+              <button type="button" class="btn btn-sm text-muted mt-1" style="background: none; border: none; padding: 0;" title="Edit Comment"
+                      data-bs-toggle="modal" data-bs-target="#editModalOrg{{ comment.id }}">
+                <i class="bx bx-edit-alt" style="font-size: 1.1rem;"></i>
+              </button>
+            </div>
+            <!-- Edit Comment Modal (Organic) -->
+            <div class="modal fade" id="editModalOrg{{ comment.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{% url 'edit_comment' comment.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Comment</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Sentiment</label>
+                        <input name="sentiment" class="form-control" value="{{ comment.sentiment }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input name="category" class="form-control" value="{{ comment.category }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Keyword Group</label>
+                        <input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input name="reason" class="form-control" value="{{ comment.reason }}">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">ไม่มีคอมเมนต์จากฝั่ง Organic</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% elif dashboard.dashboard_type == "activity" %}
+      {% if liked_comments or unliked_comments %}
+      <div class="row">
+        <!-- 🟦 Liked Comments -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-3 text-primary">🟦 Liked Comments ({{ liked_comments|length }})</h6>
+          <div class="d-flex flex-column" style="gap: 6px;">
+            {% for comment in liked_comments %}
+            <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
+              <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative" style="border: 2px solid #0d6efd; word-break: break-word;">
+                {% if comment.sentiment %}
+                <span class="badge position-absolute top-0 end-0 m-2"
+                      style="font-size: 11px; padding: 4px 6px;
+                      {% if comment.sentiment == 'Positive' %}background-color: #28a745;
+                      {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
+                      {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
+                      {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
+                  {{ comment.sentiment }}
+                </span>
+                {% endif %}
+                <div class="d-flex align-items-start mb-1">
+                  {% if comment.profile_img_url %}
+                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
+                  {% endif %}
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
+                    <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
+                      {{ comment.content }}
+                    </div>
+                  </div>
+                </div>
+                {% if comment.image_url %}
+                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
+                {% endif %}
+                {% if comment.reply %}
+                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
+                  <strong>Reply:</strong> {{ comment.reply }}
+                </div>
+                {% endif %}
+                {% if comment.reaction %}
+                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
+                  <img src="{% static 'assets/img/icons/like.png' %}" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
+                  {{ comment.reaction }}
+                </div>
+                {% endif %}
+              </div>
+              <!-- Edit Comment Button -->
+              <button type="button" class="btn btn-sm text-muted mt-1" style="background: none; border: none; padding: 0;" title="Edit Comment"
+                      data-bs-toggle="modal" data-bs-target="#editModalLiked{{ comment.id }}">
+                <i class="bx bx-edit-alt" style="font-size: 1.1rem;"></i>
+              </button>
+            </div>
+            <!-- Edit Comment Modal (Liked) -->
+            <div class="modal fade" id="editModalLiked{{ comment.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{% url 'edit_comment' comment.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Comment</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Sentiment</label>
+                        <input name="sentiment" class="form-control" value="{{ comment.sentiment }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input name="category" class="form-control" value="{{ comment.category }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Keyword Group</label>
+                        <input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input name="reason" class="form-control" value="{{ comment.reason }}">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">ไม่มีคอมเมนต์ที่ถูกใจแล้ว</p>
+            {% endfor %}
+          </div>
+        </div>
+        <!-- 🟪 Unliked Comments -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-3 text-secondary">🟪 Unliked Comments ({{ unliked_comments|length }})</h6>
+          <div class="d-flex flex-column" style="gap: 6px;">
+            {% for comment in unliked_comments %}
+            <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
+              <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative" style="border: 2px solid #6c757d; word-break: break-word;">
+                {% if comment.sentiment %}
+                <span class="badge position-absolute top-0 end-0 m-2"
+                      style="font-size: 11px; padding: 4px 6px;
+                      {% if comment.sentiment == 'Positive' %}background-color: #28a745;
+                      {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
+                      {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
+                      {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
+                  {{ comment.sentiment }}
+                </span>
+                {% endif %}
+                <div class="d-flex align-items-start mb-1">
+                  {% if comment.profile_img_url %}
+                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
+                  {% endif %}
+                  <div>
+                    <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
+                    <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
+                      {{ comment.content }}
+                    </div>
+                  </div>
+                </div>
+                {% if comment.image_url %}
+                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
+                {% endif %}
+                {% if comment.reply %}
+                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
+                  <strong>Reply:</strong> {{ comment.reply }}
+                </div>
+                {% endif %}
+                {% if comment.reaction %}
+                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
+                  <img src="{% static 'assets/img/icons/like.png' %}" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
+                  {{ comment.reaction }}
+                </div>
+                {% endif %}
+              </div>
+              <!-- Edit Comment Button -->
+              <button type="button" class="btn btn-sm text-muted mt-1" style="background: none; border: none; padding: 0;" title="Edit Comment"
+                      data-bs-toggle="modal" data-bs-target="#editModalUnliked{{ comment.id }}">
+                <i class="bx bx-edit-alt" style="font-size: 1.1rem;"></i>
+              </button>
+            </div>
+            <!-- Edit Comment Modal (Unliked) -->
+            <div class="modal fade" id="editModalUnliked{{ comment.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <form method="POST" action="{% url 'edit_comment' comment.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                      <h5 class="modal-title">Edit Comment</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Sentiment</label>
+                        <input name="sentiment" class="form-control" value="{{ comment.sentiment }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input name="category" class="form-control" value="{{ comment.category }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Keyword Group</label>
+                        <input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <input name="reason" class="form-control" value="{{ comment.reason }}">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">ไม่มีคอมเมนต์ที่ยังไม่ถูกใจ</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modals for Chart Presentation and Detail Views -->
+<div class="modal fade" id="cardPresentationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-semibold" id="cardPresentationTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body d-flex justify-content-center align-items-start" id="cardPresentationContent" style="overflow-y: auto;"></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="commentsModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -80,34 +533,6 @@
   </div>
 </div>
 
-</div>
-
-    </div>
-  {% endif %}
-
-  <br>
-
-  <!-- 🟠 Breakdown of Comments by Category & Keyword Group -->
-  <div class="mb-4">
-    <div class="row g-3">
-
-      <!-- 🟥 Category Chart -->
-      <div class="col-md-6">
-        <h6 class="text-center fw-semibold mb-2">Breakdown of Comments by Category</h6>
-        <div style="width: 100%; max-height: 200px;"> <!-- ✅ ลดความสูง -->
-          <canvas id="categoryChart" style="width: 100%; height: 200px;"></canvas>
-        </div>
-      </div>
-
-      <!-- 🟧 Keyword Group Chart -->
-      <div class="col-md-6">
-        <h6 class="text-center fw-semibold mb-2">Breakdown of Comments by Keyword Group</h6>
-        <div style="width: 100%; max-height: 200px;"> <!-- ✅ ลดความสูง -->
-          <canvas id="keywordGroupChart" style="width: 100%; height: 200px;"></canvas>
-        </div>
-      </div>
-
-      <!-- 🧠 Category/Keyword Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -118,594 +543,450 @@
       <div class="modal-body" id="detailModalContent"></div>
     </div>
   </div>
-</div>
 
-    </div>
-  </div>
-{% endif %}
-<!-- ✅ CSS object-fit-cover -->
+<!-- Custom Styles -->
 <style>
-  .object-fit-cover {
-    object-fit: cover;
+  .object-fit-cover { object-fit: cover; }
+  .btn-outline-orange {
+    border: 1px solid #FF6B00;
+    color: #FF6B00;
+    background-color: transparent;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+  }
+  .btn-outline-orange:hover {
+    background-color: #FF6B00;
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  }
+  .btn-outline-orange:focus {
+    box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.3);
   }
 </style>
 
-<!-- ✅ CDN Chart.js + ChartDataLabels -->
+<!-- Scripts: Chart.js and Plugins -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-  window.onload = function() {
-    const { jsPDF } = window.jspdf;
+  // Initialize charts after DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    // Prepare data from views.py
+    const commentsBySentiment = {{ comments_by_sentiment_json|safe }};
+    const categoryComments = {{ category_comments_json|safe }};
+    const keywordGroupComments = {{ keyword_group_comments_json|safe }};
 
-    window.exportPDF = function() {
-      console.log("✅ Export PDF function called");
-
-      const dashboardElement = document.getElementById('charts-only');
-      if (!dashboardElement) {
-        alert("❌ ไม่พบ div charts-only");
-        return;
-      }
-
-      html2canvas(dashboardElement, { scale: 2, useCORS: true }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('dashboard_charts.pdf');
-        console.log("✅ PDF saved successfully");
-      }).catch(err => {
-        console.error("❌ Export PDF error:", err);
-      });
-    }
-  };
-</script>
-
-
-<!-- ✅ Script Chart -->
-<script>
-  // ✅ Prepare comments data passed from views.py
-  const commentsBySentiment = {{ comments_by_sentiment_json|safe }};
-
-  const ctxBar = document.getElementById('sentimentBarChart').getContext('2d');
-  const sentimentBarChart = new Chart(ctxBar, {
-    type: 'bar',
-    data: {
-      labels: ['Positive', 'neutral', 'negative'],
-      datasets: [{
-        label: 'จำนวน',
-        data: [{{ positive_count }}, {{ neutral_count }}, {{ negative_count }}],
-        backgroundColor: ['#00C853', '#9E9E9E', '#F44336'],
-        borderColor: ['#00C853', '#9E9E9E', '#F44336'],
-        borderWidth: 1.5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: true },
-        title: { display: false }
+    // Sentiment Bar Chart
+    const ctxBar = document.getElementById('sentimentBarChart').getContext('2d');
+    const sentimentBarChart = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: ['Positive', 'neutral', 'negative'],
+        datasets: [{
+          label: 'จำนวน',
+          data: [{{ positive_count }}, {{ neutral_count }}, {{ negative_count }}],
+          backgroundColor: ['#00C853', '#9E9E9E', '#F44336'],
+          borderColor: ['#00C853', '#9E9E9E', '#F44336'],
+          borderWidth: 1.5
+        }]
       },
-      onClick: function(e, elements) {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          const label = this.data.labels[index];
-          showCommentsModal(label.toLowerCase());
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: 'จำนวน',
-            font: { size: 14, weight: 'bold' }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true },
+          title: { display: false }
+        },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = this.data.labels[index];
+            showCommentsModal(label.toLowerCase());
           }
+        },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'จำนวน', font: { size: 14, weight: 'bold' } } }
         }
       }
-    }
-  });
+    });
+    window.sentimentBarChart = sentimentBarChart;
 
-  const ctxPie = document.getElementById('sentimentPieChart').getContext('2d');
-  const sentimentPieChart = new Chart(ctxPie, {
-    type: 'doughnut',
-    data: {
-      labels: ['Positive', 'neutral', 'negative'],
-      datasets: [{
-        data: [{{ positive_count }}, {{ neutral_count }}, {{ negative_count }}],
-        backgroundColor: ['#00C853', '#9E9E9E', '#F44336'],
-        borderColor: '#fff',
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '50%',
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              let label = context.label || '';
-              let value = context.parsed || 0;
-              let sum = context.dataset.data.reduce((a, b) => a + b, 0);
-              let percentage = sum > 0 ? (value / sum * 100).toFixed(1) + '%' : '0%';
-              return value === 0 ? '' : `${label}: ${value} (${percentage})`;
+    // Sentiment Pie Chart
+    const ctxPie = document.getElementById('sentimentPieChart').getContext('2d');
+    const sentimentPieChart = new Chart(ctxPie, {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive', 'neutral', 'negative'],
+        datasets: [{
+          data: [{{ positive_count }}, {{ neutral_count }}, {{ negative_count }}],
+          backgroundColor: ['#00C853', '#9E9E9E', '#F44336'],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '50%',
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.label || '';
+                let value = context.parsed || 0;
+                let sum = context.dataset.data.reduce((a, b) => a + b, 0);
+                let percentage = sum > 0 ? (value / sum * 100).toFixed(1) + '%' : '0%';
+                return value === 0 ? '' : `${label}: ${value} (${percentage})`;
+              }
             }
-          }
+          },
+          datalabels: {
+            color: 'rgba(0,0,0,0.5)',
+            font: { size: 12, weight: 'bold' },
+            formatter: function(value, context) {
+              if (value === 0) return '';
+              let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+              let percentage = sum > 0 ? (value / sum * 100).toFixed(1) + '%' : '0%';
+              return percentage;
+            }
+          },
+          title: { display: false }
         },
-        datalabels: {
-          color: 'rgba(0,0,0,0.5)',
-          font: { size: 12, weight: 'bold' },
-          formatter: function(value, context) {
-            if (value === 0) return '';
-            let sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-            let percentage = sum > 0 ? (value / sum * 100).toFixed(1) + '%' : '0%';
-            return percentage;
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = this.data.labels[index];
+            showCommentsModal(label.toLowerCase());
           }
-        },
-        title: { display: false }
+        }
       },
-      onClick: function(e, elements) {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          const label = this.data.labels[index];
-          showCommentsModal(label.toLowerCase());
+      plugins: [ChartDataLabels]
+    });
+    window.sentimentPieChart = sentimentPieChart;
+
+    // Category Chart
+    const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(ctxCategory, {
+      type: 'bar',
+      data: {
+        labels: {{ category_labels|safe }},
+        datasets: [{
+          label: 'จำนวน',
+          data: {{ category_counts|safe }},
+          backgroundColor: '#9E9E9E',
+          borderColor: '#616161',
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = this.data.labels[index];
+            const comments = categoryComments[label] || [];
+            showDetailModal(`Category: ${label} (${comments.length})`, comments);
+          }
+        },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+    window.categoryChart = categoryChart;
+
+    // Keyword Group Chart
+    const ctxKeyword = document.getElementById('keywordGroupChart').getContext('2d');
+    const keywordGroupChart = new Chart(ctxKeyword, {
+      type: 'bar',
+      data: {
+        labels: {{ keyword_group_labels|safe }},
+        datasets: [{
+          label: 'จำนวน',
+          data: {{ keyword_group_counts|safe }},
+          backgroundColor: '#FF6D00',
+          borderColor: '#E65100',
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        onClick: function(e, elements) {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = this.data.labels[index];
+            const comments = keywordGroupComments[label] || [];
+            showDetailModal(`Keyword Group: ${label} (${comments.length})`, comments);
+          }
+        },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+    window.keywordGroupChart = keywordGroupChart;
+  });
+
+  // Show comments modal by sentiment (Positive/Neutral/Negative)
+  function showCommentsModal(sentimentKey) {
+    const comments = (commentsBySentiment && commentsBySentiment[sentimentKey]) || [];
+    const count = comments.length;
+    const title = `${sentimentKey.charAt(0).toUpperCase() + sentimentKey.slice(1)} Comments (${count})`;
+    document.querySelector('#commentsModal .modal-title').innerText = title;
+    const sentimentBadgeClass = {
+      positive: 'bg-success',
+      neutral: 'bg-secondary',
+      negative: 'bg-danger'
+    }[sentimentKey] || 'bg-secondary';
+    const html = comments.length > 0
+      ? comments.map(c => `
+          <div class="d-flex align-items-start border-bottom py-2">
+            <img src="${c.profile_img_url}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between">
+                <strong>${c.author}</strong>
+                <span class="badge ${sentimentBadgeClass}">${c.sentiment}</span>
+              </div>
+              <div>${c.content}</div>
+              ${c.reason ? `<div class="text-warning fw-semibold small">Reason: ${c.reason}</div>` : ''}
+              ${c.image_url ? `<img src="${c.image_url}" class="mt-1 rounded" style="max-width:100px;">` : ''}
+            </div>
+          </div>
+        `).join('')
+      : '<p class="text-center text-muted">No comments available.</p>';
+    document.getElementById('commentsModalContent').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('commentsModal')).show();
+  }
+
+  // Show detail modal for Category/Keyword charts
+  function showDetailModal(title, comments) {
+    document.querySelector('#detailModal .modal-title').innerText = title;
+    const html = comments && comments.length > 0
+      ? comments.map(c => {
+          const categoryHtml = c.category ? `<span class="me-3">Category: ${c.category}</span>` : `<span class="me-3 text-muted">Category: -</span>`;
+          const keywordGroupHtml = c.keyword_group ? `<span>Keyword Group: ${c.keyword_group}</span>` : `<span class="text-muted">Keyword Group: -</span>`;
+          const reasonHtml = c.reason ? `<div class="text-warning fw-semibold small mt-auto">Reason: ${c.reason}</div>` : '';
+          return `
+            <div class="d-flex align-items-start border-bottom py-2">
+              <img src="${c.profile_img_url}" class="rounded-circle me-2 flex-shrink-0" style="width: 32px; height: 32px; object-fit: cover;">
+              <div class="flex-grow-1 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong>${c.author}</strong>
+                  <span class="badge ${c.sentiment === 'Positive' ? 'bg-success' : c.sentiment === 'neutral' ? 'bg-secondary' : 'bg-danger'}">${c.sentiment}</span>
+                </div>
+                <div class="mb-1">${c.content}</div>
+                <div class="d-flex justify-content-between align-items-end mt-auto">
+                  ${reasonHtml}
+                  <div class="text-end small text-muted">
+                    ${categoryHtml}${keywordGroupHtml}
+                  </div>
+                </div>
+                ${c.image_url ? `<img src="${c.image_url}" class="mt-1 rounded align-self-start" style="max-width:100px;">` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')
+      : '<p class="text-center text-muted">No comments available.</p>';
+    document.getElementById('detailModalContent').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+  }
+</script>
+
+<!-- Export & Presentation Functions -->
+<script>
+  // Generic CSV export helper
+  function exportToCSV(headers, rows, filename) {
+    let csv = headers.join(',') + '\n';
+    rows.forEach(r => {
+      csv += r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Print specific card to PDF (opens print dialog with charts converted to images)
+  function printCard(cardId, title) {
+    const card = document.getElementById(cardId);
+    if (!card) {
+      window.print();
+      return;
+    }
+    const newWin = window.open('', '', 'width=900,height=600');
+    const doc = newWin.document;
+    doc.open();
+    doc.write('<html><head><title>' + title + '</title>');
+    doc.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+    doc.write('<style>body{font-family: Montserrat, Prompt, sans-serif;} .card{margin:1rem;}</style>');
+    doc.write('</head><body></body></html>');
+    doc.close();
+    // Clone the card content and remove export/presentation buttons
+    const clone = card.cloneNode(true);
+    clone.querySelectorAll('button').forEach(btn => btn.remove());
+    // Replace Chart.js canvases with images from chart instances
+    const canvasEls = clone.querySelectorAll('canvas');
+    canvasEls.forEach(canvas => {
+      const id = canvas.id;
+      let chartInstance = null;
+      if (id === 'sentimentBarChart') {
+        chartInstance = window.sentimentBarChart;
+      } else if (id === 'sentimentPieChart') {
+        chartInstance = window.sentimentPieChart;
+      } else if (id === 'categoryChart') {
+        chartInstance = window.categoryChart;
+      } else if (id === 'keywordGroupChart') {
+        chartInstance = window.keywordGroupChart;
+      }
+      if (chartInstance && typeof chartInstance.toBase64Image === 'function') {
+        try {
+          const imgData = chartInstance.toBase64Image();
+          const imgEl = document.createElement('img');
+          imgEl.src = imgData;
+          imgEl.style.width = canvas.style.width || canvas.width + 'px';
+          imgEl.style.height = canvas.style.height || canvas.height + 'px';
+          canvas.replaceWith(imgEl);
+        } catch (e) {
+          // If conversion fails, leave the canvas as is
         }
       }
-    },
-    plugins: [ChartDataLabels]
-  });
+    });
+    newWin.document.body.appendChild(clone);
+    // Wait for images to load, then print
+    setTimeout(() => {
+      newWin.focus();
+      newWin.print();
+      newWin.close();
+    }, 500);
+  }
 
-  /**
-   * 🔥 Function: Show Comments Modal by sentiment label ('positive','neutral','negative')
-   */
-  function showCommentsModal(sentimentKey) {
-  const comments = commentsBySentiment[sentimentKey] || [];
-  const count = comments.length;
-  const title = `${sentimentKey.charAt(0).toUpperCase() + sentimentKey.slice(1)} Comments (${count})`;
-
-
-  document.querySelector('#commentsModal .modal-title').innerText = title;
-
-  // ✅ Map sentiment to badge color
-  const sentimentBadgeClass = {
-    positive: 'bg-success',
-    neutral: 'bg-secondary',
-    negative: 'bg-danger'
-  }[sentimentKey] || 'bg-secondary';
-
-  const html = comments.length > 0
-    ? comments.map(c => `
-      <div class="d-flex align-items-start border-bottom py-2">
-        <img src="${c.profile_img_url}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-        <div class="flex-grow-1">
-          <div class="d-flex justify-content-between">
-            <strong>${c.author}</strong>
-            <span class="badge ${sentimentBadgeClass}">${c.sentiment}</span>
-          </div>
-          <div>${c.content}</div>
-          ${c.reason ? `<div class="text-warning fw-semibold small">Reason: ${c.reason}</div>` : ''}
-          ${c.image_url ? `<img src="${c.image_url}" class="mt-1 rounded" style="max-width:100px;">` : ''}
-        </div>
-      </div>
-    `).join('')
-    : '<p class="text-center text-muted">No comments available.</p>';
-
-  document.getElementById('commentsModalContent').innerHTML = html;
-  new bootstrap.Modal(document.getElementById('commentsModal')).show();
-}
-
-</script>
-
-<script>
-  // ✅ เตรียม data comments จาก views.py
-  const categoryComments = {{ category_comments_json|safe }};
-  const keywordGroupComments = {{ keyword_group_comments_json|safe }};
-
-  // 🔴 Category Chart
-  const ctxCategory = document.getElementById('categoryChart').getContext('2d');
-  const categoryChart = new Chart(ctxCategory, {
-    type: 'bar',
-    data: {
-      labels: {{ category_labels|safe }},
-      datasets: [{
-        label: 'จำนวน',
-        data: {{ category_counts|safe }},
-        backgroundColor: '#9E9E9E',
-        borderColor: '#616161',
-        borderWidth: 1.5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: true } },
-      onClick: function(e, elements) {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          const label = this.data.labels[index];
-          const comments = categoryComments[label] || [];
-          showDetailModal(`Category: ${label} (${comments.length})`, comments, "category");
+  // Show card content in fullscreen modal for presentation
+  function presentCard(cardId, title) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    const modalTitleEl = document.getElementById('cardPresentationTitle');
+    const modalBodyEl = document.getElementById('cardPresentationContent');
+    if (modalTitleEl) modalTitleEl.textContent = title;
+    if (modalBodyEl) {
+      modalBodyEl.innerHTML = '';
+      const canvases = card.querySelectorAll('canvas');
+      if (canvases.length > 0) {
+        // Include post screenshot image first (for Sentiment card)
+        if (cardId === 'sentimentCard') {
+          const screenshotImg = card.querySelector('img[alt="post screenshot"]');
+          if (screenshotImg) {
+            const imgClone = screenshotImg.cloneNode(true);
+            imgClone.style.maxWidth = '100%';
+            imgClone.style.height = 'auto';
+            imgClone.classList.add('mb-3');
+            modalBodyEl.appendChild(imgClone);
+          }
         }
-      },
-      scales: { y: { beginAtZero: true } }
+        // Convert each chart canvas to image and append
+        canvases.forEach(cv => {
+          try {
+            const img = document.createElement('img');
+            img.src = cv.toDataURL('image/png');
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.classList.add('mb-3');
+            modalBodyEl.appendChild(img);
+          } catch (err) {
+            console.error('Error converting canvas to image', err);
+          }
+        });
+      } else {
+        // Clone card content if no canvases (e.g., comments list)
+        const clone = card.cloneNode(true);
+        clone.querySelectorAll('button').forEach(btn => btn.remove());
+        const body = clone.querySelector('.card-body');
+        modalBodyEl.appendChild(body ? body.cloneNode(true) : clone);
+      }
     }
-  });
+    new bootstrap.Modal(document.getElementById('cardPresentationModal')).show();
+  }
 
-  // 🟠 Keyword Group Chart
-  const ctxKeywordGroup = document.getElementById('keywordGroupChart').getContext('2d');
-  const keywordGroupChart = new Chart(ctxKeywordGroup, {
-    type: 'bar',
-    data: {
-      labels: {{ keyword_group_labels|safe }},
-      datasets: [{
-        label: 'จำนวน',
-        data: {{ keyword_group_counts|safe }},
-        backgroundColor: '#FF6D00',
-        borderColor: '#E65100',
-        borderWidth: 1.5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: true } },
-      onClick: function(e, elements) {
-        if (elements.length > 0) {
-          const index = elements[0].index;
-          const label = this.data.labels[index];
-          const comments = keywordGroupComments[label] || [];
-          showDetailModal(`Keyword Group: ${label} (${comments.length})`, comments, "keyword_group");
-        }
-      },
-      scales: { y: { beginAtZero: true } }
+  // Export CSV/PDF functions for each section
+  function exportSentimentCSV() {
+    try {
+      const headers = ['Sentiment', 'Count'];
+      const rows = [
+        ['Positive', {{ positive_count|default:0 }}],
+        ['Neutral', {{ neutral_count|default:0 }}],
+        ['Negative', {{ negative_count|default:0 }}]
+      ];
+      exportToCSV(headers, rows, 'sentiment_distribution.csv');
+    } catch (err) {
+      console.error(err);
     }
-  });
+  }
+  function exportSentimentPDF() {
+    printCard('sentimentCard', 'Comments by Sentiment');
+  }
 
-  /**
-   * 🔥 Function: Show Detail Modal
-   * @param type = 'category' or 'keyword_group'
-   */
-  function showDetailModal(title, comments) {
-  document.querySelector('#detailModal .modal-title').innerText = title;
+  function exportCategoryCSV() {
+    try {
+      const labels = {{ category_labels|safe }};
+      const counts = {{ category_counts|safe }};
+      const headers = ['Category', 'Count'];
+      const rows = labels.map((label, i) => [label, counts[i]]);
+      exportToCSV(headers, rows, 'comments_by_category.csv');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  function exportCategoryPDF() {
+    printCard('categoryCard', 'Breakdown by Category');
+  }
 
-  const html = comments && comments.length > 0
-    ? comments.map(c => {
-        const categoryHtml = c.category ? `<span class="me-3">Category: ${c.category}</span>` : `<span class="me-3 text-muted">Category: -</span>`;
-        const keywordGroupHtml = c.keyword_group ? `<span>Keyword Group: ${c.keyword_group}</span>` : `<span class="text-muted">Keyword Group: -</span>`;
-        const reasonHtml = c.reason ? `<div class="text-warning fw-semibold small mt-auto">Reason: ${c.reason}</div>` : '';
+  function exportKeywordCSV() {
+    try {
+      const labels = {{ keyword_group_labels|safe }};
+      const counts = {{ keyword_group_counts|safe }};
+      const headers = ['Keyword Group', 'Count'];
+      const rows = labels.map((label, i) => [label, counts[i]]);
+      exportToCSV(headers, rows, 'comments_by_keyword_group.csv');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  function exportKeywordPDF() {
+    printCard('keywordCard', 'Breakdown by Keyword Group');
+  }
 
-        return `
-          <div class="d-flex align-items-start border-bottom py-2">
-            <img src="${c.profile_img_url}" class="rounded-circle me-2 flex-shrink-0" style="width: 32px; height: 32px; object-fit: cover;">
-            <div class="flex-grow-1 d-flex flex-column">
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <strong>${c.author}</strong>
-                <span class="badge ${c.sentiment === 'Positive' ? 'bg-success' : c.sentiment === 'neutral' ? 'bg-secondary' : 'bg-danger'}">${c.sentiment}</span>
-              </div>
-
-              <div class="mb-1">${c.content}</div>
-
-              <div class="d-flex justify-content-between align-items-end mt-auto">
-                ${reasonHtml}
-                <div class="text-end small text-muted">
-                  ${categoryHtml}${keywordGroupHtml}
-                </div>
-              </div>
-
-              ${c.image_url ? `<img src="${c.image_url}" class="mt-1 rounded align-self-start" style="max-width:100px;">` : ''}
-            </div>
-          </div>
-        `;
-      }).join('')
-    : '<p class="text-center text-muted">No comments available.</p>';
-
-  document.getElementById('detailModalContent').innerHTML = html;
-  new bootstrap.Modal(document.getElementById('detailModal')).show();
-}
-
+  function exportCommentsCSV() {
+    try {
+      const data = JSON.parse(`{{ all_comments_json|escapejs }}`);
+      const headers = ['Author', 'Content', 'Sentiment', 'Category', 'Keyword Group', 'Reason', 'Reaction', 'Reply'];
+      const rows = data.map(c => [
+        c.author || '',
+        (c.content || '').replace(/\r?\n/g, ' '),
+        c.sentiment || '',
+        c.category || '-',
+        c.keyword_group || '-',
+        c.reason || '-',
+        c.reaction || 0,
+        c.reply ? c.reply.replace(/\r?\n/g, ' ') : ''
+      ]);
+      exportToCSV(headers, rows, 'all_comments.csv');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  function exportCommentsPDF() {
+    printCard('commentsCard', 'Comments List');
+  }
 </script>
-
-
-{% if dashboard.dashboard_type == "seeding" %}
-  {% if seeding_comments or organic_comments %}
-  <div class="row">
-
-    <!-- 🟢 Seeding Comments -->
-    <div class="col-md-6">
-      <h6 class="fw-semibold mb-3 text-success">🟢 Seeding Comments ({{ seeding_comments|length }})</h6>
-      <div class="d-flex flex-column" style="gap: 6px;">
-        {% for comment in seeding_comments %}
-          <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
-
-             <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative"
-                 style="border: 2px solid #198754; word-break: break-word;">
-
-              {% if comment.sentiment %}
-                <span class="badge position-absolute top-0 end-0 m-2"
-                  style="font-size: 11px; padding: 4px 6px;
-                  {% if comment.sentiment == 'Positive' %}background-color: #28a745;
-                  {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
-                  {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
-                  {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
-                  {{ comment.sentiment }}
-                </span>
-              {% endif %}
-
-              <div class="d-flex align-items-start mb-1">
-                {% if comment.profile_img_url %}
-                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
-                {% endif %}
-                <div>
-                  <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
-                  <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
-                {{ comment.content }}
-              </div>
-                </div>
-              </div>
-
-              {% if comment.image_url %}
-                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
-              {% endif %}
-
-              {% if comment.reply %}
-                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
-                  <strong>Reply:</strong> {{ comment.reply }}
-                </div>
-              {% endif %}
-
-              {% if comment.reaction %}
-                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
-                  <img src="/static/assets/img/icons/like.png" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
-                  {{ comment.reaction }}
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- ปุ่ม Edit -->
-            <button type="button"
-                    class="btn btn-sm btn-light mt-1"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModal{{ comment.id }}">
-              ✏️
-            </button>
-          </div>
-
-          <!-- Modal แก้ไข Seeding Comment -->
-          <div class="modal fade" id="editModal{{ comment.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form method="POST" action="{% url 'edit_comment' comment.id %}">
-                  {% csrf_token %}
-                  <div class="modal-header">
-                    <h5 class="modal-title">Edit Comment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="mb-3"><label class="form-label">Content</label><textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea></div>
-                    <div class="mb-3"><label class="form-label">Sentiment</label><input name="sentiment" class="form-control" value="{{ comment.sentiment }}"></div>
-                    <div class="mb-3"><label class="form-label">Category</label><input name="category" class="form-control" value="{{ comment.category }}"></div>
-                    <div class="mb-3"><label class="form-label">Keyword Group</label><input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}"></div>
-                    <div class="mb-3"><label class="form-label">Reason</label><input name="reason" class="form-control" value="{{ comment.reason }}"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        {% empty %}
-          <p class="text-muted">ไม่มีคอมเมนต์จากฝั่ง Seeding</p>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- 🔴 Organic Comments -->
-    <div class="col-md-6">
-      <h6 class="fw-semibold mb-3" style="color: #FF6B00;">🟠 Organic Comments ({{ organic_comments|length }})</h6>
-      <div class="d-flex flex-column" style="gap: 6px;">
-        {% for comment in organic_comments %}
-          <div class="d-flex align-items-start" style="max-width: 520px; gap: 6px;">
-
-            <div class="flex-grow-1 bg-white rounded shadow-sm p-2 position-relative"
-                 style="border: 2px solid #FF6B00; word-break: break-word;">
-
-              {% if comment.sentiment %}
-                <span class="badge position-absolute top-0 end-0 m-2"
-                  style="font-size: 11px; padding: 4px 6px;
-                  {% if comment.sentiment == 'Positive' %}background-color: #28a745;
-                  {% elif comment.sentiment == 'neutral' %}background-color: #6c757d;
-                  {% elif comment.sentiment == 'negative' %}background-color: #dc3545;
-                  {% else %}background-color: #f8f9fa; color: #212529;{% endif %}">
-                  {{ comment.sentiment }}
-                </span>
-              {% endif %}
-
-              <div class="d-flex align-items-start mb-1">
-                {% if comment.profile_img_url %}
-                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
-                {% endif %}
-                <div>
-                  <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
-                  <div class="text-muted" style="font-size: 13px; white-space: normal; word-break: break-word; padding-right: 50px;">
-                {{ comment.content }}
-              </div>
-                </div>
-              </div>
-
-              {% if comment.image_url %}
-                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
-              {% endif %}
-
-              {% if comment.reply %}
-                <div class="border rounded p-2 bg-light mt-2" style="font-size: 13px;">
-                  <strong>Reply:</strong> {{ comment.reply }}
-                </div>
-              {% endif %}
-
-              {% if comment.reaction %}
-                <div class="d-flex align-items-center mt-1" style="font-size: 12px; color: #333;">
-                  <img src="/static/assets/img/icons/like.png" alt="thumbs up" style="width: 14px; height: 14px; margin-right: 4px;">
-                  {{ comment.reaction }}
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- ปุ่ม Edit -->
-            <button type="button"
-                    class="btn btn-sm btn-light mt-1"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editModalOrg{{ comment.id }}">
-              ✏️
-            </button>
-          </div>
-
-          <!-- Modal แก้ไข Organic Comment -->
-          <div class="modal fade" id="editModalOrg{{ comment.id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form method="POST" action="{% url 'edit_comment' comment.id %}">
-                  {% csrf_token %}
-                  <div class="modal-header">
-                    <h5 class="modal-title">Edit Comment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <div class="mb-3"><label class="form-label">Content</label><textarea name="content" class="form-control" rows="3">{{ comment.content }}</textarea></div>
-                    <div class="mb-3"><label class="form-label">Sentiment</label><input name="sentiment" class="form-control" value="{{ comment.sentiment }}"></div>
-                    <div class="mb-3"><label class="form-label">Category</label><input name="category" class="form-control" value="{{ comment.category }}"></div>
-                    <div class="mb-3"><label class="form-label">Keyword Group</label><input name="keyword_group" class="form-control" value="{{ comment.keyword_group }}"></div>
-                    <div class="mb-3"><label class="form-label">Reason</label><input name="reason" class="form-control" value="{{ comment.reason }}"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        {% empty %}
-          <p class="text-muted">ไม่มีคอมเมนต์จาก Organic</p>
-        {% endfor %}
-      </div>
-    </div>
-
-  </div>
-  {% else %}
-    <div class="alert alert-warning mt-4">ยังไม่มีข้อมูลคอมเมนต์</div>
-  {% endif %}
-
-
-
-
-{% elif dashboard.dashboard_type == "activity" %}
-  <!-- 🔷 ACTIVITY DASHBOARD -->
-  {% if comments %}
-    <div class="row">
-
-      <!-- 🟢 Comments ถูกใจแล้ว -->
-      <div class="col-md-6">
-        <h6 class="fw-semibold mb-3 text-success">
-          👍 ถูกใจแล้ว ({{ liked_comments|length }})
-        </h6>
-        <div class="d-flex flex-column gap-3">
-          {% for comment in liked_comments %}
-            <div class="p-3 bg-white rounded shadow-sm"
-                 style="border: 2px solid #198754; border-radius: 12px; word-break: break-word;">
-
-              <!-- ✅ รูปภาพคอมเมนต์ -->
-              {% if comment.image_url %}
-                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
-              {% endif %}
-
-              <div class="d-flex align-items-start mb-2">
-                {% if comment.profile_img_url %}
-                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
-                {% endif %}
-                <div>
-                  <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
-                  <div class="text-muted" style="font-size: 13px;">{{ comment.content }}</div>
-                  {% if comment.timestamp_text %}
-                    <div class="text-secondary" style="font-size: 12px;">🕒 {{ comment.timestamp_text }}</div>
-                  {% endif %}
-                </div>
-              </div>
-
-              <!-- ✅ แสดงสถานะ Like/Share -->
-              <span class="badge bg-success mt-1">👍 {{ comment.like_status }}</span>
-              {% if comment.share_status == "แชร์แล้ว" %}
-                <span class="badge bg-primary mt-1">🔗 {{ comment.share_status }}</span>
-              {% else %}
-                <span class="badge bg-secondary mt-1">🔗 {{ comment.share_status }}</span>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <!-- 🔴 Comments ยังไม่ถูกใจ -->
-      <div class="col-md-6">
-        <h6 class="fw-semibold mb-3 text-danger">
-          👎 ยังไม่ถูกใจ ({{ unliked_comments|length }})
-        </h6>
-        <div class="d-flex flex-column gap-3">
-          {% for comment in unliked_comments %}
-            <div class="p-3 bg-white rounded shadow-sm"
-                 style="border: 2px solid #dc3545; border-radius: 12px; word-break: break-word;">
-
-              <!-- ✅ รูปภาพคอมเมนต์ -->
-              {% if comment.image_url %}
-                <img src="{{ comment.image_url }}" class="rounded mb-2" style="max-width: 100%; border-radius: 6px;" alt="comment image">
-              {% endif %}
-
-              <div class="d-flex align-items-start mb-2">
-                {% if comment.profile_img_url %}
-                  <img src="{{ comment.profile_img_url }}" class="rounded-circle me-2" width="36" height="36" alt="avatar">
-                {% endif %}
-                <div>
-                  <div class="fw-semibold text-dark" style="font-size: 14px;">{{ comment.author }}</div>
-                  <div class="text-muted" style="font-size: 13px;">{{ comment.content }}</div>
-                  {% if comment.timestamp_text %}
-                    <div class="text-secondary" style="font-size: 12px;">🕒 {{ comment.timestamp_text }}</div>
-                  {% endif %}
-                </div>
-              </div>
-
-              <!-- ✅ แสดงสถานะ Like/Share -->
-              <span class="badge bg-secondary mt-1">👍 {{ comment.like_status }}</span>
-              {% if comment.share_status == "แชร์แล้ว" %}
-                <span class="badge bg-primary mt-1">🔗 {{ comment.share_status }}</span>
-              {% else %}
-                <span class="badge bg-secondary mt-1">🔗 {{ comment.share_status }}</span>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-
-    </div>
-
-  {% else %}
-    <div class="alert alert-warning mt-4">ยังไม่มีข้อมูลคอมเมนต์</div>
-  {% endif %}
-
-{% else %}
-  <div class="alert alert-warning mt-4">ไม่พบประเภท dashboard ที่รองรับ</div>
-{% endif %}
-
-
-
-
-<!-- ✅ จบ Content Wrapper -->
 {% endblock %}

@@ -66,6 +66,7 @@ def page_campaign_dashboard(request):
         form = PageGroupForm()  # กรณี GET ให้แสดงฟอร์มเปล่า
     return render(request, 'index.html', {'form': form})  # ส่งฟอร์มไปยังเทมเพลต
 
+@login_required
 def posts_campaign(request, group_name):
     try:
         # หา CommentCampaignGroup ตาม group_name
@@ -88,47 +89,64 @@ def comment_campaign_detail(request, pk):
     return render(request, 'PageInfo/comment_campaign_detail.html', {
         'campaign': campaign
     })
-
+@login_required
 def comment_dashboard_detail(request, dashboard_id):
-    # ดึงข้อมูล dashboard โดยใช้ id ที่ได้รับจาก URL
+    # Get the dashboard or return 404 if not found
     dashboard = get_object_or_404(FBCommentDashboard, id=dashboard_id)
 
-    # ดึงข้อมูลคอมเมนต์ที่เกี่ยวข้องกับ dashboard_id
+    # Retrieve all comments related to this dashboard
     comments = FacebookComment.objects.filter(dashboard=dashboard)
 
-    # นับจำนวน sentiment สำหรับแสดงผลในกราฟ
+    # Count sentiments for charts
     positive_count = comments.filter(sentiment="Positive").count()
     neutral_count = comments.filter(sentiment="neutral").count()
     negative_count = comments.filter(sentiment="negative").count()
 
-    # เตรียมข้อมูลให้กับกราฟ
+    # Prepare comments grouped by sentiment for modal display
     comments_by_sentiment = {
-        'positive': list(comments.filter(sentiment="Positive").values('author', 'content', 'sentiment')),
-        'neutral': list(comments.filter(sentiment="neutral").values('author', 'content', 'sentiment')),
-        'negative': list(comments.filter(sentiment="negative").values('author', 'content', 'sentiment')),
+        'positive': list(comments.filter(sentiment="Positive").values('author', 'content', 'sentiment', 'profile_img_url', 'image_url', 'reason')),
+        'neutral': list(comments.filter(sentiment="neutral").values('author', 'content', 'sentiment', 'profile_img_url', 'image_url', 'reason')),
+        'negative': list(comments.filter(sentiment="negative").values('author', 'content', 'sentiment', 'profile_img_url', 'image_url', 'reason')),
     }
 
-    # เตรียมข้อมูลที่จำเป็นในการแสดงในกราฟ
+    # Prepare data for category breakdown chart
     category_qs = comments.values('category').annotate(count=Count('category')).order_by('-count')
     category_labels = [item['category'] if item['category'] else 'ไม่ระบุ' for item in category_qs]
     category_counts = [item['count'] for item in category_qs]
 
+    # Prepare data for keyword group breakdown chart (limit to top 10 groups)
     keyword_group_qs = comments.values('keyword_group').annotate(count=Count('keyword_group')).order_by('-count')[:10]
     keyword_group_labels = [item['keyword_group'] if item['keyword_group'] else 'ไม่ระบุ' for item in keyword_group_qs]
     keyword_group_counts = [item['count'] for item in keyword_group_qs]
 
-    # กรองคอมเมนต์ seeding และ organic
-    seeding_comments = [c for c in comments if is_seeding(c.author)]
-    organic_comments = [c for c in comments if not is_seeding(c.author)]
+    # Map comments by each category (for detail modal on chart click)
+    category_comments = {}
+    for cat in category_labels:
+        comment_list = comments.filter(category=cat).values(
+            'profile_img_url', 'author', 'content', 'image_url', 'sentiment', 'reason', 'category', 'keyword_group'
+        )
+        category_comments[cat] = list(comment_list)
 
-    # คำนวณแยกคอมเมนต์ประเภท Seeding และ Organic
-    seeding_comments = sorted(seeding_comments, key=lambda x: x.created_at, reverse=True)
-    organic_comments = sorted(organic_comments, key=lambda x: x.created_at, reverse=True)
+    # Map comments by each keyword group (for detail modal on chart click)
+    keyword_group_comments = {}
+    for kg in keyword_group_labels:
+        comment_list = comments.filter(keyword_group=kg).values(
+            'profile_img_url', 'author', 'content', 'image_url', 'sentiment', 'reason', 'keyword_group', 'category'
+        )
+        keyword_group_comments[kg] = list(comment_list)
 
-    # ส่งข้อมูลไปยังเทมเพลต
+    # Prepare all comments data for CSV export (with sorting by reaction count)
+    comment_values = list(comments.values('author', 'content', 'sentiment', 'category',
+                                         'keyword_group', 'reason', 'reaction', 'reply'))
+    # Sort by reaction count (descending) if clean_reaction is available
+    try:
+        comment_values.sort(key=lambda x: clean_reaction(x['reaction']), reverse=True)
+    except Exception:
+        pass
+
+    # Prepare context for template
     context = {
         "dashboard": dashboard,
-        "comments": comments,
         "positive_count": positive_count,
         "neutral_count": neutral_count,
         "negative_count": negative_count,
@@ -137,9 +155,37 @@ def comment_dashboard_detail(request, dashboard_id):
         "category_counts": json.dumps(category_counts),
         "keyword_group_labels": json.dumps(keyword_group_labels, ensure_ascii=False),
         "keyword_group_counts": json.dumps(keyword_group_counts),
-        "seeding_comments": seeding_comments,
-        "organic_comments": organic_comments,
+        "category_comments_json": json.dumps(category_comments, ensure_ascii=False),
+        "keyword_group_comments_json": json.dumps(keyword_group_comments, ensure_ascii=False),
+        "all_comments_json": json.dumps(comment_values, ensure_ascii=False),
     }
+
+    # Separate comments into seeding vs organic if dashboard type is 'seeding'
+    if dashboard.dashboard_type == "seeding":
+        seeding_comments = [c for c in comments if is_seeding(c.author)]
+        organic_comments = [c for c in comments if not is_seeding(c.author)]
+        # Sort each list by cleaned reaction count (descending)
+        seeding_comments = sorted(seeding_comments, key=lambda x: clean_reaction(x.reaction), reverse=True)
+        organic_comments = sorted(organic_comments, key=lambda x: clean_reaction(x.reaction), reverse=True)
+        context.update({
+            "seeding_comments": seeding_comments,
+            "organic_comments": organic_comments,
+        })
+
+    # If dashboard type is 'activity', separate into liked vs unliked comments
+    elif dashboard.dashboard_type == "activity":
+        liked_comments = [c for c in comments if c.like_status == "ถูกใจแล้ว"]
+        unliked_comments = [c for c in comments if c.like_status != "ถูกใจแล้ว"]
+        # (Optionally sort by reaction count if needed, similar to above)
+        liked_comments = sorted(liked_comments, key=lambda x: clean_reaction(x.reaction), reverse=True)
+        unliked_comments = sorted(unliked_comments, key=lambda x: clean_reaction(x.reaction), reverse=True)
+        context.update({
+            "liked_comments": liked_comments,
+            "unliked_comments": unliked_comments,
+        })
+
+    return render(request, 'PageInfo/comment_dashboard.html', context)
+
 
     return render(request, 'PageInfo/comment_dashboard.html', context)
 
@@ -276,6 +322,7 @@ def normalize_post(post):
 from django.db.models import Count
 import json
 
+@login_required
 def comment_dashboard_view(request):
     target_post_url = request.GET.get("post_url")
 
@@ -405,109 +452,92 @@ def comment_dashboard_view(request):
     return render(request, "PageInfo/comment_dashboard.html", context)
 
 def add_comment_url(request):
-    # รับค่าจาก request POST หรือ GET
     if request.method == "POST":
         link_url = request.POST.get("post_url")
         dashboard_name = request.POST.get("dashboard_name") or extract_post_id(link_url)
         dashboard_type = request.POST.get("dashboard_type") or "seeding"
-
-        # รับ campaign_group_id จากฟอร์ม
         campaign_group_id = request.POST.get("post_campaign_id")
 
-        # ตรวจสอบว่า campaign_group_id ได้ถูกส่งมาหรือไม่
         if not campaign_group_id:
             return HttpResponse("❌ ไม่พบ campaign_group_id", status=400)
 
-        # ดึงข้อมูล CommentCampaignGroup จาก ID ที่ได้รับ
         try:
             campaign_group = CommentCampaignGroup.objects.get(id=campaign_group_id)
         except CommentCampaignGroup.DoesNotExist:
             return HttpResponse("❌ ไม่พบ campaign_group", status=404)
 
-    elif request.method == "GET":
-        link_url = request.GET.get("url")
-        dashboard_name = extract_post_id(link_url) if link_url else None
-        dashboard_type = request.GET.get("dashboard_type") or "seeding"
-        campaign_group = None  # ในกรณีนี้ไม่มี campaign_group_id
+        if not link_url:
+            return HttpResponse("❌ ไม่พบ URL", status=400)
+
+        validate = URLValidator()
+        try:
+            validate(link_url)
+        except ValidationError:
+            return HttpResponse("❌ URL ไม่ถูกต้อง", status=400)
+
+        normalized_link_url = normalize_url(link_url)
+
+        dashboard = FBCommentDashboard.objects.create(
+            post_id=normalized_link_url,
+            dashboard_name=dashboard_name[:255] if dashboard_name else "",
+            dashboard_type=dashboard_type,
+            campaign_group=campaign_group
+        )
+
+        if dashboard_type == "seeding":
+            result = asyncio.run(run_seeding_comment_scraper(link_url))
+            comments = result.get("comments", [])
+            screenshot_path = result.get("post_screenshot_path")
+
+            for c in comments:
+                FacebookComment.objects.create(
+                    post_url=normalized_link_url,
+                    dashboard=dashboard,
+                    author=c.get("author"),
+                    profile_img_url=c.get("profile_img_url"),
+                    content=c.get("content"),
+                    reaction=c.get("reaction"),
+                    timestamp_text=c.get("timestamp_text"),
+                    image_url=c.get("image_url"),
+                    reply=c.get("reply"),
+                )
+
+            if screenshot_path:
+                abs_path = os.path.join("media", screenshot_path)
+                if os.path.exists(abs_path):
+                    with open(abs_path, "rb") as f:
+                        dashboard.screenshot_path.save(os.path.basename(abs_path), File(f), save=True)
+
+        elif dashboard_type == "activity":
+            result = asyncio.run(run_activity_comment_scraper(link_url))
+            comments = result.get("comments", [])
+            likes = asyncio.run(run_fb_like_scraper(link_url))
+            shares = asyncio.run(run_fb_share_scraper(link_url))
+
+            like_names = set(likes)
+            share_names = set(shares)
+
+            for c in comments:
+                name = c.get("author")
+                FacebookComment.objects.create(
+                    post_url=normalized_link_url,
+                    dashboard=dashboard,
+                    author=name,
+                    profile_img_url=c.get("profile_img_url"),
+                    content=c.get("content"),
+                    reaction=c.get("reaction"),
+                    timestamp_text=c.get("timestamp_text"),
+                    image_url=c.get("image_url"),
+                    reply=c.get("reply"),
+                    like_status="ถูกใจแล้ว" if name in like_names else "ยังไม่ถูกใจ",
+                    share_status="แชร์แล้ว" if name in share_names else "ยังไม่แชร์",
+                )
+
+        # ✅ เปลี่ยน redirect จากใช้ ID → เป็น group_name ตาม urls.py
+        return redirect('posts_campaign', group_name=campaign_group.group_name)
 
     else:
         return redirect('index')
-
-    if not link_url:
-        return HttpResponse("❌ ไม่พบ URL", status=400)
-
-    # ตรวจสอบ URL ให้ถูกต้อง
-    validate = URLValidator()
-    try:
-        validate(link_url)
-    except ValidationError:
-        return HttpResponse("❌ URL ไม่ถูกต้อง", status=400)
-
-    normalized_link_url = normalize_url(link_url)
-
-    # สร้าง dashboard
-    dashboard = FBCommentDashboard.objects.create(
-        post_id=normalized_link_url,  # ใช้ post_id แทน link_url
-        dashboard_name=dashboard_name[:255] if dashboard_name else "",
-        dashboard_type=dashboard_type,
-        campaign_group=campaign_group  # เชื่อมโยงกับ campaign_group
-    )
-
-    # ถ้าเป็น dashboard_type = "seeding"
-    if dashboard_type == "seeding":
-        result = asyncio.run(run_seeding_comment_scraper(link_url))
-        comments = result.get("comments", [])
-        screenshot_path = result.get("post_screenshot_path")
-
-        for c in comments:
-            FacebookComment.objects.create(
-                post_url=normalized_link_url,
-                dashboard=dashboard,
-                author=c.get("author"),
-                profile_img_url=c.get("profile_img_url"),
-                content=c.get("content"),
-                reaction=c.get("reaction"),
-                timestamp_text=c.get("timestamp_text"),
-                image_url=c.get("image_url"),
-                reply=c.get("reply"),
-            )
-
-        if screenshot_path:
-            abs_path = os.path.join("media", screenshot_path)
-            if os.path.exists(abs_path):
-                with open(abs_path, "rb") as f:
-                    dashboard.screenshot_path.save(os.path.basename(abs_path), File(f), save=True)
-
-    # ถ้าเป็น dashboard_type = "activity"
-    elif dashboard_type == "activity":
-        result = asyncio.run(run_activity_comment_scraper(link_url))
-        comments = result.get("comments", [])
-        likes = asyncio.run(run_fb_like_scraper(link_url))
-        shares = asyncio.run(run_fb_share_scraper(link_url))
-
-        like_names = set(likes)
-        share_names = set(shares)
-
-        for c in comments:
-            name = c.get("author")
-            FacebookComment.objects.create(
-                post_url=normalized_link_url,
-                dashboard=dashboard,
-                author=name,
-                profile_img_url=c.get("profile_img_url"),
-                content=c.get("content"),
-                reaction=c.get("reaction"),
-                timestamp_text=c.get("timestamp_text"),
-                image_url=c.get("image_url"),
-                reply=c.get("reply"),
-                like_status="ถูกใจแล้ว" if name in like_names else "ยังไม่ถูกใจ",
-                share_status="แชร์แล้ว" if name in share_names else "ยังไม่แชร์",
-            )
-
-    # รีไดเร็กต์ไปยังหน้าแสดงข้อมูลของ campaign_group
-    return redirect(f"/posts-campaign/{campaign_group.id}/")
-
-
 
 def get_pillar_summary_from_pages(page_ids):
     from django.db import connection
@@ -553,10 +583,10 @@ def clean_number(value):
         return 0
 
 async def run_fb_post_video_reel_live_scraper(url, cookie_path, cutoff_dt):
-    posts_scraper = FBPostScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
-    videos_scraper = FBVideoScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
-    reels_scraper = FBReelScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
-    lives_scraper = FBLiveScraperAsync(cookie_file=cookie_path, headless=False, page_url=url, cutoff_dt=cutoff_dt)
+    posts_scraper = FBPostScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
+    videos_scraper = FBVideoScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
+    reels_scraper = FBReelScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
+    lives_scraper = FBLiveScraperAsync(cookie_file=cookie_path, headless=True, page_url=url, cutoff_dt=cutoff_dt)
 
     posts = await posts_scraper.run()
     videos = await videos_scraper.run()
@@ -565,7 +595,7 @@ async def run_fb_post_video_reel_live_scraper(url, cookie_path, cutoff_dt):
 
     return (posts or []) + (videos or []) + (reels or []) + (lives or [])
 
-
+@login_required
 def add_page(request, group_id):
     group = PageGroup.objects.get(id=group_id)
 
@@ -846,6 +876,7 @@ def create_group(request):
     # ส่งฟอร์มไปยัง template
     return render(request, 'PageInfo/index.html', {'form': form})
 
+@login_required
 def group_detail(request, group_id):
     group = get_object_or_404(PageGroup, id=group_id)
     pages = group.pages.all().order_by('-page_followers_count')
@@ -1290,7 +1321,7 @@ def sidebar_context(request):
     }
 
 
-
+@login_required
 def pageview(request, page_id):
     page = get_object_or_404(PageInfo, id=page_id)
 
